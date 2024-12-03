@@ -25,3 +25,4 @@ Function: This makes the OrderItem table variables accessible
         return $this->belongsTo(Product::class, 'ProductID');
     }
 }
+
