@@ -6,10 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
+/********************************
+Developer: Oliver Blatchford
+University ID: 230163795
+Function: This makes the Product table variables accessible
+********************************/
     protected $table = 'product';
     protected $primaryKey = 'ProductID';
     protected $fillable = ['ProductName', 'Description', 'Stock', 'Category'];
-    public $timestamps = false;
 
     public function cartItems()
     {

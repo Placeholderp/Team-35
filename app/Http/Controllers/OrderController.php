@@ -3,40 +3,33 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Order;
+
 
 class OrderController extends Controller
 {
+/********************************
+Developer: Oliver Blatchford
+University ID: 230163795
+Function: This function shows the orders on a page and places an order on the database
+********************************/
+    public function showOrders()
+    {
+        $orders = Order::all();
+        return view('orders.index', compact('orders'));
+    }
+
     public function placeOrder(Request $request)
     {
-        $customerId = $request->input('CustomerID');
-
-        $cart = Cart::with('items.product')->where('CustomerID', $customerId)->first();
-
-        if (!$cart || $cart->items->isEmpty()) {
-            return response()->json(['message' => 'Cart is empty.'], 400);
-        }
-
-        $totalAmount = $cart->items->sum(function ($item) {
-            return $item->Quantity * $item->product->Price;
-        });
-
-        $order = Order::create([
-            'CustomerID' => $customerId,
-            'TotalAmount' => $totalAmount,
-            'OrderDate' => now(),
-        ]);
-
-        foreach ($cart->items as $item) {
-            OrderItem::create([
-                'OrderID' => $order->OrderID,
-                'ProductID' => $item->ProductID,
-                'Quantity' => $item->Quantity,
-                'Price' => $item->product->Price,
-            ]);
-        }
-
-        $cart->items()->delete();
-
-        return response()->json(['message' => 'Order placed successfully.', 'OrderID' => $order->OrderID], 201);
+        //Creates new entry in order table
+        $order = new Order();
+        //Requests userID and total amount of purchase
+        $order->userID = $request->input('userID');
+        $order->totalAmount = $request->input('totalAmount');
+        //Saves the order date as current time
+        $order->orderDate = now();
+        $order->save();
+        //Shows orderPlaced page with the order
+        return view('ordersPlaced', ['ordersPlaced' => $order]);
     }
 }

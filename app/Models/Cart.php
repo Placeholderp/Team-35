@@ -4,12 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+
 class Cart extends Model
 {
+/********************************
+Developer: Oliver Blatchford
+University ID: 230163795
+Function: This makes the cart table variables accessible
+********************************/
     protected $table = 'cart';
     protected $primaryKey = 'CartID';
     protected $fillable = ['CustomerID'];
-    public $timestamps = false;
 
     public function customer()
     {
