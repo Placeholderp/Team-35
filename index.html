@@ -125,6 +125,41 @@ Function: This page is to display all the products/services we are selling
              // Activate the selected tab
             document.getElementById(tabName).classList.add('active');
         }
+
+    // Developer: Georgi Tsarev, Student ID: 230132296, Function: Allows customers to filter products based on name and description using RegEx
+
+    function filterProducts(inputSelector, productSelector) {
+    const input = document.querySelector(inputSelector);
+
+    if (!input) {
+      console.error(`Input element not found for selector: ${inputSelector}`);
+      return;
+    }
+    input.addEventListener('input', function () {
+      const q = this.value.trim();
+
+      // Filter special characters for regex
+      const escapeQ = query.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+      const regex = new RegExp(escapeQ, 'i');  
+      const products = document.querySelectorAll(`${productSelector} .product-card`);
+
+      products.forEach(product => {
+        const title = product.querySelector('.overlay h2').textContent;
+        const description = product.querySelector('.overlay p').textContent;
+
+        if (regex.test(title) || regex.test(description)) {
+          product.style.display = 'block';
+        } else {
+          product.style.display = 'none';
+        }
+      });
+    });
+  }
+  // Allows the search bar to work dynamically
+  document.addEventListener('DOMContentLoaded', () => { 
+  });
+
+
     </script>
 
 <footer>
