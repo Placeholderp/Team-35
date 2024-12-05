@@ -22,7 +22,7 @@ html, body {
     margin: 0;
     display: flex;
     flex-direction: column;
-    background: var(--container-color);
+    background: var(--bg-color);
 }
 
 
@@ -34,7 +34,7 @@ html, body {
         padding: 30px 0;
         text-align: center;
         text-transform: uppercase;
-        color: var(--bg-color);
+        color: black;
         }
 .BasketPage{
             display: flex;
