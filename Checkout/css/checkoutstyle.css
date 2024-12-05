@@ -284,6 +284,7 @@ header{
     margin: 0.5rem 0;
 }
 .sc-btn{
+    text-decoration: none;
     padding: 12px 20px;
     border-radius: 2rem;
     background: var(--bg2-color);
