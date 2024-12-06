@@ -27,10 +27,7 @@ Route::post(
 
 
 //Shows all orders
-Route::get('/orders', function () {
-    $orders = Order::all(); 
-    return view('orders', compact('orders'));
-})->name('orders');
+Route::get('/orders', function () {$orders = Order::all(); return view('orders', compact('orders'));})->name('orders');
 
 
 //Showing all the pages
@@ -42,20 +39,30 @@ Route::view('/about', 'about')->name('page.about');
 
 //Shows the cart page
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+//Updates the quantity of items in the cart
+Route::post('/cart/update-stock/{product}', [CartController::class, 'update_stock'])->name('cart.updateStock');
 //Adds a product to cart
-Route::post('/cart/add', [CartController::class, 'store'])->name('cart.store');
-//Deletes a product from the cart
-Route::delete('/cart/remove/{id}', [CartController::class, 'destroy'])->name('cart.destroy');
+Route::post('/cart/add/{product}', [CartController::class, 'add'])->name('cart.add');
+//Removes a product from the cart
+Route::delete('/cart/remove/{product}', [CartController::class, 'remove'])->name('cart.remove');
+
 
 //Shows the payment page
 Route::get('/payment', [PaymentController::class, 'index'])->name('payment.index');
 //Checks if payment has been processesed
 Route::post('/payment/process', [PaymentController::class, 'process'])->name('payment.process');
 
+
 //Shows the product page
-Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+//Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 //When you click on a product it shows you a page with its specific details
-Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
+//Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
+
+//temporary testing delete later
+Route::get('/products', function () {
+    return view('products');
+});
+
 
 //Shows register form
 Route::get('/register', [UsersController::class, 'showRegisterForm'])->name('register');
@@ -66,8 +73,6 @@ Route::get('/login', [UsersController::class, 'showLoginForm'])->name('login');
 //Logs the user in if the details match the database
 Route::post('/login', [UsersController::class, 'login'])->name('login.process');
 
-//Shows the home page
-Route::view('/', 'home')->name('home');
 //Shows the about us page
 Route::view('/about', 'about')->name('about');
 //Shows the contact us page
@@ -76,7 +81,6 @@ Route::view('/contact', 'contact')->name('contact');
 Route::view('/admin', 'admin.index')->name('admin');
 //Shows the calorie counter page
 Route::view('caloriecounter', 'caloriecounter.index')->name('caloriecounter');
-
 
 
 
