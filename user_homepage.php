@@ -1,4 +1,9 @@
 <?php
+/********************************
+Developer: Oliver
+University ID: 230163795
+Function: Created the user homepage with navigation to other pages
+********************************/
 session_start();
 if (!isset($_SESSION['username']) || $_SESSION['usertype'] !== 'user') {
     header("Location: login.php");
@@ -33,28 +38,28 @@ echo "Welcome, User " . htmlspecialchars($_SESSION['username']);
 
   <div class="dashboard-sections">
             <!-- Section 1: Basket -->
-            <div class="section">
+            <div class="section" style="background-image: url('images/basket.svg');">
                 <h2>Basket</h2>
                 <p>View items in your basket and proceed to checkout.</p>
                 <a href="basket.php">Go to Basket</a>
             </div>
 
             <!-- Section 2: Account -->
-            <div class="section">
+            <div class="section" style="background-image: url('images/account.svg');">
                 <h2>Account</h2>
                 <p>View and update your account details, including your username and password.</p>
                 <a href="account.php">Manage Account</a>
             </div>
 
             <!-- Section 3: Product Page -->
-            <div class="section">
+            <div class="section" style="background-image: url('images/product.svg');">
                 <h2>Product Page</h2>
                 <p>Explore our latest products and add them to your basket.</p>
                 <a href="product_page.php">Browse Products</a>
             </div>
 
             <!-- Section 4: Previous Orders -->
-            <div class="section">
+            <div class="section" style="background-image: url('images/previous.svg');">
                 <h2>Previous Orders</h2>
                 <p>Track your previous orders and view receipts.</p>
                 <a href="previous_orders.php">View Orders</a>
@@ -72,5 +77,5 @@ echo "Welcome, User " . htmlspecialchars($_SESSION['username']);
       </div>
   </footer>
 </body>
-</html>s
+</html>
 

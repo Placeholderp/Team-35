@@ -1,145 +1,178 @@
+/********************************
+Developer: Oliver
+University ID: 230163795
+Function: Created the user homepage style sheets to create the look of the page
+********************************/
 body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f4f4f4;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f4f4f4;
 }
 
 
 .navbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%; 
-  background-color: #333;
-  padding: 10px 0; 
-  z-index: 1000;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+position: fixed;
+top: 0;
+left: 0;
+width: 100%; 
+background-color: #333;
+padding: 10px 0; 
+z-index: 1000;
+box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .navbar a {
-  float: right;
-  color: white;
-  text-decoration: none;
-  padding: 10px 20px;
-  font-size: 14px;
+float: right;
+color: white;
+text-decoration: none;
+padding: 10px 20px;
+font-size: 14px;
 }
 
 .navbar a:hover,
 .dropdown:hover .dropbtn {
-  background-color: rgb(49, 106, 252);
+background-color: rgb(49, 106, 252);
 }
 * Dropdown container */
 .dropdown {
-  position: absolute; 
-  top: 10px; 
-  left: 10px; 
-  overflow: hidden; 
+position: absolute; 
+top: 10px; 
+left: 10px; 
+overflow: hidden; 
 }
 
 
 .dropdown .dropbtn {
-  font-size: 16px;
-  border: none;
-  outline: none;
-  color: white;
-  padding: 14px 16px;
-  background-color: #333; 
-  font-family: inherit;
-  margin: 0;
-  border-radius: 4px; 
-  cursor: pointer; 
+font-size: 16px;
+border: none;
+outline: none;
+color: white;
+padding: 14px 16px;
+background-color: #333; 
+font-family: inherit;
+margin: 0;
+border-radius: 4px; 
+cursor: pointer; 
 }
 
 .dropdown-content {
-  display: none;
-  position: absolute;
-  background-color: #f9f9f9;
-  min-width: 160px;
-  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-  z-index: 1;
+display: none;
+position: absolute;
+background-color: #f9f9f9;
+min-width: 160px;
+box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+z-index: 1;
 }
 
 
 .dropdown-content a {
-  float: none;
-  color: black;
-  padding: 12px 16px;
-  text-decoration: none;
-  display: block;
-  text-align: left;
+float: none;
+color: black;
+padding: 12px 16px;
+text-decoration: none;
+display: block;
+text-align: left;
 }
 
 
 .dropdown-content a:hover {
-  background-color: #ddd;
+background-color: #ddd;
 }
 
 
 .dropdown:hover .dropdown-content {
-  display: block;
+display: block;
 }
 
 .dashboard-sections, .info-sections {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-    justify-content: space-around;
-    margin-top: 20px;
-    margin-bottom: 20px;
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  margin-top: 20px;
+  margin-bottom: 20px;
 }
 
 .section {
-    border: 1px solid #ddd;
-    padding: 50px;
-    
-    text-align: center;
-    width: 30%;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
-    margin-top: 20px;
-    margin-bottom: 20px;
+border: 1px solid #ddd;
+padding: 50px;
+text-align: center;
+width: 30%;
+background-color: rgba(255, 255, 255, 0.3);
+border-radius: 8px;
+box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+margin-top: 20px;
+margin-bottom: 20px;
+background-size: cover;
+background-position: center;
+background-repeat: no-repeat;
+height: 25vh;
+padding-top: 20%;
+position: relative;
+background-clip: padding-box;
 }
 
+
 .section h2, .section h4 {
-    color: #333;
+  color: #333;
 }
 
 .section p {
-    font-size: 14px;
-    color: #666;
-    margin-bottom: 10px;
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 10px;
 }
 
 .section a {
-    display: inline-block;
-    margin-top: 10px;
-    padding: 10px 20px;
-    background-color: #007BFF;
-    color: white;
-    text-decoration: none;
-    border-radius: 5px;
+  display: inline-block;
+  margin-top: 10px;
+  padding: 10px 20px;
+  background-color: #007BFF;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
 }
 
 .section a:hover {
-    background-color: #0056b3;
+  background-color: #0056b3;
+}
+
+.section-content {
+position: absolute;
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
+text-align: center;
+background-color: rgba(255,255, 255, 0.7);
+padding: 10px;
+border-radius: 5px;
+}
+
+
+img {
+opacity: 0.5;
 }
 
 footer {
-    text-align: center;
-    background-color: hsl(239, 100%, 12%);
-    padding: 3px;
-    padding-top: 8px;
-    padding-bottom: 8px;
-    color: #fffdfd;
+  text-align: center;
+  background-color: hsl(239, 100%, 12%);
+  padding: 3px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  color: #fffdfd;
 }
 
 footer a {
-    color: #007BFF;
-    text-decoration: none;
+  color: #007BFF;
+  text-decoration: none;
 }
 
 footer a:hover {
-    color: #0056b3;
+  color: #0056b3;
 }
+
+
+
+
+
