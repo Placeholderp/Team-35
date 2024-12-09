@@ -1,0 +1,344 @@
+/* Global Styles */
+:root {
+    --main-bg: hsl(239, 100%, 12%);
+    --header-bg: #3b4747;
+    --text-color: #ffffff;
+    --primary: #007BFF;
+    --secondary: #28a745;
+    --dark: #1c1d25;
+    --light: #f5f5f5;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Open Sans', sans-serif;
+    background-color: var(--main-bg);
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+a {
+    text-decoration: none;
+    color: var(--primary);
+}
+
+a:hover {
+    color: var(--secondary);
+}
+
+/* Header */
+header {
+    background: var(--header-bg);
+    padding: 20px 40px;
+    position: relative;
+    z-index: 1000;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    height: 50px;
+    width: auto;
+}
+
+/* Navigation Menu */
+nav {
+    display: flex;
+    align-items: center;
+    gap: 15px; 
+}
+
+nav a {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-color);
+    padding: 5px 0;
+    border-bottom: 2px solid transparent;
+    transition: color 0.3s ease, border-bottom 0.3s ease;
+}
+
+nav a:hover {
+    color: var(--secondary);
+    border-bottom: 2px solid var(--secondary);
+}
+
+#cart-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+/* Cart Icon with Number Badge */
+#cart-icon {
+    font-size: 1.8rem;
+    color: var(--text-color);
+    position: relative;
+    transition: transform 0.2s ease;
+}
+
+#cart-icon:hover {
+    transform: scale(1.2);
+}
+
+#cart-icon::after {
+    content: attr(data-quantity);
+    position: absolute;
+    top: -8px;
+    right: -10px;
+    background: red;
+    color: white;
+    font-size: 0.8rem;
+    font-weight: bold;
+    padding: 3px 6px;
+    border-radius: 50%;
+    display: none;
+}
+
+#cart-icon[data-quantity]:not([data-quantity="0"])::after {
+    display: block;
+}
+
+
+/* Hamburger Menu Icon */
+#menu-icon {
+    display: none;
+    font-size: 2rem;
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    #menu-icon {
+        display: block;
+    }
+
+    nav {
+        flex-direction: column;
+        gap: 10px;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background: var(--header-bg);
+        padding: 20px;
+        transform: translateY(-200%);
+        opacity: 0;
+        visibility: hidden;
+    }
+
+    nav.active {
+        transform: translateY(0);
+        opacity: 1;
+        visibility: visible;
+    }
+}
+
+/* Product Details Section */
+.product-details-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 40px 20px;
+    gap: 40px;
+}
+
+.product-image img {
+    width: 100%;
+    max-width: 450px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.product-info {
+    max-width: 500px;
+    background: var(--light);
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.product-title {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--dark);
+    margin-bottom: 10px;
+}
+
+.product-info p {
+    margin-bottom: 15px;
+    color: var(--dark);
+}
+
+.price {
+    font-size: 1.8rem;
+    color: var(--secondary);
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+
+.product-quantity {
+    width: 80px;
+    padding: 8px;
+    text-align: center;
+    color: black; 
+    background: var(--light);
+    border: 1px solid var(--dark);
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+/* Buttons */
+button {
+    background: var(--secondary);
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    margin-right: 10px;
+}
+
+button:hover {
+    background: var(--primary);
+}
+
+/* Cart */
+.cart {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 360px;
+    height: 100vh;
+    background: var(--main-bg);
+    color: var(--text-color);
+    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.4);
+    padding: 20px;
+    transition: all 0.3s ease-in-out;
+    overflow-y: auto;
+    z-index: 1001;
+}
+
+.cart.active {
+    right: 0;
+}
+
+.cart-title {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.cart-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.cart-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--light);
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.cart-img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+.detail-box {
+    flex: 1;
+    margin-left: 10px;
+}
+
+.cart-product-title {
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--dark);
+}
+
+.cart-price {
+    color: var(--secondary);
+    font-weight: bold;
+}
+
+.cart-quantity {
+    width: 60px;
+    padding: 5px;
+    text-align: center;
+}
+
+.cart-remove {
+    font-size: 1.8rem;
+    color: red;
+    cursor: pointer;
+}
+
+.total {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.btn-buy {
+    width: 100%;
+    padding: 15px;
+    background: var(--secondary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background 0.3s ease;
+}
+
+.btn-buy:hover {
+    background: var(--primary);
+}
+
+#close-cart {
+    font-size: 2rem;
+    color: var(--text-color);
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    cursor: pointer;
+}
+
+/* Footer */
+footer {
+    background: var(--header-bg);
+    color: var(--text-color);
+    padding: 20px 40px;
+    text-align: center;
+}
+
+footer a {
+    color: var(--primary);
+}
+
+footer a:hover {
+    color: var(--secondary);
+}

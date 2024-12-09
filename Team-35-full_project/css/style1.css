@@ -1,0 +1,98 @@
+/* Reset basic styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+/* General body styling */
+body {
+    background-color: #f9f9f9;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    width: 100%;
+    padding: 20px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Page header styling */
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #007bff;
+    font-size: 24px;
+}
+
+/* Results container */
+.results-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+}
+
+/* Product card styles */
+.product-card {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    width: 250px; /* Fixed width for consistent card sizing */
+    text-align: center;
+    padding: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Product image styling */
+.product-card img {
+    width: 100%; /* Set width to fill the container */
+    max-width: 200px; /* Ensure the image doesn't exceed 200px width */
+    height: 150px; /* Fixed height to maintain consistent card size */
+    object-fit: cover; /* Crop or scale the image neatly */
+    border-radius: 5px; /* Optional: Rounded corners for a clean look */
+    margin-bottom: 10px;
+}
+
+/* Product title */
+.product-card h2 {
+    font-size: 18px;
+    margin: 10px 0;
+    color: #333;
+}
+
+/* Product price */
+.product-card p {
+    font-size: 16px;
+    color: #777;
+    margin-bottom: 15px;
+}
+
+/* Button styling */
+.product-card a button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.product-card a button:hover {
+    background-color: #0056b3;
+}

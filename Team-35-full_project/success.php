@@ -1,0 +1,26 @@
+<!--/********************************
+Developer: Hussain Alwazan
+University ID: 230049123
+Function: This page is to display items and purchase it.
+********************************/-->
+
+<!DOCTYPE html>
+<html lang="en">
+<!--display title-->
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Success Payment</title>
+        <link rel="stylesheet" href="css/style3.css">
+    </head>
+    <!--main container-->
+    <body>
+<div class="sc-container">
+    <h1>Payment Successful!</h1>
+    <p>Your order will arrive in 3 business days.</p>
+    <img src="Images/success.png" alt=""/>
+    <a class="sc-btn" href="product_page.php"> Back To Homepage</a>
+</div>
+    </body>
+</html>
