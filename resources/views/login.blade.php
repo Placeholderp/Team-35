@@ -11,7 +11,7 @@ Function: I have created the login page which will authenticate users and allow 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Title which is shown on the tab -->
     <title>Aston Fitness - Login</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="{{asset('css/signupandlogin.css')}}">
 </head>
 <body>
     <!--Navigation bar code with links to different pages on the website.-->
@@ -56,7 +56,7 @@ Function: I have created the login page which will authenticate users and allow 
             </form>
             <!-- If users have not created an account they can click this link to redirect them to the signup page.  -->
             <div class="signup-prompt">
-                <p>Haven't already created an account? <a href="signup.html">Click here to sign up!</a></p>
+                <p>Haven't already created an account? <a href="{{asset('views/signup.html'}}">Click here to sign up!</a></p>
                 </div>
         </div>
     </div>

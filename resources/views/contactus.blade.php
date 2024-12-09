@@ -11,7 +11,7 @@ Function: This page will allow browsers to contact the fitness website's represe
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Contact Us</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="{{asset('css/contactus.css'}}">
 </head>
 <body>
 

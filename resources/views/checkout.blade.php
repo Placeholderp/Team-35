@@ -12,7 +12,7 @@ Function: This page is to display items and purchase it.
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Payment page</title>
-    <link rel="stylesheet" href="css/Checkout.css">
+    <link rel="stylesheet" href="{{asset('css/Checkout.css')}}">
 </head>
 <!--Body-->
 <body>

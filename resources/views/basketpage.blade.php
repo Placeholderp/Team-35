@@ -12,7 +12,7 @@ Function: This page is to display items and purchase it.
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Website With payment</title>
-        <link rel="stylesheet" href="css/checkoutstyle.css">
+        <link rel="stylesheet" href="{{asset('css/checkoutstyle.css')}}">
         <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' 
         rel='stylesheet'>
 

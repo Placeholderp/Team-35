@@ -12,7 +12,7 @@ Function: This page is to display items and purchase it.
 <title>BasketPage</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/
 4.7.0/css/font-awesome.min.css">
-<link rel="stylesheet" href="css/Basketpage.css">
+<link rel="stylesheet" href="{{'asset(css/Basketpage.css') }}">
 </head>
 <!--body-->
 <body>
