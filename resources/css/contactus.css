@@ -1,0 +1,298 @@
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Root Colors and Global Styles */
+:root {
+    --main-color: #fd4646;
+    --text-color: #000000;
+    --bg1-color: #007f00;
+    --bg-color: #ffffff;
+    --container-color: #1e1e2a;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    color: var(--bg-color);
+    background: var(--container-color);
+}
+
+
+/* Utility */
+.poppins-thin {
+    font-family: "Poppins", sans-serif;
+    margin: 0;
+    padding: 0;
+    scroll-padding-top: 2rem;
+    scroll-behavior: smooth;
+    box-sizing: border-box;
+    list-style: none;
+    text-decoration: none;
+}
+
+/* Navbar container */
+.navbar {
+    overflow: hidden;
+    background-color: #333;
+    font-family: Arial;
+  }
+  
+  /* Links inside the navbar */
+  .navbar a {
+    float: right;
+    font-size: 16px;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+  }
+  
+  .dropdown {
+    float: right;
+    overflow: hidden;
+  }
+  
+  .dropdown .dropbtn {
+    font-size: 16px;
+    border: none;
+    outline: none;
+    color: white;
+    padding: 14px 16px;
+    background-color: inherit;
+    font-family: inherit; /* Important for vertical align on mobile phones */
+    margin: 0; /* Important for vertical align on mobile phones */
+  }
+  
+  .navbar a:hover, .dropdown:hover .dropbtn {
+    background-color: rgb(0, 72, 255);
+  }
+  
+  /* Dropdown content (hidden by default) */
+  .dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+  }
+  
+  /* Links inside the dropdown */
+  .dropdown-content a {
+    float: none;
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    text-align: left;
+  }
+  
+  /* Add a grey background color to dropdown links on hover */
+  .dropdown-content a:hover {
+    background-color: #ddd;
+  }
+  
+  .dropdown.open .dropdown-content {
+    display: block; /* Display when the dropdown is "open" */
+}
+
+/* Dropdown button */
+.dropdown .dropbtn {
+    font-size: 16px;
+    border: none;
+    outline: none;
+    color: white;
+    padding: 14px 16px;
+    font-family: inherit;
+    margin: 0;
+    cursor: pointer;
+}
+
+  /* Show the dropdown menu on hover */
+  /*.dropdown:hover .dropdown-content {
+    display: block;
+  }*/
+
+
+
+
+/* Hero Section */
+.hero {
+    text-align: center;
+    padding: 10px 20px;
+}
+
+.hero h1 {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+    color: #ffffff;
+}
+
+.hero p {
+    font-size: 1.2em;
+    color: #ffffff;
+}
+
+/* Contact Form */
+.contact-form {
+    display: flex;
+    justify-content: center;
+    padding: 5px 5px;
+    background-color: hsl(239, 100%, 12%);
+}
+
+.contact-form form {
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+}
+
+.contact-form label {
+    margin-bottom: 5px;
+    color: #ffffff;
+}
+
+.contact-form input,
+.contact-form textarea {
+    margin-bottom: 20px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+    border-color: #007BFF;
+}
+
+.contact-form button {
+    padding: 12px;
+    border: none;
+    background-color: #007BFF;
+    color: #fff;
+    font-size: 1em;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.contact-form button:hover {
+    background-color: #0056b3;
+}
+
+/* Contact Information */
+.contact-info {
+    text-align: center;
+    padding: 0px 0px;
+    color: #ffffff;
+}
+
+.contact-info img {
+    max-height: 200px; /* Set a max height for the image */
+    width: 100%; /* Maintain aspect ratio */
+    height: auto; /* Maintain aspect ratio */
+}
+
+.contact-info h2 {
+    font-size: 1.8em;
+    margin-bottom: 10px;
+}
+
+.contact-details {
+    display: flex;
+    justify-content: center;
+    gap: 20px; /* space between each item */
+    padding-top: 5px;
+}
+
+.contact-details p {
+    margin: 0;
+}
+
+section.contact-info p {
+    margin: 10px 0;
+}
+
+/* Footer */
+footer {
+    padding: 5px; /* Reduced padding */
+    text-align: center;
+    background-color: hsl(239, 100%, 12%);
+    font-size: 0.9em;
+    color: #ffffff;
+}
+
+footer {
+    margin: 20px 10px;
+}
+
+footer a {
+    color: #007BFF;
+    text-decoration: none;
+    margin: 0 5px;
+}
+
+footer a:hover {
+    color: #0056b3;
+}
+
+
+/* Layout & Container */
+.container {
+    max-width: 1068px;
+    margin: auto;
+    width: 100%;
+}
+
+section {
+    padding: 4rem 0 3rem;
+}
+
+.nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 0;
+}
+
+/* Splash Container */
+.sc-container {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.sc-container img {
+    width: 200px;
+    margin: 2rem 0;
+}
+
+.sc-container h1 {
+    font-size: 2.8rem;
+    margin-bottom: 10px;
+}
+
+.sc-container p {
+    max-width: 600px;
+    font-size: 0.970rem;
+    text-align: center;
+    margin: 0.5rem 0;
+}
+
+/* Splash Button */
+.sc-btn {
+    padding: 12px 20px;
+    border-radius: 2rem;
+    background: var(--bg1-color);
+    color: var(--bg-color);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+}
