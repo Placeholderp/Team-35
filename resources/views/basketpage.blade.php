@@ -1,0 +1,94 @@
+<!--/********************************
+Developer: Hussain Alwazan
+University ID: 230049123
+Function: This page is to display items and purchase it.
+********************************/-->
+
+<!DOCTYPE html>
+<html lang="en">
+    <!--Header-->
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Website With payment</title>
+        <link rel="stylesheet" href="{{asset('css/checkoutstyle.css')}}">
+        <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' 
+        rel='stylesheet'>
+
+    </head>
+    <!--Body-->
+    <body>
+        <!--Cart-->
+<header>
+    <div class="nav container">
+        <a class="logo">Fitness</a>
+        <i class='bx bxs-cart' id="cart-icon" data-quantity="0"></i>
+        <div class="cart">
+            <h2 class="cart-title">Your Cart</h2>
+            <div class="cart-content">
+               
+            </div>
+
+            <div class="total">
+                <div class="total-title">Total</div>
+                <div class="total-price">£0</div>
+            </div>
+       
+          
+            <button type="button" onclick="window.location.href='BasketCartPage.html'" class="btn-buy">View Basket</button>
+            <i class='bx bx-x' id="close-cart"></i>
+      
+       
+        </div>
+    </div>
+</header>
+<!--Main container-->
+<section class="shop-container">
+    <h2 class="section-title">Shop Products</h2>
+    <div class="shop-content">
+    <div class="product-box">
+        <img 
+        src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiXeBQJ18kKXF3mDVjsLmaiOG6GmW95MDiVRXNT-WA3iQ80ubJ34nThq1kDoiabtfGVegKp7Uq5p_oM3Q13yz8JVzBmw0JefbLX5dMBcZnWre6XFbfcnoFgj27DAbaCgpL6OgWLkCdaKBlU900SH5J6mb1wwo8U6IkJwul0xr0trAnEf0SdJlSPm5W3kSQ/s320/Screenshot%20(183).png"
+         alt="" 
+         class="product img"
+         />
+<h2 class="product-title">T-shirt</h2>
+<span class="price">£50</span>
+<i class="bx bxs-shopping-bags add-cart"></i>
+    </div>
+    <div class="product-box">
+        <img 
+        src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEioFxWLlUrk9dOEYen26JbmbR8ElxIQwaBaSJQSVe1u-4olEpi6PeAXKxMgZSOI0LKpkDO39M_T3Yl4EZkYR5GuzOyImXWcRGHbw6FRtlGCC0rT_AHXMRv6wqV8WLetieE6bacNcbFR35JgbbWmGyCQt3cD5d2771VClXMk77SPd2uhLdNwuuW9W1lWSqI/s320/Screenshot%20(187).png"
+         alt="" 
+         class="product img"
+         />
+<h2 class="product-title">T-shirt1</h2>
+<span class="price">£50</span>
+<i class="bx bxs-shopping-bags add-cart"></i>
+    </div>
+    <div class="product-box">
+        <img 
+        src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhdKbdPolZ4QV8DZNE0-E-at5SWj0KVulfv7oBp7NJTwrPqVgoQJsFzXt61g9fYMp3O8R5QomeRw5t0gvushp4AHfZt17cQsTVupLFzXDDJDGrjOQYhfixZn-_EgHbmRG8FJslyZjq_V4lsdHVbXoQJU84PZPI278q8_andgH9QKu20_5Ob8aOdsRw9wSE/s320/Screenshot%20(188).png"
+         alt="" 
+         class="product img"
+         />
+<h2 class="product-title">T-shirt2</h2>
+<span class="price">£50</span>
+<i class="bx bxs-shopping-bags add-cart"></i>
+    </div>
+    <div class="product-box">
+        <img 
+        src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEinSQV2JGDCNwnjuUyMNThYoWLNH6ym5cuNAo6F23se69J6P7iv98MqvOqCxYnma5opw8Tfn46FOa-lFfkvt1o38r0WFlwjecJiN_Lc-Prg2jbjAJecmZYWsJZAdEkafFYublTs3N6FZRrE36qyxv4PL8z9mgSxIwNw8qMosIFZRUaTOwT-n4D8eYvKk8g/s320/white_background_bag_after.jpg"
+         alt="" 
+         class="product img"
+         />
+<h2 class="product-title">T-shirt3</h2>
+<span class="price">£50</span>
+<i class="bx bxs-shopping-bags add-cart"></i>
+    </div>
+    </div>
+</section>
+<script src="js/checkoutjs.js"></script>
+    </body>
+</html>

@@ -1,0 +1,374 @@
+/********************************
+Developer: Esraa Mubarak
+University ID: 230087321
+Function: This page is for all my styling and design of my pages
+********************************/
+
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: hsl(239, 100%, 12%); /* Dark background color */
+    color: #ffffff; /* White text color */
+}
+
+header {
+    background-color: #3b4747; /* Dark header color for contrast */
+    color: #ffffff; /* White text color in header */
+    padding: 30px 20px; /* Larger padding to increase header size */
+    height: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 20px; /* Larger font size for header text */
+}
+
+nav a {
+    color: #ffffff; /* White links in header */
+    text-decoration: none;
+    margin: 0 15px;
+    font-size: 18px; /* Larger font size for nav links */
+}
+
+nav a.active {
+    font-weight: bold;
+    border-bottom: 2px solid #28a745; /* Active link styling */
+}
+
+h1 {
+    text-align: center;
+    margin: 20px 0;
+    color: #ffffff;
+}
+
+/* Centering Styles */
+main {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center main content */
+    padding: 20px;
+}
+
+/* Tabs Styles */
+.tabs {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.tab-button {
+    background-color: #3b4747;
+    color: #ffffff;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    margin: 0 10px;
+}
+
+.tab-button.active {
+    background-color: #1c1d25;
+}
+
+/* Product Grid Styles */
+.product-grid {
+    display: flex;
+    justify-content: center; /* Center product grid */
+    flex-wrap: wrap;
+    margin: 20px 0;
+}
+
+.product-card {
+    position: relative;
+    margin: 10px;
+    overflow: hidden;
+    width: 300px;
+    height: 200px;
+    border-radius: 10px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    background-color: white;
+}
+
+.product-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.product-card:hover img {
+    transform: scale(1.1);
+}
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.product-card:hover .overlay {
+    opacity: 1;
+}
+
+h2 {
+    margin: 5px 0;
+    color: #ffffff; /* Ensure headers are white for visibility */
+}
+
+.price {
+    font-size: 18px;
+    margin: 5px 0;
+}
+
+button {
+    background-color: #1c1d25;
+    color: #ffffff;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #3b4747;
+}
+
+/* Orders Container Styles */
+.orders-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.order-card {
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    width: 90%;
+    max-width: 600px;
+    h2{
+        color:black;
+    }
+}
+.order-items {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.item img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+}
+
+.item-details {
+    text-align: left;
+}
+
+.reorder-button {
+    background-color: #3b4747;
+    color: #ffffff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background-color 0.3s;
+}
+
+.reorder-button:hover {
+    background-color: #1c1d25;
+}
+
+.contact-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    background-color: #000;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 10px;
+    width: 100%; /* Ensures it spans the full width of its container */
+}
+
+.contact-details p
+
+.contact-details a {
+    margin: 0;
+    font-size: 14px;
+    flex-grow: 1; 
+}
+
+.contact-details a {
+    color: #fff;
+    text-decoration: none;
+}
+
+.contact-details a:hover {
+    color: #007BFF;
+}
+
+footer {
+    text-align: center;
+    background-color: hsl(239, 100%, 12%);
+    padding: 5px;
+    padding-top: 20px;
+}
+
+footer a {
+    color: #007BFF;
+    text-decoration: none;
+}
+
+footer a:hover {
+    color: #0056b3;
+}
+
+/* Style for the main product details container */
+.product-details-container {
+    display: flex;
+    justify-content: center; /* Align items to the start (left) */
+    align-items: center; /* Align items to the top */
+    gap: 20px; /* Space between the image and product info */
+    padding: 20px;
+    background-color:  hsl(239, 100%, 12%); /* Match your site's background color */
+    color: #f5f5f5;
+}
+
+/* Style for the product image */
+.product-image {
+    flex: 0 0 auto; /* Do not allow the image container to grow */
+}
+
+.product-image img {
+    max-width: 350px; /* Set a max width for the image */
+    width: 100%; /* Make sure the image is responsive */
+    height: auto;
+    border-radius: 8px; /* Optional: Add a slight border radius */
+}
+
+/* Style for the product info container */
+.product-info {
+    flex: 1; /* Allow the product info section to take up remaining space */
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Adjust spacing between elements */
+    max-width: 500px; /* Limit the width of the description section */
+    color: white;
+    border: 5px solid white; /* Thickness, style, and color of the border */
+    padding: 15px; /* Optional: Space between content and border */
+    margin: 10px; /* Optional: Space outside the border */
+    width: 300px; 
+    border-radius: 15px;
+
+}
+
+/* Styling for the product title */
+#product-name {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+/* Styling for product price */
+#product-price {
+    font-size: 1.5rem;
+    color: whitesmoke; /* Highlight price with the theme color */
+}
+
+/* Styling for product description */
+#product-description {
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+/* Styling for buttons */
+button {
+    margin-top: 10px;
+    padding: 10px 15px;
+    background-color: rgb(62, 18, 62); /* Match the button color to your site's theme */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    width: 100%; /* Make the buttons stretch across the available width */
+}
+
+button:hover {
+    background-color: green;
+}
+
+/* Quantity selector label */
+label {
+    font-weight: bold;
+    margin-top: 15px;
+}
+
+/* Style for quantity selector */
+select {
+    padding: 5px;
+    font-size: 1rem;
+    width: 9%;
+}
+
+/* Styles for order-card and item-details with black text */
+.order-card {
+    background: #ffffff;
+    color: black; /* Text color set to black */
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    width: 90%;
+    max-width: 600px;
+}
+
+.item-details {
+    color: black; /* Make item text black */
+}
+
+/* Container for the title and search bar */
+.section-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between; /* Push search bar to the right */
+    align-items: center; /* Vertically align the items */
+    margin-bottom: 20px; /* Add space below the header */
+    width: 100%;
+}
+
+/* Search bar styling */
+.search-bar input {
+    padding: 8px 12px; /* Add space inside the input field */
+    font-size: 16px; /* Adjust text size */
+    border: 1px solid #ccc; /* Light border */
+    border-radius: 8px; /* Rounded corners */
+    outline: none; /* Remove default outline */
+    width: 250px; /* Set width for the search bar */
+    box-sizing: border-box; /* Include padding in width calculation */
+    
+}
+

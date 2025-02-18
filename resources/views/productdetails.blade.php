@@ -1,0 +1,129 @@
+<!--********************************
+Developer: Esraa Mubarak
+University ID: 230087321
+Function: This page is for all product details and to be able to add to basket or checkout the product
+********************************/-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details - FitStore</title>
+    <link rel="stylesheet" href="{{asset('css/product.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Charis+SIL:ital,wght@0,400;0,700;1,400;1,700&family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="logo">Aston-35 Fitness</div>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="#cart" class="cart-icon">🛒</a>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <div class="product-details-container">
+        <div class="product-image">
+            <img id="product-image" src="" alt="Product Image">
+        </div>
+        <div class="product-info">
+            <h2 id="product-name">Product Name</h2>
+            <p id="product-description">Product description goes here...</p>
+            <p id="product-price" class="price">£0.00</p>
+
+            <!-- Quantity Selector -->
+            <label for="quantity">Quantity:</label>
+            <select id="quantity" name="quantity">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+            </select>
+
+            <!-- Buttons for Add to Bag and Checkout -->
+            <button onclick="addToCart()">Add to Bag</button>
+            <button onclick="checkoutNow()">Checkout Now</button>
+        </div>
+    </div>
+
+    <script>
+        // Parse URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const product = urlParams.get('product');
+
+        // Product data
+        const products = {
+            cardio: {
+                name: "Cardio Routine",
+                image: "images/cardio.jpg",
+                description: "Boost your endurance and cardiovascular health with our Cardio Routine, designed for all fitness levels. Whether you're looking to improve your stamina, burn fat, or simply stay active, this routine offers a variety of fun and engaging exercises. From quick 10-minute bursts to longer 30-minute sessions, each workout is tailored to help you improve heart health, increase lung capacity, and accelerate calorie burn. Perfect for those short on time but still looking for an effective workout.",
+                price: "£19.99"
+            },
+            strength: {
+                name: "Strength Routine",
+                image: "images/strength.jpg",
+                description: "Build power and confidence with our Strength Routine, designed to help you gain muscle, enhance endurance, and improve overall body strength. This routine includes expertly crafted exercises targeting major muscle groups with safe, progressive techniques to reduce injury risk and promote balanced muscle growth. Suitable for all fitness levels, each session emphasizes form, stability, and controlled movements, making it ideal for both beginners and seasoned athletes.",
+                price: "£24.99"
+            },
+            flexibility: {
+                name: "Flexibility Routine",
+                image: "images/flexibility.jpg",
+                description: "Unlock a new level of movement and ease with our targeted flexibility routine. This program is designed to enhance your range of motion, improve posture, and alleviate muscle stiffness. Perfect for all fitness levels, our guided exercises focus on safe stretching techniques to increase flexibility gradually, reduce injury risk, and support recovery. Incorporate this routine into your fitness plan to feel more agile and balanced in every activity.",
+                price: "£14.99"
+            },
+            creatine: {
+                name: "Creatine",
+                image: "images/creatine.jpg",
+                description: "Maximize your strength, power, and performance with our high-quality Creatine supplement. Creatine is one of the most researched and proven sports supplements, known for enhancing strength and muscle mass. It works by increasing your body's ability to produce energy during high-intensity exercise, allowing you to train harder, push through plateaus, and recover more quickly. Ideal for athletes, weightlifters, or anyone looking to improve their performance in explosive activities like sprinting, lifting, or jumping.",
+                price: "£29.99"
+            },
+            whey: {
+                name: "Whey Protein",
+                image: "images/wheyprotein.jpg",
+                description: "Fuel your muscles with our premium Whey Protein, designed for rapid absorption and optimal recovery. Sourced from high-quality whey, this protein is packed with essential amino acids, making it perfect for post-workout recovery, muscle repair, and growth. With a smooth texture and delicious flavor, it’s the ideal supplement to meet your daily protein needs, helping you recover faster and build lean muscle effectively.",
+                price: "£34.99"
+            },
+            "plant-based": {
+                name: "Plant-Based Protein",
+                image: "images/plantbasedprotein.jpg",
+                description: "Our Plant-Based Protein is a vegan-friendly, clean protein source made from premium pea, rice, and hemp proteins. Ideal for those looking for an animal-free alternative, it supports muscle repair, growth, and overall recovery. Packed with essential amino acids, this plant-powered formula offers a smooth texture and delicious taste, making it a perfect post-workout supplement or an addition to your daily routine. Whether you're building muscle, boosting recovery, or just looking to meet your protein needs, this supplement is a great choice for every fitness level",
+                price: "£26.99"
+            }
+        };
+
+        // Display product details
+        const productInfo = products[product];
+        if (productInfo) {
+            document.getElementById('product-name').textContent = productInfo.name;
+            document.getElementById('product-image').src = productInfo.image;
+            document.getElementById('product-description').textContent = productInfo.description;
+            document.getElementById('product-price').textContent = productInfo.price;
+        } else {
+            document.querySelector('.product-info').innerHTML = "<p>Product not found.</p>";
+        }
+
+        function addToCart() {
+            alert(`${productInfo.name} has been added to your bag!`);
+        }
+
+        function checkoutNow() {
+            window.location.href = "checkout.html";
+        }
+    </script>
+    <footer>
+        <div class="contact-details">
+          <p>Aston St, Birmingham B4 7ET</p>
+          <p>Phone: <a href="tel:0121 204 3000">0121 204 3000</a></p>
+          <p>Email: <a href="mailto:info@example.com">Aston35@Fitness.com</a></p>
+          <p>© 2024 Aston35Fitness. All rights reserved.</p>
+          <a href="PrivacyPolicy.html">Privacy Policy</a> | <a href="Term Of Service.html">Terms of Service</a>
+          </div>
+      </footer>
+</body>
+</html>
+
