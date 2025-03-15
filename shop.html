@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shop</title>
+
+    <!-- Bootstrap CSS -->
+    <link
+        rel="stylesheet"
+        href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+        integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+        crossorigin="anonymous"
+    />
+
+    <!-- Font Awesome -->
+    <link
+        rel="stylesheet"
+        href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css"
+    />
+
+    <link rel="stylesheet" href="style.css" />
+
+    <style>
+        .product img {
+            width: 100%;
+            height: auto;
+            box-sizing: border-box;
+            object-fit: cover;
+        }
+
+        #featured > div.row.mx-auto.container > nav > ul > li.page-item.active > a {
+            background-color: black;
+        }
+
+        #featured > div.row.mx-auto.container > nav > ul > li:nth-child(n):hover > a {
+            background-color: coral;
+            color: #fff;
+        }
+
+        .pagination a {
+            color: #000;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- NAVIGATION -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white py-3 fixed-top">
+        <div class="container">
+            <img src="img/logo1.png" alt="" />
+            <button
+                class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent"
+                aria-expanded="false"
+                aria-label="Toggle navigation"
+            >
+                <span><i id="bar" class="fas fa-bars"></i></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="shop.html">Shop</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="blog.html">Blog</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="about_us.html">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="Calorie_Calculator.html"
+                            >Calorie Calculator</a
+                        >
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="Contact_us.html"
+                            >Contact Us</a
+                        >
+                    </li>
+                    <li class="nav-item">
+                        <i class="fal fa-search"></i>
+                        <i
+                            onclick="window.location.href='cart.html';"
+                            class="fal fa-shopping-bag"
+                        ></i>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <section id="featured" class="my-5 py-5">
+        <div class="container mt-5 py-5">
+            <h2 class="font-weight-bold">Our Featured</h2>
+            <hr />
+            <p>
+                Here you can check out our new products with fair price on
+                rymo.
+            </p>
+        </div>
+        <div class="row mx-auto container">
+            <!-- PRODUCT 1 -->
+            <div
+                onclick="window.location.href='sproduct.html';"
+                class="product col-lg-3 col-md-4 col-12 text-center"
+            >
+                <img class="mb-3 img-fluid" src="img/shop/1.jpg" alt="" />
+                <div class="star">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                </div>
+                <h5 class="p-name">Sport Boots</h5>
+                <h4 class="p-price">$92.00</h4>
+                <button class="buy-btn">Buy Now</button>
+            </div>
+            <!-- PRODUCT 2 -->
+            <div
+                class="product col-lg-3 col-md-4 col-12 text-center"
+            >
+                <img class="mb-3 img-fluid" src="img/shop/2.jpg" alt="" />
+                <div class="star">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                </div>
+                <h5 class="p-name">Sport Boots</h5>
+                <h4 class="p-price">$92.00</h4>
+                <button class="buy-btn">Buy Now</button>
+            </div>
+            <!-- PRODUCT 3 -->
+            <div
+                class="product col-lg-3 col-md-4 col-12 text-center"
+            >
+                <img
+                    class="mb-3 img-fluid"
+                    src="img/shop/3.jpg"
+                    alt=""
+                />
+                <div class="star">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                </div>
+                <h5 class="p-name">Sport Boots</h5>
+                <h4 class="p-price">$92.00</h4>
+                <button class="buy-btn">Buy Now</button>
+            </div>
+            <!-- PRODUCT 4 -->
+            <div
+                class="product col-lg-3 col-md-4 col-12 text-center"
+            >
+                <img class="mb-3 img-fluid" src="img/shop/4.jpg" alt="" />
+                <div class="star">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                </div>
+                <h5 class="p-name">Sport Boots</h5>
+                <h4 class="p-price">$92.00</h4>
+                <button class="buy-btn">Buy Now</button>
+            </div>
+
+            <!-- PRODUCT 5 -->
+            <div
+                class="product col-lg-3 col-md-4 col-12 text-center"
+            >
+                <img class="mb-3 img-fluid" src="img/shop/5.jpg" alt="" />
+                <div class="star">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                </div>
+                <h5 class="p-name">Sport Boots</h5>
+                <h4 class="p-price">$92.00</h4>
+                <button class="buy-btn">Buy Now</button>
+            </div>
+
+            <!-- PRODUCT 6 -->
+            <div
+                class="product col-lg-3 col-md-4 col-12 text-center"
+            >
+                <img class="mb-3 img-fluid" src="img/shop/6.jpg" alt="" />
+                <div class="star">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                </div>
+                <h5 class="p-name">Sport Boots</h5>
+                <h4 class="p-price">$92.00</h4>
+                <button class="buy-btn">Buy Now</button>
+            </div>
+
+            <!-- PRODUCT 7 -->
+            <div
+                class="product col-lg-3 col-md-4 col-12 text-center"
+            >
+                <img class="mb-3 img-fluid" src="img/shop/7.jpg" alt="" />
+                <div class="star">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                </div>
+                <h5 class="p-name">Sport Boots</h5>
+                <h4 class="p-price">$92.00</h4>
+                <button class="buy-btn">Buy Now</button>
+            </div>
+
+            <!-- PRODUCT 8 -->
+            <div
+                class="product col-lg-3 col-md-4 col-12 text-center"
+            >
+                <img class="mb-3 img-fluid" src="img/shop/8.jpg" alt="" />
+                <div class="star">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                </div>
+                <h5 class="p-name">Sport Boots</h5>
+                <h4 class="p-price">$92.00</h4>
+                <button class="buy-btn">Buy Now</button>
+            </div>
+
+            <!-- PRODUCT 9 -->
+            <div
+                class="product col-lg-3 col-md-4 col-12 text-center"
+            >
+                <img class="mb-3 img-fluid" src="img/shop/9.jpg" alt="" />
+                <div class="star">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                </div>
+                <h5 class="p-name">Sport Boots</h5>
+                <h4 class="p-price">$92.00</h4>
+                <button class="buy-btn">Buy Now</button>
+            </div>
+
+            <!-- PRODUCT 10 -->
+            <div
+                class="product col-lg-3 col-md-4 col-12 text-center"
+            >
+                <img class="mb-3 img-fluid" src="img/shop/10.jpg" alt="" />
+                <div class="star">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                </div>
+                <h5 class="p-name">Sport Boots</h5>
+                <h4 class="p-price">$92.00</h4>
+                <button class="buy-btn">Buy Now</button>
+            </div>
+
+            <!-- PRODUCT 11 -->
+            <div
+                class="product col-lg-3 col-md-4 col-12 text-center"
+            >
+                <img class="mb-3 img-fluid" src="img/shop/11.jpg" alt="" />
+                <div class="star">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                </div>
+                <h5 class="p-name">Sport Boots</h5>
+                <h4 class="p-price">$92.00</h4>
+                <button class="buy-btn">Buy Now</button>
+            </div>
+
+            <!-- PRODUCT 12 -->
+            <div
+                class="product col-lg-3 col-md-4 col-12 text-center"
+            >
+                <img class="mb-3 img-fluid" src="img/shop/12.jpg" alt="" />
+                <div class="star">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                </div>
+                <h5 class="p-name">Sport Boots</h5>
+                <h4 class="p-price">$92.00</h4>
+                <button class="buy-btn">Buy Now</button>
+            </div>
+
+            <!-- PRODUCT 13 -->
+            <div
+                class="product col-lg-3 col-md-4 col-12 text-center"
+            >
+                <img class="mb-3 img-fluid" src="img/shop/13.jpg" alt="" />
+                <div class="star">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                </div>
+                <h5 class="p-name">Sport Boots</h5>
+                <h4 class="p-price">$92.00</h4>
+                <button class="buy-btn">Buy Now</button>
+            </div>
+
+            <!-- PRODUCT 14 -->
+            <div
+                class="product col-lg-3 col-md-4 col-12 text-center"
+            >
+                <img class="mb-3 img-fluid" src="img/shop/14.jpg" alt="" />
+                <div class="star">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                </div>
+                <h5 class="p-name">Sport Boots</h5>
+                <h4 class="p-price">$92.00</h4>
+                <button class="buy-btn">Buy Now</button>
+            </div>
+
+            <!-- PRODUCT 15 -->
+            <div
+                class="product col-lg-3 col-md-4 col-12 text-center"
+            >
+                <img class="mb-3 img-fluid" src="img/shop/15.jpg" alt="" />
+                <div class="star">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                </div>
+                <h5 class="p-name">Sport Boots</h5>
+                <h4 class="p-price">$92.00</h4>
+                <button class="buy-btn">Buy Now</button>
+            </div>
+
+            <!-- PRODUCT 16 -->
+            <div
+                class="product col-lg-3 col-md-4 col-12 text-center"
+            >
+                <img class="mb-3 img-fluid" src="img/shop/16.jpg" alt="" />
+                <div class="star">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                </div>
+                <h5 class="p-name">Sport Boots</h5>
+                <h4 class="p-price">$92.00</h4>
+                <button class="buy-btn">Buy Now</button>
+            </div>
+
+            <!-- PRODUCT 17 -->
+            <div
+                class="product col-lg-3 col-md-4 col-12 text-center"
+            >
+                <img class="mb-3 img-fluid" src="img/shop/17.jpg" alt="" />
+                <div class="star">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                </div>
+                <h5 class="p-name">Sport Boots</h5>
+                <h4 class="p-price">$92.00</h4>
+                <button class="buy-btn">Buy Now</button>
+            </div>
+
+            <!-- PRODUCT 18 -->
+            <div
+                class="product col-lg-3 col-md-4 col-12 text-center"
+            >
+                <img class="mb-3 img-fluid" src="img/shop/18.jpg" alt="" />
+                <div class="star">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                </div>
+                <h5 class="p-name">Sport Boots</h5>
+                <h4 class="p-price">$92.00</h4>
+                <button class="buy-btn">Buy Now</button>
+            </div>
+
+            <!-- PRODUCT 19 -->
+            <div
+                class="product col-lg-3 col-md-4 col-12 text-center"
+            >
+                <img class="mb-3 img-fluid" src="img/shop/19.jpg" alt="" />
+                <div class="star">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                </div>
+                <h5 class="p-name">Sport Boots</h5>
+                <h4 class="p-price">$92.00</h4>
+                <button class="buy-btn">Buy Now</button>
+            </div>
+
+            <!-- PRODUCT 20 -->
+            <div
+                class="product col-lg-3 col-md-4 col-12 text-center"
+            >
+                <img class="mb-3 img-fluid" src="img/shop/20.jpg" alt="" />
+                <div class="star">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                </div>
+                <h5 class="p-name">Sport Boots</h5>
+                <h4 class="p-price">$92.00</h4>
+                <button class="buy-btn">Buy Now</button>
+            </div>
+
+            <nav aria-label="...">
+                <ul class="pagination mt-5">
+                    <li class="page-item disabled">
+                        <a
+                            class="page-link"
+                            href="#"
+                            tabindex="-1"
+                            aria-disabled="true"
+                            >Previous</a
+                        >
+                    </li>
+                    <li class="page-item active">
+                        <a class="page-link" href="#">1</a>
+                    </li>
+                    <li class="page-item" aria-current="page">
+                        <a class="page-link" href="#">2</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">3</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </section>
+
+    <footer class="mt-5 py-5">
+        <div class="row container mx-auto pt-5">
+            <div class="footer-one col-lg-3 col-md-6 col-12">
+                <img src="img/logo2.png" alt="">
+                <p class="pt-3">Transform your body, elevate your mind, and unlock your full potential—every step counts on your fitness journey!</p>
+            </div>
+            <div class="footer-one col-lg-3 col-md-6 col-12 mb-3">
+                <h5 class="pb-2">Featured</h5>
+                <ul class="text-uppercase list-unstyled">
+                    <li><a href="#">PROTEIN</a></li>
+                    <li><a href="#">SUPPLEMENTS</a></li>
+                    <li><a href="#">VITAMINS</a></li>
+                    <li><a href="#">WORKOUTS</a></li>
+                    <li><a href="#">PRE WORKOUT</a></li>
+                    
+
+                </ul>
+            </div>
+            <div class="footer-one col-lg-3 col-md-6 col-12 mb-3">
+                <h5 class="pb-2">Contact Us</h5>
+                <div>
+                    <h6 class="text-uppercase">Address</h6>
+                    <p>Aston St, Birmingham B4 7ET</p>
+                </div>
+                <div>
+                    <h6 class="text-uppercase">Phone</h6>
+                    <p>0121 204 3000</p>
+                </div>
+                <div>
+                    <h6 class="text-uppercase">Email</h6>
+                    <p>Aston35@info.com</p>
+                </div>
+            </div>
+
+
+
+
+            <div class="footer-one col-lg-3 col-md-6 col-12 mb-3">
+                <h5 class="pb-2">Terms and Conditions</h5>
+                <div>
+                        <ul class="text-uppercase list-unstyled">
+                            <li><a href="PrivacyPolicy.html">PRIVACY POLICY</a></li>
+                            <li><a href="TermsOfService.html">TERMS OF SERVICE</a></li>
+                            <li><a href="ModernDaySlaveryStatement.html">MODERN DAY SLAVERY STATEMENT</a></li>
+                            
+                            
+        
+                        </ul>
+                    </div>
+
+
+            </div>
+            </div>
+        </div>
+
+        <div class="copyright mt-5">
+            <div class="row container mx-auto">
+
+                <div class="col-lg-3 col-md-6 col-12 mb-4">
+                    <img src="img/payment.png" alt="">
+                </div>
+                <div class="col-lg-4 col-md-6 col-12 text-nowrap mb-2">
+                    <p>Aston35 LTD © 2024. All Rights Reserved</p>
+                </div>
+                <div class="col-lg-4 col-md-6 col-12">
+                    <a href="https://www.facebook.com/?locale2=en_GB&_rdr"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://x.com/i/flow/login"><i class="fab fa-twitter"></i></a>
+                    <a href="https://uk.linkedin.com/"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+
+    <!-- Popper & Bootstrap JS -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js"
+        integrity="sha384-SR1sx49pcuLnqZUnnPwx6FCym0wLsk5JZuNx2bPPENzswTNFaQU1RDvt3wT4gWFG"
+        crossorigin="anonymous"
+    ></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.min.js"
+        integrity="sha384-j0CNLUeiqtyaRmlzUHCPZ+Gy5fQu0dQ6eZ/xAww941Ai1SxSY+0EQqNXNE6DZiVc"
+        crossorigin="anonymous"
+    ></script>
+
+    <!-- *** Add-to-cart SCRIPT *** -->
+    <script>
+      // Grab all buttons with class "buy-btn"
+      const buyButtons = document.querySelectorAll(".buy-btn");
+
+      // For each "Buy Now" button, set up a click listener
+      buyButtons.forEach((btn) => {
+        btn.addEventListener("click", function () {
+          // The parent product card has .product
+          const productCard = this.closest(".product");
+          if (!productCard) return;
+
+          // 1) Get product image (from <img> inside .product)
+          const imgTag = productCard.querySelector("img");
+          const image = imgTag ? imgTag.src : "";
+
+          // 2) Get product name (from .p-name)
+          const nameTag = productCard.querySelector(".p-name");
+          const name = nameTag ? nameTag.textContent.trim() : "Untitled";
+
+          // 3) Get product price (from .p-price) & parse out $
+          const priceTag = productCard.querySelector(".p-price");
+          let price = 0;
+          if (priceTag) {
+            price = parseFloat(priceTag.textContent.replace("$", "")) || 0;
+          }
+
+          // Default quantity is 1 since there's no quantity input here
+          const quantity = 1;
+
+          // 4) Load existing cart from localStorage
+          let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+          // 5) Create a product object
+          const product = {
+            name: name,
+            price: price,
+            quantity: quantity,
+            image: image
+          };
+
+          // 6) Add product to cart array
+          cart.push(product);
+
+          // 7) Save updated cart back to localStorage
+          localStorage.setItem("cart", JSON.stringify(cart));
+
+          // 8) (Optionally redirect) or just alert:
+          alert(name + " added to cart!");
+          // If you want immediate cart page redirect, uncomment:
+          // window.location.href = "cart.html";
+        });
+      });
+    </script>
+</body>
+</html>

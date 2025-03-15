@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Calorie Calculator</title>
+
+  <!-- Bootstrap CSS (4.1.3 for styling) -->
+  <link 
+    rel="stylesheet" 
+    href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" 
+    integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" 
+    crossorigin="anonymous"
+  />
+
+  <!-- FontAwesome -->
+  <link
+    rel="stylesheet"
+    href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css"
+  />
+
+  <!-- Your main style file (with all the CSS you provided) -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- NAVBAR -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-white py-3 fixed-top">
+    <div class="container">
+      <a href="index.html">
+        <img src="img/logo1.png" alt="Logo" />
+      </a>
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#navbarSupportedContent"
+        aria-controls="navbarSupportedContent"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span><i id="bar" class="fas fa-bars"></i></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item">
+            <a class="nav-link active" href="index.html">Home</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="shop.html">Shop</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="blog.html">Blog</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="about_us.html">About</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="Calorie_Calculator.html">Calorie Calculator</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="Contact_us.html">Contact Us</a>
+        </li>
+        <li class="nav-item">
+            <i class="fal fa-search"></i>
+            <i onclick="window.location.href='cart.html';" class="fal fa-shopping-bag"></i>
+        </li>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  
+  
+
+  <!-- MAIN CALORIE CALCULATOR SECTION -->
+  <section id="calorie-calculator" class="container my-5 py-5">
+    <div class="row">
+      <div class="col-12 col-md-8 offset-md-2">
+        <div class="text-center mb-4">
+          <h1>Calorie Calculator</h1>
+          <p>Fuel Your Ambition, Transform Your Body.</p>
+        </div>
+        <form id="calorieForm" class="p-4" style="background-color: #f8f8f8;">
+          <div class="form-group">
+            <label for="gender">Gender:</label>
+            <select class="form-control" id="gender" required>
+              <option value="">Select</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="age">Age (years):</label>
+            <input
+              type="number"
+              class="form-control"
+              id="age"
+              placeholder="e.g. 25"
+              required
+              min="1"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="weight">Weight (kg):</label>
+            <input
+              type="number"
+              class="form-control"
+              id="weight"
+              placeholder="e.g. 70"
+              required
+              min="1"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="height">Height (cm):</label>
+            <input
+              type="number"
+              class="form-control"
+              id="height"
+              placeholder="e.g. 175"
+              required
+              min="1"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="activity">Activity Level:</label>
+            <select class="form-control" id="activity" required>
+              <option value="">Select</option>
+              <option value="low">Low</option>
+              <option value="intermediate">Intermediate</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="goal">Goal:</label>
+            <select class="form-control" id="goal" required>
+              <option value="">Select</option>
+              <option value="maintain">Maintain Weight</option>
+              <option value="lose">Lose Weight</option>
+              <option value="gain">Gain Muscle</option>
+            </select>
+          </div>
+
+          <div class="text-center mt-4">
+            <button type="button" id="calculateBtn" class="btn btn-primary">
+              Calculate
+            </button>
+            <button type="reset" id="resetBtn" class="btn btn-secondary">
+              Reset
+            </button>
+          </div>
+        </form>
+
+        <div class="mt-3">
+          <label for="resultBox"><strong>Result:</strong></label>
+          <input
+            type="text"
+            class="form-control"
+            id="resultBox"
+            readonly
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="mt-5 py-5">
+    <div class="row container mx-auto pt-5">
+        <div class="footer-one col-lg-3 col-md-6 col-12">
+            <img src="img/logo2.png" alt="">
+            <p class="pt-3">Transform your body, elevate your mind, and unlock your full potential—every step counts on your fitness journey!</p>
+        </div>
+        <div class="footer-one col-lg-3 col-md-6 col-12 mb-3">
+            <h5 class="pb-2">Featured</h5>
+            <ul class="text-uppercase list-unstyled">
+                <li><a href="#">PROTEIN</a></li>
+                <li><a href="#">SUPPLEMENTS</a></li>
+                <li><a href="#">VITAMINS</a></li>
+                <li><a href="#">WORKOUTS</a></li>
+                <li><a href="#">PRE WORKOUT</a></li>
+                
+
+            </ul>
+        </div>
+        <div class="footer-one col-lg-3 col-md-6 col-12 mb-3">
+            <h5 class="pb-2">Contact Us</h5>
+            <div>
+                <h6 class="text-uppercase">Address</h6>
+                <p>Aston St, Birmingham B4 7ET</p>
+            </div>
+            <div>
+                <h6 class="text-uppercase">Phone</h6>
+                <p>0121 204 3000</p>
+            </div>
+            <div>
+                <h6 class="text-uppercase">Email</h6>
+                <p>Aston35@info.com</p>
+            </div>
+        </div>
+
+
+
+
+        <div class="footer-one col-lg-3 col-md-6 col-12 mb-3">
+            <h5 class="pb-2">Terms and Conditions</h5>
+            <div>
+                    <ul class="text-uppercase list-unstyled">
+                        <li><a href="PrivacyPolicy.html">PRIVACY POLICY</a></li>
+                        <li><a href="TermsOfService.html">TERMS OF SERVICE</a></li>
+                        <li><a href="ModernDaySlaveryStatement.html">MODERN DAY SLAVERY STATEMENT</a></li>
+                        
+                        
+    
+                    </ul>
+                </div>
+
+
+        </div>
+        </div>
+    </div>
+
+    <div class="copyright mt-5">
+        <div class="row container mx-auto">
+
+            <div class="col-lg-3 col-md-6 col-12 mb-4">
+                <img src="img/payment.png" alt="">
+            </div>
+            <div class="col-lg-4 col-md-6 col-12 text-nowrap mb-2">
+                <p>Aston35 LTD © 2024. All Rights Reserved</p>
+            </div>
+            <div class="col-lg-4 col-md-6 col-12">
+                <a href="https://www.facebook.com/?locale2=en_GB&_rdr"><i class="fab fa-facebook-f"></i></a>
+                <a href="https://x.com/i/flow/login"><i class="fab fa-twitter"></i></a>
+                <a href="https://uk.linkedin.com/"><i class="fab fa-linkedin-in"></i></a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+  <script src="JS/Calorie_Calculator.js"></script>
+  <!-- Bootstrap JS (v5 scripts for toggling) -->
+  <script 
+    src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js" 
+    integrity="sha384-SR1sx49pcuLnqZUnnPwx6FCym0wLsk5JZuNx2bPPENzswTNFaQU1RDvt3wT4gWFG" 
+    crossorigin="anonymous">
+  </script>
+  <script 
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.min.js" 
+    integrity="sha384-j0CNLUeiqtyaRmlzUHCPZ+Gy5fQu0dQ6eZ/xAww941Ai1SxSY+0EQqNXNE6DZiVc" 
+    crossorigin="anonymous">
+  </script>
