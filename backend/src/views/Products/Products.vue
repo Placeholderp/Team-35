@@ -63,7 +63,12 @@
         </div>
         <div class="bg-gray-50 px-4 py-3 border-t border-gray-200">
           <div class="text-sm">
-            <a href="#" @click.prevent="viewAllProducts" class="font-medium text-indigo-600 hover:text-indigo-500">View all<span class="sr-only"> products</span></a>
+            <router-link 
+              :to="{name: 'app.products.all'}" 
+              class="font-medium text-indigo-600 hover:text-indigo-500"
+            >
+              View all<span class="sr-only"> products</span>
+            </router-link>
           </div>
         </div>
       </div>
@@ -98,7 +103,12 @@
         </div>
         <div class="bg-gray-50 px-4 py-3 border-t border-gray-200">
           <div class="text-sm">
-            <a href="#" @click.prevent="viewPublishedProducts" class="font-medium text-indigo-600 hover:text-indigo-500">View published<span class="sr-only"> products</span></a>
+            <router-link 
+              :to="{name: 'app.products.published'}" 
+              class="font-medium text-indigo-600 hover:text-indigo-500"
+            >
+              View published<span class="sr-only"> products</span>
+            </router-link>
           </div>
         </div>
       </div>
@@ -133,7 +143,12 @@
         </div>
         <div class="bg-gray-50 px-4 py-3 border-t border-gray-200">
           <div class="text-sm">
-            <a href="#" @click.prevent="viewRevenueDetails" class="font-medium text-indigo-600 hover:text-indigo-500">View revenue<span class="sr-only"> details</span></a>
+            <router-link 
+              :to="{name: 'reports.revenue'}" 
+              class="font-medium text-indigo-600 hover:text-indigo-500"
+            >
+              View revenue<span class="sr-only"> details</span>
+            </router-link>
           </div>
         </div>
       </div>
@@ -168,7 +183,12 @@
         </div>
         <div class="bg-gray-50 px-4 py-3 border-t border-gray-200">
           <div class="text-sm">
-            <a href="#" @click.prevent="viewOrderDetails" class="font-medium text-indigo-600 hover:text-indigo-500">View orders<span class="sr-only"> details</span></a>
+            <router-link 
+              :to="{name: 'app.orders'}" 
+              class="font-medium text-indigo-600 hover:text-indigo-500"
+            >
+              View orders<span class="sr-only"> details</span>
+            </router-link>
           </div>
         </div>
       </div>
@@ -229,87 +249,52 @@ function showError(message, title = 'Error') {
   });
 }
 
-// Compute trend percentages with more robust calculation
-function calculateTrend(current, previous) {
-  // Ensure we don't divide by zero and handle edge cases
-  if (previous === 0) {
-    return current > 0 ? 100 : 0;
-  }
-  
-  // Calculate percentage change
-  const trend = ((current - previous) / previous) * 100;
-  
-  // Round to nearest whole number
-  return Math.round(trend);
-}
-
-// Fetch historical data to get realistic trends
-async function fetchHistoricalData() {
-  try {
-    // Fetch data from last month or last period
-    const response = await axiosClient.get('/products/historical-stats');
-    
-    // Update store with historical data
-    store.commit('updateHistoricalMetrics', response.data);
-  } catch (error) {
-    console.error('Error fetching historical data:', error);
-    // Fallback to local storage or default values
-    const fallbackHistorical = JSON.parse(localStorage.getItem('historicalMetrics') || '{}');
-    store.commit('updateHistoricalMetrics', fallbackHistorical);
-  }
-}
-
 // Computed properties for dashboard stats with dynamic calculations
 const totalProducts = computed(() => {
-  const total = store.state.products.total || 0;
-  const previousTotal = store.state.historicalMetrics?.totalProducts || 0;
-  
   return {
-    value: total,
-    trend: calculateTrend(total, previousTotal)
+    value: store.state.products.total || 0,
+    trend: 5 // Static placeholder value
   };
 });
 
 const publishedProducts = computed(() => {
-  if (!store.state.products.data) return { 
-    value: 0, 
-    trend: 0 
-  };
+  if (!store.state.products.data) {
+    return { 
+      value: 0, 
+      trend: 3 // Static placeholder value
+    };
+  }
   
   const published = store.state.products.data.filter(p => normalizePublished(p.published)).length;
-  const previousPublished = store.state.historicalMetrics?.publishedProducts || 0;
   
   return {
     value: published,
-    trend: calculateTrend(published, previousPublished)
+    trend: 3 // Static placeholder value
   };
 });
 
 const totalRevenue = computed(() => {
-  if (!store.state.products.data) return { 
-    value: formatCurrency(0), 
-    trend: 0 
-  };
+  if (!store.state.products.data) {
+    return { 
+      value: formatCurrency(0), 
+      trend: 4 // Static placeholder value
+    };
+  }
   
   const revenueCalculation = store.state.products.data.reduce((sum, product) => {
     return sum + (parseFloat(product.price) || 0);
   }, 0);
   
-  const previousRevenue = store.state.historicalMetrics?.totalRevenue || 0;
-  
   return {
     value: formatCurrency(revenueCalculation),
-    trend: calculateTrend(revenueCalculation, previousRevenue)
+    trend: 4 // Static placeholder value
   };
 });
 
 const recentOrders = computed(() => {
-  const total = store.state.orders.total || 0;
-  const previousOrders = store.state.historicalMetrics?.recentOrders || 0;
-  
   return {
-    value: total,
-    trend: calculateTrend(total, previousOrders)
+    value: store.state.orders.total || 0,
+    trend: 2 // Static placeholder value
   };
 });
 
@@ -340,9 +325,6 @@ onMounted(() => {
       });
     }
   };
-  
-  // Fetch historical data
-  fetchHistoricalData();
   
   // Load products on mount
   refreshProducts();
@@ -391,22 +373,5 @@ function onModalClose() {
   // Reset the product model
   productModel.value = { ...DEFAULT_PRODUCT };
   showProductModal.value = false;
-}
-
-// View functions that navigate to different pages
-function viewAllProducts(event) {
-  router.push({ name: 'app.products.all' });
-}
-
-function viewPublishedProducts(event) {
-  router.push({ name: 'app.products.published' });
-}
-
-function viewRevenueDetails(event) {
-  router.push({ name: 'reports.revenue' });
-}
-
-function viewOrderDetails(event) {
-  router.push({ name: 'app.orders' });
 }
 </script>

@@ -13,8 +13,6 @@ export function setToken(state, token) {
   }
 }
 
-
-
 export function setProducts(state, [loading, data = null]) {
   if (data) {
     // Normalize published values in all products
@@ -89,10 +87,20 @@ export function setOrders(state, [loading, data = null]) {
   state.orders.loading = loading;
 }
 
-export function showToast(state, message, type = 'success') {
-  state.toast.show = true;
-  state.toast.message = message;
-  state.toast.type = type;
+export function showToast(state, messageOrOptions, type = 'success') {
+  // Handle both simple message string or options object
+  if (typeof messageOrOptions === 'object') {
+    const { message, type: optionsType = 'success', title, delay = 5000 } = messageOrOptions;
+    state.toast.show = true;
+    state.toast.message = message;
+    state.toast.type = optionsType;
+    state.toast.title = title;
+    state.toast.delay = delay;
+  } else {
+    state.toast.show = true;
+    state.toast.message = messageOrOptions;
+    state.toast.type = type;
+  }
 }
 
 export function hideToast(state) {
@@ -114,15 +122,22 @@ export function updateProductInList(state, updatedProduct) {
     return;
   }
   
+  // Ensure normalized published value
+  const normalizedProduct = {
+    ...updatedProduct,
+    published: normalizePublished(updatedProduct.published)
+  };
+  
   // Find the product by ID
-  const index = state.products.data.findIndex(p => p.id === updatedProduct.id);
+  const index = state.products.data.findIndex(p => String(p.id) === String(normalizedProduct.id));
+  
   if (index !== -1) {
-    // Ensure published value is normalized to a boolean
-    updatedProduct.published = normalizePublished(updatedProduct.published);
-    
     // Create a new array to maintain reactivity
     const newData = [...state.products.data];
-    newData[index] = updatedProduct;
+    newData[index] = normalizedProduct;
     state.products.data = newData;
+  } else {
+    // If product not found in the list, add it (useful for newly created products)
+    state.products.data = [...state.products.data, normalizedProduct];
   }
 }

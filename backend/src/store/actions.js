@@ -103,6 +103,11 @@ export function getProduct({commit}, id) {
   
   return axiosClient.get(`/products/${productId}`)
     .then(response => {
+      // If the response contains product data, normalize published status
+      if (response.data) {
+        response.data.published = normalizePublished(response.data.published);
+      }
+      
       // Reset loading state
       commit('setProducts', [false]);
       // Ensure we're returning the full response object
@@ -128,15 +133,19 @@ export function updateProduct({commit}, product) {
   let id;
   
   if (product instanceof FormData) {
-    id = cleanId(product.get('id'));
+    // Get the ID from FormData if it exists
+    id = product.get('id');
     
-    // Update the ID in the FormData to ensure it's clean
-    if (product.has('id')) {
+    if (id) {
+      // Clean the ID
+      id = cleanId(id);
+      
+      // Update ID in the FormData
       product.delete('id');
       product.append('id', id);
     }
     
-    // Make sure FormData has _method
+    // Ensure _method is set for PUT simulation
     if (!product.has('_method')) {
       product.append('_method', 'PUT');
     }
@@ -151,7 +160,18 @@ export function updateProduct({commit}, product) {
   const formData = prepareProductFormData(product, true);
   
   // Use clean ID in URL
-  return axiosClient.post(`/products/${id}`, formData);
+  return axiosClient.post(`/products/${id}`, formData)
+    .then(response => {
+      // Update product in store if successful
+      if (response.data && response.data.data) {
+        commit('updateProductInList', {
+          ...response.data.data,
+          id: cleanId(response.data.data.id),
+          published: normalizePublished(response.data.data.published)
+        });
+      }
+      return response;
+    });
 }
 
 export function deleteProduct({commit}, id) {
@@ -160,8 +180,6 @@ export function deleteProduct({commit}, id) {
   
   return axiosClient.delete(`/products/${cleanedId}`);
 }
-
-
 
 export function getUsers({commit, state}, {url = null, search = '', per_page, sort_field, sort_direction} = {}) {
   commit('setUsers', [true])

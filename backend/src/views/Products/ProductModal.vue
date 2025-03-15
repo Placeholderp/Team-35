@@ -358,34 +358,22 @@ function onSubmit() {
     // Use the utility function to prepare form data
     const formData = prepareProductFormData(localProduct, !!localProduct.id);
     
-    if (localProduct.id) {
-      axiosClient.post(`/products/${localProduct.id}`, formData)
-        .then(response => {
-          store.dispatch('getProducts', { force: true });
-          closeModal();
-          notifySuccess(`Product "${localProduct.title}" updated successfully!`);
-        })
-        .catch(error => {
-          handleApiError(error);
-        })
-        .finally(() => {
-          loading.value = false;
-        });
-    } else {
-      // Create new product
-      store.dispatch('createProduct', formData)
-        .then(() => {
-          store.dispatch('getProducts');
-          closeModal();
-          notifySuccess(`Product "${localProduct.title}" created successfully!`);
-        })
-        .catch(error => {
-          handleApiError(error);
-        })
-        .finally(() => {
-          loading.value = false;
-        });
-    }
+    const action = localProduct.id 
+      ? store.dispatch('updateProduct', formData)
+      : store.dispatch('createProduct', formData);
+      
+    action
+      .then(() => {
+        store.dispatch('getProducts', { force: true });
+        closeModal();
+        notifySuccess(`Product "${localProduct.title}" ${localProduct.id ? 'updated' : 'created'} successfully!`);
+      })
+      .catch(error => {
+        handleApiError(error);
+      })
+      .finally(() => {
+        loading.value = false;
+      });
   } catch (error) {
     notifyError('An unexpected error occurred. Please try again.');
     loading.value = false;

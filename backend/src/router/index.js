@@ -1,4 +1,4 @@
-// router/index.js
+// router/index.js - Updated Configuration
 import { createRouter, createWebHistory } from "vue-router";
 import AppLayout from '../components/AppLayout.vue'
 import Login from "../views/Login.vue";
@@ -44,28 +44,22 @@ const routes = [
       {
         path: 'products',
         name: 'app.products',
-        component: Products,
-        children: [
-          {
-            path: '',
-            redirect: { name: 'app.products.all' }
-          },
-          {
-            path: 'all',
-            name: 'app.products.all',
-            component: AllProducts
-          },
-          {
-            path: 'published',
-            name: 'app.products.published',
-            component: PublishedProducts
-          },
-          {
-            path: 'import',
-            name: 'app.products.import',
-            component: ProductImport
-          }
-        ]
+        component: Products
+      },
+      {
+        path: 'products/all',
+        name: 'app.products.all',
+        component: AllProducts
+      },
+      {
+        path: 'products/published',
+        name: 'app.products.published',
+        component: PublishedProducts
+      },
+      {
+        path: 'products/import',
+        name: 'app.products.import',
+        component: ProductImport
       },
       {
         path: 'products/create',

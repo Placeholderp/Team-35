@@ -388,24 +388,32 @@ function isPublished(product) {
   return normalizePublished(product?.published);
 }
 
+// Key function that needs fixing in ProductsTable.vue
+
 function togglePublishStatus(product) {
   const currentStatus = isPublished(product);
   const newStatus = !currentStatus;
   const id = cleanId(product.id);
+  
+  // Create a copy of the product with the updated published status
   const updatedProductData = {
     ...product,
     id,
     published: newStatus
   };
+  
+  // Create FormData using our utility
   const formData = prepareProductFormData(updatedProductData, true);
 
-  // Optimistic UI update
+  // Optimistic UI update - important to create a deep copy first
   store.commit('setProducts', [true]);
-  const updatedProduct = JSON.parse(JSON.stringify(updatedProductData));
-  store.commit('updateProductInList', updatedProduct);
+  // Update the product in the list before the API call completes
+  store.commit('updateProductInList', updatedProductData);
 
+  // Make the API call to update the product
   axiosClient.post(`/products/${id}`, formData)
     .then(() => {
+      // Refresh product list with cache-busting
       return store.dispatch('getProducts', {
         force: true,
         search: search.value,
@@ -416,6 +424,8 @@ function togglePublishStatus(product) {
     })
     .then(() => {
       emit('statusChanged');
+      
+      // Show success notification
       if (window.$notification) {
         window.$notification.success(
           `Product "${product.title}" is now ${newStatus ? 'published' : 'unpublished'}.`,
@@ -429,18 +439,22 @@ function togglePublishStatus(product) {
         });
       }
     })
-    .catch(() => {
-      // Revert if error
+    .catch((error) => {
+      // Revert optimistic update on error
       store.commit('updateProductInList', {
-        ...updatedProduct,
+        ...updatedProductData,
         published: currentStatus
       });
+      
+      // Show error notification
+      const errorMessage = error.response?.data?.message || 'Failed to update product status. Please try again.';
+      
       if (window.$notification) {
-        window.$notification.error('Failed to update product status. Please try again.');
+        window.$notification.error(errorMessage);
       } else {
         store.commit('showToast', {
           type: 'error',
-          message: 'Failed to update product status. Please try again.',
+          message: errorMessage,
           title: 'Error'
         });
       }

@@ -100,13 +100,13 @@ const XCircleIcon = {
   </svg>`
 };
 
-// Props for Toast position and customization
-// Also update the position prop to remove the 'bottom' option:
+// In Toast.vue, update the position prop validator to include 'bottom'
+
 const props = defineProps({
   position: {
     type: String,
     default: 'top',
-    validator: (value) => ['top'].includes(value)
+    validator: (value) => ['top', 'bottom'].includes(value)
   },
   // Add a priority prop to determine which toast instance takes precedence
   priority: {
@@ -114,6 +114,7 @@ const props = defineProps({
     default: 0
   }
 });
+
 
 // Timer references for cleanup
 let interval = null;
