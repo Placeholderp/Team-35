@@ -1,0 +1,177 @@
+<x-app-layout>
+    <!-- Main container with Alpine.js component for the product item. -->
+    <div  x-data="productItem({{ json_encode([
+                    'id' => $product->id,
+                    'slug' => $product->slug,
+                    'image' => $product->image,
+                    'title' => $product->title,
+                    'price' => $product->price,
+                    'addToCartUrl' => route('cart.add', $product)
+                ]) }})" class="container mx-auto">
+        
+        <div class="grid gap-6 grid-cols-1 lg:grid-cols-5">
+            
+            <div class="lg:col-span-3">
+               
+                <div
+                    x-data="{
+                      images: ['{{$product->image}}'],
+                      activeImage: null,
+                      // Function to show the previous image in the gallery
+                      prev() {
+                          let index = this.images.indexOf(this.activeImage);
+                          if (index === 0)
+                              index = this.images.length;
+                          this.activeImage = this.images[index - 1];
+                      },
+                      // Function to show the next image in the gallery
+                      next() {
+                          let index = this.images.indexOf(this.activeImage);
+                          if (index === this.images.length - 1)
+                              index = -1;
+                          this.activeImage = this.images[index + 1];
+                      },
+                      // Initialization function setting the active image to the first image if available
+                      init() {
+                          this.activeImage = this.images.length > 0 ? this.images[0] : null
+                      }
+                    }"
+                >
+                    <!-- Main image display with navigation arrows -->
+                    <div class="relative">
+                        <!-- Loop through images array -->
+                        <template x-for="image in images">
+                            <!-- Only show the image if it is the activeImage -->
+                            <div
+                                x-show="activeImage === image"
+                                class="aspect-w-3 aspect-h-2"
+                            >
+                                <img :src="image" alt="" class="w-auto mx-auto"/>
+                            </div>
+                        </template>
+                        <!-- Left arrow for previous image -->
+                        <a
+                            @click.prevent="prev"
+                            class="cursor-pointer bg-black/30 text-white absolute left-0 top-1/2 -translate-y-1/2"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="h-10 w-10"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M15 19l-7-7 7-7"
+                                />
+                            </svg>
+                        </a>
+                        <!-- Right arrow for next image -->
+                        <a
+                            @click.prevent="next"
+                            class="cursor-pointer bg-black/30 text-white absolute right-0 top-1/2 -translate-y-1/2"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="h-10 w-10"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M9 5l7 7-7 7"
+                                />
+                            </svg>
+                        </a>
+                    </div>
+                    <!-- Thumbnail navigation for the image gallery -->
+                    <div class="flex">
+                        <template x-for="image in images">
+                            <a
+                                @click.prevent="activeImage = image"  
+                                class="cursor-pointer w-[80px] h-[80px] border border-gray-300 hover:border-purple-500 flex items-center justify-center"
+                                :class="{'border-purple-600': activeImage === image}" 
+                            >
+                                <img :src="image" alt="" class="w-auto max-auto max-h-full"/>
+                            </a>
+                        </template>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right side: Product Details -->
+            <div class="lg:col-span-2">
+                <!-- Product Title -->
+                <h1 class="text-lg font-semibold">
+                    {{$product->title}}
+                </h1>
+                <!-- Product Price -->
+                <div class="text-xl font-bold mb-6">${{$product->price}}</div>
+                
+                <!-- Quantity Input -->
+                <div class="flex items-center justify-between mb-5">
+                    <label for="quantity" class="block font-bold mr-4">
+                        Quantity
+                    </label>
+                    <input
+                        type="number"
+                        name="quantity"
+                        x-ref="quantityEl"  
+                        value="1"
+                        min="1"
+                        class="w-32 focus:border-purple-500 focus:outline-none rounded"
+                    />
+                </div>
+                
+                <!-- Add to Cart Button -->
+                <button
+                    @click="addToCart($refs.quantityEl.value)"  
+                    class="btn-primary py-4 text-lg flex justify-center min-w-0 w-full mb-6"
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-6 w-6 mr-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                        />
+                    </svg>
+                    Add to Cart
+                </button>
+                
+                <!-- Product Description with Read More/Read Less Toggle -->
+                <div class="mb-6" x-data="{expanded: false}">
+                    <!-- Description content -->
+                    <div
+                        x-show="expanded"  <!-- Display description when expanded is true -->
+                        x-collapse.min.120px  
+                        class="text-gray-500 wysiwyg-content"
+                    >
+                        {{ $product->description }}
+                    </div>
+                    <!-- Toggle link to expand or collapse the description -->
+                    <p class="text-right">
+                        <a
+                            @click="expanded = !expanded"  
+                            href="javascript:void(0)"
+                            class="text-purple-500 hover:text-purple-700"
+                            x-text="expanded ? 'Read Less' : 'Read More'"  
+                        ></a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</x-app-layout>
