@@ -33,9 +33,9 @@
             <h5 class="pb-2">Terms and Conditions</h5>
             <div>
                 <ul class="text-uppercase list-unstyled">
-                    <li><a href="{{ url('privacy-policy') }}">PRIVACY POLICY</a></li>
-                    <li><a href="{{ url('terms-of-service') }}">TERMS OF SERVICE</a></li>
-                    <li><a href="{{ url('modern-day-slavery-statement') }}">MODERN DAY SLAVERY STATEMENT</a></li>
+                    <li><a href="{{ route('privacy-policy') }}">PRIVACY POLICY</a></li>
+                    <li><a href="{{ route('terms-of-service') }}">TERMS OF SERVICE</a></li>
+                    <li><a href="{{ route('modern-day-slavery-statement') }}">MODERN DAY SLAVERY STATEMENT</a></li>
                 </ul>
             </div>
         </div>

@@ -141,7 +141,7 @@
                     </li>
                     <li class="nav-item">
                         <i class="fal fa-search"></i>
-                        <i onclick="window.location.href='{{ route('cart') }}';" class="fal fa-shopping-bag"></i>
+                        <i onclick="window.location.href='{{ route('cart.index') }}';" class="fal fa-shopping-bag"></i>
                     </li>
                 </ul>
             </div>

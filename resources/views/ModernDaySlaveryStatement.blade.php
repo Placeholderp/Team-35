@@ -24,7 +24,7 @@
                     <li class="nav-item"><a class="nav-link" href="{{ route('calorie.calculator') }}">Calorie Calculator</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ route('contact') }}">Contact Us</a></li>
                     <li class="nav-item">
-                        <i onclick="window.location.href='{{ route('cart') }}';" class="fal fa-shopping-bag"></i>
+                        <i onclick="window.location.href='{{ route('cart.index') }}';" class="fal fa-shopping-bag"></i>
                     </li>
                 </ul>
             </div>

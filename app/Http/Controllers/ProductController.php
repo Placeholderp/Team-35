@@ -20,6 +20,16 @@ class ProductController extends Controller
         }
         return $id;
     }
+
+    /**
+ * Display the cart page
+ *
+ * @return \Illuminate\Http\Response
+ */
+public function cart()
+{
+    return view('cart');
+}
     
     /**
      * Display the specified resource.
@@ -83,20 +93,29 @@ class ProductController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function about()
-    {
-        return view('about');
-    }
-
+ /**
+ * Display the about page
+ *
+ * @return \Illuminate\Http\Response
+ */
+public function about()
+{
+    return view('about_us');
+}
     /**
      * Display the calorie calculator page
      *
      * @return \Illuminate\Http\Response
      */
-    public function calorieCalculator()
-    {
-        return view('calorie-calculator');
-    }
+   /**
+ * Display the calorie calculator page
+ *
+ * @return \Illuminate\Http\Response
+ */
+public function calorieCalculator()
+{
+    return view('Calorie_Calculator');
+}
 
     /**
      * Display the contact page
@@ -105,7 +124,7 @@ class ProductController extends Controller
      */
     public function contact()
     {
-        return view('contact');
+        return view('Contact_us');
     }
     
     /**

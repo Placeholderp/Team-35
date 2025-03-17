@@ -1,5 +1,5 @@
 // Import dependencies and modules
-import './bootstrap'; // Import the bootstrap file (initializes application settings, etc.)
+import './bootstrap.js'; // Import the bootstrap file (initializes application settings, etc.)
 import Alpine from 'alpinejs'; // Import Alpine.js for reactive UI components
 import collapse from '@alpinejs/collapse'; // Import the collapse plugin for Alpine
 import { get, post } from "./http.js"; // Import HTTP helper functions for making GET/POST requests

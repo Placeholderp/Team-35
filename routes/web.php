@@ -26,7 +26,18 @@ Route::middleware(['guestOrVerified'])->group(function () {
     Route::get('/about', [ProductController::class, 'about'])->name('about');
     Route::get('/calorie-calculator', [ProductController::class, 'calorieCalculator'])->name('calorie.calculator');
     Route::get('/contact', [ProductController::class, 'contact'])->name('contact');
+// Policy pages
+Route::get('/privacy-policy', function () {
+    return view('privacypolicy');
+})->name('privacy-policy');
 
+Route::get('/terms-of-service', function () {
+    return view('termsofservice');
+})->name('terms-of-service');
+
+Route::get('/modern-day-slavery-statement', function () {
+    return view('moderndayslaverystatement');
+})->name('modern-day-slavery-statement');
     Route::prefix('/cart')->name('cart.')->group(function () {
         Route::get('/', [CartController::class, 'index'])->name('index');
         Route::post('/add/{product:slug}', [CartController::class, 'add'])->name('add');
