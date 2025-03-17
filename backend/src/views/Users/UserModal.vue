@@ -33,9 +33,26 @@
                 
                 <!-- Modal Header -->
                 <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                  <DialogTitle as="h3" class="text-lg font-medium text-gray-900">
-                    {{ user.id ? `Edit User: ${user.name}` : 'Create New User' }}
-                  </DialogTitle>
+                  <div>
+                    <DialogTitle as="h3" class="text-lg font-medium text-gray-900">
+                      {{ user.id ? `Edit User: ${user.name}` : 'Create New User' }}
+                    </DialogTitle>
+                    <!-- Display Role Badge -->
+                    <div v-if="user.id" class="mt-1">
+                      <span 
+                        v-if="user.is_admin" 
+                        class="px-2 py-1 text-xs rounded-full bg-indigo-100 text-indigo-800 font-medium"
+                      >
+                        Admin
+                      </span>
+                      <span 
+                        v-else 
+                        class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800 font-medium"
+                      >
+                        User
+                      </span>
+                    </div>
+                  </div>
                   <button 
                     @click="closeModal"
                     class="text-gray-400 hover:text-gray-500 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 p-1 rounded-full"
@@ -87,6 +104,44 @@
                       />
                     </div>
                     
+                    <!-- Admin Status Display Section -->
+                    <div class="mt-4">
+                      <div class="flex items-center justify-between">
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700">Admin Status</label>
+                          <div class="flex flex-col space-y-2 mt-2">
+                            <p class="text-sm text-gray-700">
+                              Current status: 
+                              <span class="font-medium" :class="isAdmin ? 'text-indigo-600' : 'text-gray-700'">
+                                {{ isAdmin ? 'Admin' : 'User' }}
+                              </span>
+                            </p>
+                            
+                            <!-- Toggle Switch for Admin Rights - Only visible for admin users -->
+                            <div v-if="isCurrentUserAdmin" class="flex items-center">
+                              <span class="text-sm text-gray-500 mr-3">User</span>
+                              <div class="relative inline-block w-10 mr-2 align-middle select-none">
+                                <input 
+                                  id="is_admin" 
+                                  type="checkbox" 
+                                  v-model="isAdmin"
+                                  class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
+                                />
+                                <label 
+                                  for="is_admin" 
+                                  class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"
+                                ></label>
+                              </div>
+                              <span class="text-sm text-gray-500 ml-3">Admin</span>
+                            </div>
+                            <p v-else class="text-sm text-gray-500 italic">
+                              Only administrators can change user permissions
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
                     <div v-if="errorMessage" class="text-red-600 p-2 bg-red-50 rounded-md text-sm">
                       {{ errorMessage }}
                     </div>
@@ -120,7 +175,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import Spinner from "../../components/core/Spinner.vue"
 import store from "../../store/index.js"
@@ -144,17 +199,20 @@ const user = ref({
   id: props.user.id || null,
   name: props.user.name || '',
   email: props.user.email || '',
-  password: ''
+  password: '',
+  is_admin: props.user.is_admin || false
 })
 
 watch(
   () => props.user,
   (newUser) => {
+    // Initialize the form with values from the provided user
     user.value = {
       id: newUser.id || null,
       name: newUser.name || '',
       email: newUser.email || '',
-      password: ''
+      password: '',
+      is_admin: newUser.is_admin || false
     }
   },
   { deep: true, immediate: true }
@@ -163,23 +221,90 @@ watch(
 const loading = ref(false)
 const errorMessage = ref('')
 
+// Determine admin status based on backend response
+const isAdmin = ref(user.value.is_admin || false)
+
+const isCurrentUserAdmin = computed(() => {
+  try {
+    return store.state.user && 
+           store.state.user.data && 
+           store.state.user.data.is_admin === true;
+  } catch (e) {
+    console.error("Error checking admin status:", e);
+    return false;
+  }
+})
+// Fetch user role from database when email changes
+watch(() => user.value.email, async (newEmail) => {
+  if (!newEmail || newEmail.trim() === '') return;
+  
+  try {
+    // Check if we're editing an existing user (in which case we already know their admin status)
+    if (user.value.id) {
+      isAdmin.value = user.value.is_admin;
+      return;
+    }
+    
+    // For new users, check if email exists in database
+    loading.value = true;
+    errorMessage.value = '';
+    
+    // Use the existing users list to check for email
+    const existingUsers = store.state.users.data;
+    const existingUser = existingUsers.find(u => u.email.toLowerCase() === newEmail.toLowerCase());
+    
+    if (existingUser) {
+      isAdmin.value = existingUser.is_admin;
+      errorMessage.value = 'User with this email already exists in the system.';
+    } else {
+      // Reset admin status for new users if email doesn't exist
+      isAdmin.value = false;
+    }
+  } catch (error) {
+    console.error('Error checking user role:', error);
+  } finally {
+    loading.value = false;
+  }
+}, { immediate: true })
+
 function closeModal() {
   show.value = false
   emit('close')
   errorMessage.value = ''
 }
 
-function onSubmit() {
+async function onSubmit() {
   loading.value = true
   errorMessage.value = ''
   
-  if (user.value.id) {
+  // Create a copy of the user data for submission
+  const userData = { ...user.value };
+  
+  // Only allow admin status changes if the current user is an admin
+  if (isCurrentUserAdmin.value) {
+    userData.is_admin = isAdmin.value;
+  } else {
+    // If not an admin, use the original value without allowing changes
+    userData.is_admin = props.user.is_admin || false;
+  }
+  
+  // If updating an existing user and password is empty, remove it from the data to be sent
+  if (userData.id && !userData.password) {
+    delete userData.password;
+  }
+  
+  if (userData.id) {
     // Update user
-    store.dispatch('updateUser', user.value)
+    store.dispatch('updateUser', userData)
       .then(response => {
         loading.value = false
         if (response.status === 200) {
-          store.commit('showToast', 'User updated successfully')
+          const roleChanged = props.user.is_admin !== userData.is_admin;
+          let message = 'User updated successfully';
+          if (roleChanged && isCurrentUserAdmin.value) {
+            message += userData.is_admin ? ' and promoted to Admin' : ' and changed to regular User';
+          }
+          store.commit('showToast', message)
           store.dispatch('getUsers')
           closeModal()
         }
@@ -191,11 +316,15 @@ function onSubmit() {
       })
   } else {
     // Create new user
-    store.dispatch('createUser', user.value)
+    store.dispatch('createUser', userData)
       .then(response => {
         loading.value = false
         if (response.status === 201) {
-          store.commit('showToast', 'User created successfully')
+          let message = 'User created successfully';
+          if (userData.is_admin && isCurrentUserAdmin.value) {
+            message += ' with Admin privileges';
+          }
+          store.commit('showToast', message)
           store.dispatch('getUsers')
           closeModal()
         }
@@ -208,3 +337,18 @@ function onSubmit() {
   }
 }
 </script>
+
+<style scoped>
+/* Toggle switch styles */
+.toggle-checkbox:checked {
+  right: 0;
+  border-color: #4F46E5;
+}
+.toggle-checkbox:checked + .toggle-label {
+  background-color: #4F46E5;
+}
+.toggle-label {
+  transition: background-color 0.2s ease;
+  position: relative;
+}
+</style>

@@ -17,7 +17,10 @@ import OrderView from "../views/Orders/OrderView.vue";
 import RequestPassword from "../views/RequestPassword.vue";
 import ResetPassword from "../views/ResetPassword.vue";
 import NotFound from "../views/NotFound.vue";
+import AdminRegistration from "../views/AdminRegistration.vue";
+import ForcePasswordChange from "../views/ForcePasswordChange.vue";
 import store from "../store";
+import UserProfile from "../views/Users/UserProfile.vue";
 import Report from "../views/Reports/Report.vue";
 import OrdersReport from "../views/Reports/OrdersReport.vue";
 import CustomersReport from "../views/Reports/CustomersReport.vue";
@@ -55,6 +58,14 @@ const routes = [
         path: 'products/published',
         name: 'app.products.published',
         component: PublishedProducts
+      },
+      {
+        path: 'profile',
+        name: 'app.profile',
+        component: UserProfile,
+        meta: {
+          requiresAuth: true
+        }
       },
       {
         path: 'products/import',
@@ -146,6 +157,23 @@ const routes = [
     }
   },
   {
+    path: '/admin/register',
+    name: 'admin.register',
+    component: AdminRegistration,
+    meta: {
+      requiresGuest: true
+    }
+  },
+  {
+    path: '/force-password-change',
+    name: 'forcePasswordChange',
+    component: ForcePasswordChange,
+    meta: {
+      requiresAuth: true,
+      requiresPasswordChange: true
+    }
+  },
+  {
     path: '/request-password',
     name: 'requestPassword',
     component: RequestPassword,
@@ -177,6 +205,10 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   // Check if the user token exists
   const isAuthenticated = !!store.state.user.token;
+  const user = store.state.user.data;
+  
+  // Check if user needs to change password (first login)
+  const needsPasswordChange = user && user.force_password_change === true;
   
   if (to.meta.requiresAuth && !isAuthenticated) {
     // Redirect to login if a protected route is accessed without authentication
@@ -186,6 +218,12 @@ router.beforeEach((to, from, next) => {
     });
   } else if (to.meta.requiresGuest && isAuthenticated) {
     // Redirect to dashboard if a guest-only route is accessed while authenticated
+    return next({ name: 'app.dashboard' });
+  } else if (needsPasswordChange && to.name !== 'forcePasswordChange') {
+    // Redirect to password change if the user needs to change their password
+    return next({ name: 'forcePasswordChange' });
+  } else if (to.meta.requiresPasswordChange && !needsPasswordChange) {
+    // Prevent accessing the password change page if not required
     return next({ name: 'app.dashboard' });
   } else {
     // Proceed as normal

@@ -15,6 +15,25 @@ export function cleanId(id) {
     // Return only the first part (before any colon)
     return parts[0];
   }
+
+  /**
+ * Generate full URL for product images
+ * @param {string} imagePath - The image path or filename
+ * @returns {string|null} - The complete image URL or null if no image
+ */
+export function getImageUrl(imagePath) {
+  if (!imagePath) return null;
+  
+  // If it's already a full URL, return it as is
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    return imagePath;
+  }
+  
+  // For relative paths, construct the full URL
+  // Adjust the base URL according to your environment
+  const baseUrl = window.location.origin;
+  return `${baseUrl}/storage/products/${imagePath}`;
+}
   
   /**
    * Normalize a published value to a boolean
@@ -67,34 +86,38 @@ export function cleanId(id) {
   }
   
   /**
-   * Prepare form data for product API requests
-   * @param {Object} product - The product object
-   * @param {boolean} isUpdate - Whether this is an update operation
-   * @returns {FormData} - FormData ready for API submission
-   */
-  export function prepareProductFormData(product, isUpdate = false) {
-    const formData = new FormData();
-    
-    if (isUpdate) {
-      const id = cleanId(product.id);
-      formData.append('id', id);
-      formData.append('_method', 'PUT');
-    }
-    
-    formData.append('title', product.title || '');
-    formData.append('description', product.description || '');
-    formData.append('price', product.price || 0);
-    formData.append('published', normalizePublished(product.published) ? 1 : 0);
-    
-    // Only append image if it's a file (new upload)
-    if (product.image instanceof File) {
-      formData.append('image', product.image);
-    }
-    
-    // Preserve image URL if available
-    if (product.image_url) {
-      formData.append('image_url', product.image_url);
-    }
-    
-    return formData;
+ * Prepare form data for product API requests
+ * @param {Object} product - The product object
+ * @param {boolean} isUpdate - Whether this is an update operation
+ * @returns {FormData} - FormData ready for API submission
+ */
+export function prepareProductFormData(product, isUpdate = false) {
+  const formData = new FormData();
+  
+  if (isUpdate) {
+    const id = cleanId(product.id);
+    formData.append('id', id);
+    formData.append('_method', 'PUT');
   }
+  
+  formData.append('title', product.title || '');
+  formData.append('description', product.description || '');
+  formData.append('price', product.price || 0);
+  formData.append('published', normalizePublished(product.published) ? 1 : 0);
+  
+  // Handle image correctly for both new uploads and updates
+  if (product.image instanceof File) {
+    // New file being uploaded
+    formData.append('image', product.image);
+    console.log('Uploading new image file:', product.image.name);
+  } else if (isUpdate && product.image === null) {
+    // Explicitly remove the image
+    formData.append('_remove_image', '1');
+  }
+  // If no new image and not explicitly removing, don't append anything
+  // This indicates to the server to keep the existing image
+  
+  return formData;
+}
+
+  

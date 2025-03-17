@@ -19,6 +19,13 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['guestOrVerified'])->group(function () {
     Route::get('/', [ProductController::class, 'index'])->name('home');
     Route::get('/product/{product:slug}', [ProductController::class, 'view'])->name('product.view');
+    
+    // Add missing routes
+    Route::get('/shop', [ProductController::class, 'shop'])->name('shop');
+    Route::get('/blog', [ProductController::class, 'blog'])->name('blog');
+    Route::get('/about', [ProductController::class, 'about'])->name('about');
+    Route::get('/calorie-calculator', [ProductController::class, 'calorieCalculator'])->name('calorie.calculator');
+    Route::get('/contact', [ProductController::class, 'contact'])->name('contact');
 
     Route::prefix('/cart')->name('cart.')->group(function () {
         Route::get('/', [CartController::class, 'index'])->name('index');

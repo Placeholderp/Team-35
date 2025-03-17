@@ -11,9 +11,6 @@ class UserResource extends JsonResource
 
     /**
      * Transform the resource into an array.
-     * 
-     * This method converts the user model's data into an array format,
-     * including the id, name, email, and a formatted creation timestamp.
      */
     public function toArray($request)
     {
@@ -21,6 +18,8 @@ class UserResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
+            // Use the raw database value instead of the accessor
+            'is_admin' => (bool)$this->getAttributes()['is_admin'] ?? false,
             'created_at' => (new DateTime($this->created_at))->format('Y-m-d H:i:s'),
         ];
     }

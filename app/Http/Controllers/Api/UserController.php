@@ -25,7 +25,7 @@ class UserController extends Controller
         $search = request('search', '');
         $sortField = request('sort_field', 'updated_at');
         $sortDirection = request('sort_direction', 'desc');
-    
+        
         $query = User::query()
             ->when($search, function ($query) use ($search) {
                 $query->where('name', 'LIKE', "%{$search}%")
@@ -33,26 +33,26 @@ class UserController extends Controller
             })
             ->orderBy($sortField, $sortDirection)
             ->paginate($perPage);
-    
+        
         return UserResource::collection($query);
     }
     
-
+    
     /**
      * Store a newly created resource in storage.
      */
     public function store(CreateUserRequest $request)
     {
         $data = $request->validated();
-        $data['is_admin'] = true;
+        $data['is_admin'] = isset($data['is_admin']) ? (bool)$data['is_admin'] : false;
         $data['email_verified_at'] = date('Y-m-d H:i:s');
         $data['password'] = Hash::make($data['password']);
-
+        
         $data['created_by'] = $request->user()->id;
         $data['updated_by'] = $request->user()->id;
-
+        
         $user = User::create($data);
-
+        
         return new UserResource($user);
     }
 
@@ -62,14 +62,23 @@ class UserController extends Controller
     public function update(UpdateUserRequest $request, User $user)
     {
         $data = $request->validated();
-
-        if (!empty($data['password'])) {
+        
+        // Make sure is_admin is properly handled as a boolean
+        if (isset($data['is_admin'])) {
+            $data['is_admin'] = (bool)$data['is_admin'];
+        }
+        
+        // Remove password from data if it's empty
+        if (empty($data['password'])) {
+            unset($data['password']);
+        } else {
             $data['password'] = Hash::make($data['password']);
         }
+        
         $data['updated_by'] = $request->user()->id;
-
+        
         $user->update($data);
-
+        
         return new UserResource($user);
     }
 
@@ -79,7 +88,7 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         $user->delete();
-
+        
         return response()->noContent();
     }
 }

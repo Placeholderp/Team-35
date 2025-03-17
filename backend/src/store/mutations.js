@@ -1,5 +1,6 @@
 import { normalizePublished } from "../utils/ProductUtils";
 
+
 export function setUser(state, user) {
   state.user.data = user;
 }
@@ -12,6 +13,7 @@ export function setToken(state, token) {
     sessionStorage.removeItem('TOKEN')
   }
 }
+
 
 export function setProducts(state, [loading, data = null]) {
   if (data) {
@@ -39,11 +41,27 @@ export function setProducts(state, [loading, data = null]) {
   state.products.loading = loading;
 }
 
+function normalizeIsAdmin(value) {
+  if (typeof value === 'boolean') return value;
+  if (value === 1 || value === '1' || value === 'true') return true;
+  return false;
+}
+
 export function setUsers(state, [loading, data = null]) {
   if (data) {
+    // Normalize is_admin values before storing in state
+    let normalizedData = data.data;
+    if (normalizedData && Array.isArray(normalizedData)) {
+      normalizedData = normalizedData.map(user => ({
+        ...user,
+        // Convert is_admin to a proper boolean
+        is_admin: normalizeIsAdmin(user.is_admin)
+      }));
+    }
+
     state.users = {
       ...state.users,
-      data: data.data,
+      data: normalizedData,
       links: data.meta?.links,
       page: data.meta.current_page,
       limit: data.meta.per_page,
@@ -113,7 +131,9 @@ export function setCountries(state, countries) {
 }
 
 export function REMOVE_USER(state, userId) {
-  state.users.data = state.users.data.filter(user => user.id !== userId);
+  if (state.users.data) {
+    state.users.data = state.users.data.filter(user => user.id !== userId);
+  }
 }
 
 // Update products in the list with normalized published values

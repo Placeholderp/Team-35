@@ -152,7 +152,7 @@
               >
                 <img
                   class="h-full w-full object-cover"
-                  :src="product.image_url"
+                  :src="getImageUrl(product.image_url)"
                   :alt="product.title"
                 />
               </div>
@@ -281,7 +281,7 @@
           aria-label="Pagination"
         >
           <template v-for="(link, i) in products.links" :key="i">
-            <a
+            
               :disabled="!link.url"
               href="#"
               @click="getForPage($event, link)"
@@ -313,7 +313,7 @@
               <template v-else>
                 {{ link.label }}
               </template>
-            </a>
+            
           </template>
         </nav>
       </div>
@@ -328,13 +328,7 @@ import axiosClient from "../../axios";
 import Spinner from "../../components/core/Spinner.vue";
 import { PRODUCTS_PER_PAGE } from "../../constants";
 import TableHeaderCell from "../../components/core/Table/TableHeaderCell.vue";
-import {
-  cleanId,
-  normalizePublished,
-  formatCurrency,
-  formatDate,
-  prepareProductFormData
-} from "../../utils/ProductUtils";
+import { cleanId, normalizePublished, formatCurrency, formatDate, prepareProductFormData, getImageUrl } from "../../utils/ProductUtils";
 
 const perPage = ref(PRODUCTS_PER_PAGE);
 const search = ref("");
@@ -387,8 +381,6 @@ function sortProducts(field) {
 function isPublished(product) {
   return normalizePublished(product?.published);
 }
-
-// Key function that needs fixing in ProductsTable.vue
 
 function togglePublishStatus(product) {
   const currentStatus = isPublished(product);

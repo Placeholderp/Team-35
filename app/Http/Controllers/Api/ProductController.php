@@ -74,16 +74,9 @@ class ProductController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(ProductRequest $request)
     {
-        $data = $request->validate([
-            'title'       => 'required|string|max:2000',
-            'image'       => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'description' => 'nullable|string',
-            'price'       => 'required|numeric',
-            'published'   => 'boolean',
-        ]);
-
+        $data = $request->validated();
         $data['published'] = $request->boolean('published', false);
 
         // Generate a unique slug
@@ -94,6 +87,12 @@ class ProductController extends Controller
             $data['image'] = $request->file('image')->store('products', 'public');
             $data['image_mime'] = $request->file('image')->getMimeType();
             $data['image_size'] = $request->file('image')->getSize();
+            
+            // Debug image path
+            Log::info('Image upload path', [
+                'image_path' => $data['image'],
+                'full_url' => URL::to(Storage::url($data['image']))
+            ]);
         }
 
         // Set created_by and updated_by
@@ -115,7 +114,7 @@ class ProductController extends Controller
      * Display the specified resource.
      * 
      * @param string|int $id
-     * * @return \App\Http\Resources\ProductResource
+     * @return \App\Http\Resources\ProductResource
      */
     public function show($id)
     {
@@ -133,6 +132,13 @@ class ProductController extends Controller
         // Add image URL if present
         if ($product->image) {
             $product->image_url = URL::to(Storage::url($product->image));
+            
+            // Debug image path
+            Log::info('Image URL for product', [
+                'product_id' => $product->id,
+                'image_path' => $product->image,
+                'image_url' => $product->image_url
+            ]);
         }
 
         return new ProductResource($product);
@@ -143,7 +149,7 @@ class ProductController extends Controller
      * 
      * @param \App\Http\Requests\ProductRequest $request
      * @param string|int $id
-     * * @return \App\Http\Resources\ProductResource
+     * @return \App\Http\Resources\ProductResource
      */
     public function update(ProductRequest $request, $id)
     {
@@ -155,48 +161,107 @@ class ProductController extends Controller
         
         $data = $request->validated();
         $data['updated_by'] = $request->user()->id;
-
+    
         // Handle published field conversion
-        if (isset($data['published'])) {
-            if (
-                $data['published'] === '1' ||
-                $data['published'] === 1 ||
-                $data['published'] === 'true' ||
-                $data['published'] === true
-            ) {
-                $data['published'] = true;
-            } else {
-                $data['published'] = false;
-            }
-        } else {
-            $data['published'] = false;
-        }
-
+        $data['published'] = $request->boolean('published', false);
+    
         Log::info('Updating product', [
             'product_id'     => $product->id,
             'published'      => $data['published'],
             'published_type' => gettype($data['published']),
+            'has_image'      => isset($data['image']) ? 'yes' : 'no'
         ]);
-
-        $image = $data['image'] ?? null;
-        if ($image) {
-            // Save the image using the saveImage() method
-            $relativePath = $this->saveImage($image);
-            $data['image'] = URL::to(Storage::url($relativePath));
-            $data['image_mime'] = $image->getClientMimeType();
-            $data['image_size'] = $image->getSize();
-
+    
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            // Log before saving
+            Log::info('Image before save', [
+                'file_name' => $request->file('image')->getClientOriginalName(),
+                'file_size' => $request->file('image')->getSize()
+            ]);
+            
             // Delete old image if it exists
             if ($product->image) {
-                Storage::deleteDirectory('/public/' . dirname($product->image));
+                Log::info('Deleting old image', ['old_path' => $product->image]);
+                Storage::disk('public')->delete($product->image);
             }
+            
+            // Save the new image
+            $relativePath = $request->file('image')->store('products', 'public');
+            
+            // Save path to data array
+            $data['image'] = $relativePath;
+            $data['image_mime'] = $request->file('image')->getMimeType();
+            $data['image_size'] = $request->file('image')->getSize();
+            
+            // Log after saving
+            Log::info('Image after save', [
+                'relative_path' => $relativePath,
+                'full_url' => URL::to(Storage::url($relativePath))
+            ]);
+        } else if ($request->boolean('_remove_image')) {
+            // Handle image removal
+            if ($product->image) {
+                Storage::disk('public')->delete($product->image);
+            }
+            $data['image'] = null;
+            $data['image_mime'] = null;
+            $data['image_size'] = null;
         }
-
+        
+        // Remove _remove_image from data before update
+        if (isset($data['_remove_image'])) {
+            unset($data['_remove_image']);
+        }
+    
         $product->update($data);
         $product->refresh();
-
+    
+        // Add image_url to the response if image exists
+        if ($product->image) {
+            $product->image_url = URL::to(Storage::url($product->image));
+            
+            // Debug the final image URL
+            Log::info('Final image URL', [
+                'image_path' => $product->image,
+                'image_url' => $product->image_url
+            ]);
+        }
+    
         return new ProductResource($product);
     }
+    /**
+ * Function to generate correct image URL
+ * 
+ * @param string $path
+ * @return string
+ */
+private function getImageUrl($path)
+{
+    // First try using asset helper
+    $url = asset('storage/' . $path);
+    
+    // If we're on the Vite dev server (localhost:5173), ensure URL matches
+    if (request()->getHost() === 'localhost:5173' || request()->getHost() === '127.0.0.1:5173') {
+        // Replace http://localhost with http://localhost:5173 if needed
+        if (strpos($url, 'http://localhost/') === 0 && strpos($url, 'http://localhost:5173/') !== 0) {
+            $url = str_replace('http://localhost/', 'http://localhost:5173/', $url);
+        }
+    }
+    
+    Log::info('Generated image URL', [
+        'path' => $path,
+        'generated_url' => $url
+    ]);
+    
+    return $url;
+}
+
+// Then replace all instances of:
+// $product->image_url = URL::to(Storage::url($product->image));
+
+// With:
+// $product->image_url = $this->getImageUrl($product->image);
 
     /**
      * Remove the specified resource from storage.
@@ -220,16 +285,5 @@ class ProductController extends Controller
         $product->delete();
 
         return response()->noContent();
-    }
-
-    /**
-     * Save uploaded image and return the relative path.
-     *
-     * @param \Illuminate\Http\UploadedFile $image
-     * @return string
-     */
-    private function saveImage($image)
-    {
-        return $image->store('products', 'public');
     }
 }

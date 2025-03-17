@@ -43,8 +43,71 @@ class ProductController extends Controller
             ->latest()
             ->get();
     
-        return view('welcome', compact('products'));
+        return view('index', compact('products'));
     }
+
+    /**
+     * Display the product view page
+     *
+     * @param  Product  $product
+     * @return \Illuminate\Http\Response
+     */
+    public function view(Product $product)
+    {
+        return view('product', compact('product'));
+    }
+
+    /**
+     * Display the shop page with all published products
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function shop()
+    {
+        $products = Product::where('published', true)->get();
+        return view('shop', compact('products'));
+    }
+
+    /**
+     * Display the blog page
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function blog()
+    {
+        return view('blog');
+    }
+
+    /**
+     * Display the about page
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function about()
+    {
+        return view('about');
+    }
+
+    /**
+     * Display the calorie calculator page
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function calorieCalculator()
+    {
+        return view('calorie-calculator');
+    }
+
+    /**
+     * Display the contact page
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function contact()
+    {
+        return view('contact');
+    }
+    
     /**
      * Update the specified resource.
      *
@@ -79,5 +142,4 @@ class ProductController extends Controller
         
         return response()->noContent();
     }
-    
 }

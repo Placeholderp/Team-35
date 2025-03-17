@@ -43,7 +43,16 @@
             :src="user.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'" 
             :alt="user.name || 'User profile'" 
           />
-          <span class="ml-2 text-gray-700 hidden md:block">{{ user.name || 'Admin User' }}</span>
+          <div class="ml-2 hidden md:flex md:flex-col">
+            <span class="text-sm font-medium text-gray-700">{{ user.name || 'Admin User' }}</span>
+            <!-- Add Admin Badge -->
+            <span 
+              v-if="user.is_admin" 
+              class="text-xs px-1.5 py-0.5 bg-indigo-100 text-indigo-800 rounded-full font-medium"
+            >
+              Administrator
+            </span>
+          </div>
           <ChevronDownIcon class="ml-1 h-4 w-4 text-gray-500" />
         </button>
         
@@ -56,38 +65,52 @@
           leave-from-class="transform opacity-100 scale-100"
           leave-to-class="transform opacity-0 scale-95"
         >
-          <div 
-            v-if="isDropdownOpen" 
-            class="absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-            role="menu"
-            aria-orientation="vertical"
-            aria-labelledby="user-menu-button"
-          >
-            <router-link 
-              to="/profile" 
-              class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              @click="isDropdownOpen = false"
-              role="menuitem"
-            >
-              Your Profile
-            </router-link>
-            <router-link 
-              to="/settings" 
-              class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              @click="isDropdownOpen = false"
-              role="menuitem"
-            >
-              Settings
-            </router-link>
-            <div class="border-t border-gray-100 my-1"></div>
-            <button 
-              @click="handleLogout" 
-              class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              role="menuitem"
-            >
-              Logout
-            </button>
+        <div 
+          v-if="isDropdownOpen" 
+          class="absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+          role="menu"
+          aria-orientation="vertical"
+          aria-labelledby="user-menu-button"
+        >
+          <!-- Add Admin Indicator in dropdown too -->
+          <div v-if="user.is_admin" class="px-4 py-2 text-xs text-gray-500 border-b border-gray-100">
+            <span class="px-1.5 py-0.5 bg-indigo-100 text-indigo-800 rounded-full font-medium">
+              Administrator
+            </span>
           </div>
+          
+          <router-link 
+            to="/app/profile" 
+            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            @click="isDropdownOpen = false"
+            role="menuitem"
+          >
+            Your Profile
+          </router-link>
+          <router-link 
+            to="/settings" 
+            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            @click="isDropdownOpen = false"
+            role="menuitem"
+          >
+            Settings
+          </router-link>
+          <button 
+            @click="handleChangePassword" 
+            class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            role="menuitem"
+          >
+            Change Password
+          </button>
+          <div class="border-t border-gray-100 my-1"></div>
+          <button 
+            @click="handleLogout" 
+            class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            role="menuitem"
+          >
+            Logout
+          </button>
+        </div>
         </transition>
       </div>
     </div>
@@ -97,12 +120,12 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { useStore } from 'vuex'; // Add this import for Vuex store
+import { useStore } from 'vuex';
 import { MenuIcon, BellIcon, ChevronDownIcon } from '@heroicons/vue/solid';
 
 // Router and Store
 const router = useRouter();
-const store = useStore(); // Get the store instance
+const store = useStore();
 
 // Props
 const props = defineProps({
@@ -111,6 +134,9 @@ const props = defineProps({
     default: () => ({})
   }
 });
+
+// Emits
+const emit = defineEmits(['toggle-sidebar', 'change-password']);
 
 // Reactive state
 const isDropdownOpen = ref(false);
@@ -130,6 +156,11 @@ function handleClickOutside(event) {
   ) {
     isDropdownOpen.value = false;
   }
+}
+
+function handleChangePassword() {
+  isDropdownOpen.value = false;
+  emit('change-password');
 }
 
 function handleLogout() {

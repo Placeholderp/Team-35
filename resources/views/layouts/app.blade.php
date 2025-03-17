@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-
     <meta charset="utf-8">
-    
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ config('app.name', 'Laravel E-commerce Website') }}</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
+    <!-- Include styles from child templates -->
+    @yield('styles')
     
     <style>
         [x-cloak] {
@@ -19,11 +19,13 @@
     </style>
 </head>
 <body>
-    @include('layouts.navigation')
+    @section('navigation')
+        @include('layouts.navigation')
+    @show
 
     <!-- Main content -->
     <main class="p-5">
-        {{ $slot }}
+        @yield('content')
     </main>
 
     <!-- Toast notification container -->
@@ -69,5 +71,9 @@
         </div>
     </div>
     <!--/ Toast -->
+    
+    @yield('footer')
+    
+    @yield('scripts')
 </body>
 </html>

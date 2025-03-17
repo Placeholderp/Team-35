@@ -21,9 +21,10 @@ class UpdateUserRequest extends FormRequest
     public function rules()
     {
         return [
-            'name' => ['max:55'],
-            'email' => ['email'],
-            'password' => ['nullable', Password::min(8)->numbers()->letters()->symbols()]
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $this->user->id,
+            'password' => 'nullable|string|min:6',
+            'is_admin' => 'boolean',
         ];
     }
 }

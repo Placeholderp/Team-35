@@ -1,9 +1,20 @@
 import axiosClient from "../axios";
 import { cleanId, normalizePublished, prepareProductFormData } from "../utils/ProductUtils";
 
+// Utility function to normalize is_admin to boolean
+function normalizeIsAdmin(value) {
+  if (typeof value === 'boolean') return value;
+  if (value === 1 || value === '1' || value === 'true') return true;
+  return false;
+}
+
 export function getCurrentUser({commit}, data) {
   return axiosClient.get('/user', data)
     .then(({data}) => {
+      // Normalize is_admin if it exists
+      if (data) {
+        data.is_admin = normalizeIsAdmin(data.is_admin);
+      }
       commit('setUser', data);
       return data;
     })
@@ -12,8 +23,14 @@ export function getCurrentUser({commit}, data) {
 export function login({commit}, data) {
   return axiosClient.post('/login', data)
     .then(({data}) => {
+      // Normalize is_admin if it exists
+      if (data && data.user) {
+        data.user.is_admin = normalizeIsAdmin(data.user.is_admin);
+      }
       commit('setUser', data.user);
-      commit('setToken', data.token)
+      commit('setToken', data.token);
+      
+      // Return the complete data including any first_login flag
       return data;
     })
 }
@@ -26,6 +43,28 @@ export function logout({commit}) {
     })
 }
 
+export function register({commit}, userData) {
+  return axiosClient.post('/register', userData)
+    .then(({data}) => {
+      // We don't set the user or token here since they need to login after registration
+      return data;
+    });
+}
+
+export function changePassword({commit}, passwordData) {
+  return axiosClient.post('/change-password', passwordData)
+    .then(({data}) => {
+      // If the response includes updated user data, update the store
+      if (data.user) {
+        // Normalize is_admin if it exists
+        if (data.user) {
+          data.user.is_admin = normalizeIsAdmin(data.user.is_admin);
+        }
+        commit('setUser', data.user);
+      }
+      return data;
+    });
+}
 export function getCountries({commit}) {
   return axiosClient.get('countries')
     .then(({data}) => {
@@ -194,6 +233,13 @@ export function getUsers({commit, state}, {url = null, search = '', per_page, so
     }
   })
     .then((response) => {
+      // Properly normalize is_admin values
+      if (response.data && response.data.data) {
+        response.data.data = response.data.data.map(user => ({
+          ...user,
+          is_admin: normalizeIsAdmin(user.is_admin)
+        }));
+      }
       commit('setUsers', [false, response.data])
     })
     .catch(() => {
@@ -202,11 +248,40 @@ export function getUsers({commit, state}, {url = null, search = '', per_page, so
 }
 
 export function createUser({commit}, user) {
-  return axiosClient.post('/users', user)
+  // Ensure we're working with a copy to avoid mutation
+  const userData = { ...user };
+  return axiosClient.post('/users', userData)
 }
 
 export function updateUser({commit}, user) {
-  return axiosClient.put(`/users/${user.id}`, user)
+  // Ensure we're working with a copy to avoid mutation
+  const userData = { ...user };
+  return axiosClient.put(`/users/${userData.id}`, userData)
+}
+
+export function deleteUser({commit}, id) {
+  return axiosClient.delete(`/users/${id}`)
+    .then(response => {
+      // Remove the user from the store
+      commit('REMOVE_USER', id);
+      return response;
+    });
+}
+export function checkUserRole({commit}, {email}) {
+  return axiosClient.get('/check-user-role', {
+    params: { email }
+  })
+    .then(({data}) => {
+      if (data && data.exists) {
+        // Normalize is_admin if it exists
+        data.is_admin = normalizeIsAdmin(data.is_admin);
+      }
+      return data;
+    })
+    .catch(error => {
+      console.error('Error checking user role:', error);
+      return { exists: false, is_admin: false };
+    });
 }
 
 export function getCustomers({commit, state}, {url = null, search = '', per_page, sort_field, sort_direction} = {}) {

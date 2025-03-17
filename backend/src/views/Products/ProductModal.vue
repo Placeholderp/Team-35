@@ -192,7 +192,7 @@ import { Dialog, DialogPanel, DialogTitle, DialogOverlay, TransitionChild, Trans
 import CustomInput from "../../components/core/CustomInput.vue";
 import store from "../../store/index.js";
 import Spinner from "../../components/core/Spinner.vue";
-import { cleanId, normalizePublished, prepareProductFormData } from "../../utils/ProductUtils";
+import { cleanId, normalizePublished, formatCurrency, formatDate, prepareProductFormData, getImageUrl } from "../../utils/ProductUtils";
 
 const props = defineProps({
   modelValue: {
@@ -234,6 +234,13 @@ const localProduct = reactive({
   published: false
 });
 
+// Clear all validation errors - DEFINE THIS FUNCTION BEFORE USING IT
+function clearErrors() {
+  Object.keys(errors).forEach(key => {
+    errors[key] = '';
+  });
+}
+
 watch(() => props.product, (newVal) => {
   if (newVal) {
     // Clean the ID if it contains a colon
@@ -242,14 +249,14 @@ watch(() => props.product, (newVal) => {
     Object.assign(localProduct, {
       id: cleanedId,
       title: newVal.title || '',
-      image: newVal.image || '',
+      image: '', // Don't set image to the URL string
       description: newVal.description || '',
       price: newVal.price || '',
       published: normalizePublished(newVal.published)
     });
     
-    // Reset image preview if editing an existing product with an image
-    if (cleanedId && newVal.image_url) {
+    // Set the image preview correctly
+    if (newVal.image_url) {
       imagePreview.value = newVal.image_url;
     } else {
       imagePreview.value = null;
@@ -259,13 +266,6 @@ watch(() => props.product, (newVal) => {
     clearErrors();
   }
 }, { immediate: true, deep: true });
-
-// Clear all validation errors
-function clearErrors() {
-  Object.keys(errors).forEach(key => {
-    errors[key] = '';
-  });
-}
 
 // Notify success/error using the notification system
 function notifySuccess(message, title = 'Success') {
@@ -314,18 +314,27 @@ function handleFileChange(event) {
         return;
       }
       
-      // Store the file reference
-      localProduct.image = file;
-      
-      // Create and display image preview
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        imagePreview.value = e.target.result;
-      };
-      reader.readAsDataURL(file);
-      
-      // Clear any previous error
-      errors.image = '';
+      try {
+        // Store the file reference
+        localProduct.image = file;
+        
+        // Create and display image preview
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          imagePreview.value = e.target.result;
+        };
+        reader.onerror = (e) => {
+          console.error('FileReader error:', e);
+          errors.image = 'Failed to read the image file';
+        };
+        reader.readAsDataURL(file);
+        
+        // Clear any previous error
+        errors.image = '';
+      } catch (error) {
+        console.error('Error handling file:', error);
+        errors.image = 'Error processing image';
+      }
     }
   }
 }
@@ -355,6 +364,13 @@ function onSubmit() {
   loading.value = true;
   
   try {
+    // Log the image state for debugging
+    console.log('Image state before submit:', {
+      isFile: localProduct.image instanceof File,
+      imageType: localProduct.image instanceof File ? localProduct.image.type : typeof localProduct.image,
+      imagePreview: imagePreview.value ? 'set' : 'not set'
+    });
+    
     // Use the utility function to prepare form data
     const formData = prepareProductFormData(localProduct, !!localProduct.id);
     
@@ -363,18 +379,21 @@ function onSubmit() {
       : store.dispatch('createProduct', formData);
       
     action
-      .then(() => {
+      .then((response) => {
+        console.log('API Response:', response);
         store.dispatch('getProducts', { force: true });
         closeModal();
         notifySuccess(`Product "${localProduct.title}" ${localProduct.id ? 'updated' : 'created'} successfully!`);
       })
       .catch(error => {
+        console.error('API Error:', error.response?.data || error);
         handleApiError(error);
       })
       .finally(() => {
         loading.value = false;
       });
   } catch (error) {
+    console.error('Unexpected error:', error);
     notifyError('An unexpected error occurred. Please try again.');
     loading.value = false;
   }

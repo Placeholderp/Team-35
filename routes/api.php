@@ -20,11 +20,11 @@ use App\Http\Controllers\ReportController;
 */
 
 Route::post('/login', [AuthController::class, 'login']);
-
+Route::post('/register', [App\Http\Controllers\Auth\RegisterController::class, 'register']);
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('/user', [AuthController::class, 'getUser']);
     Route::post('/logout', [AuthController::class, 'logout']);
-
+    Route::middleware('auth:sanctum')->post('/change-password', [App\Http\Controllers\Auth\PasswordController::class, 'changePassword']);
     Route::get('products', [ProductController::class, 'index']);
     Route::post('products', [ProductController::class, 'store']);
     Route::get('products/{id}', [ProductController::class, 'show']);

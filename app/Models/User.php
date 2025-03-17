@@ -20,7 +20,8 @@ class User extends Authenticatable
         'email',
         'password',
         'email_verified_at',
-        'is_admin'
+        'is_admin',
+        'force_password_change'
     ];
 
     /**
@@ -36,7 +37,23 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'is_admin' => 'boolean',
+        'force_password_change' => 'boolean'
     ];
+
+    /**
+     * Get the user's admin status based on email.
+     * This method will ensure users with certain emails are always treated as admins
+     * regardless of what's in the database.
+     *
+     * @return bool
+     */
+    public function getIsAdminAttribute($value)
+    {
+    
+        // Otherwise, return the actual value from the database
+        return (bool) $value;
+    }
 
     public function customer()
     {

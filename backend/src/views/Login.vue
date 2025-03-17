@@ -142,6 +142,16 @@
           </div>
         </form>
 
+        <!-- Registration Link -->
+        <div class="mt-5 text-center">
+          <p class="text-sm text-gray-600">
+            Need a new admin account?
+            <router-link :to="{ name: 'admin.register' }" class="font-medium text-indigo-600 hover:text-indigo-500 transition-colors duration-150">
+              Register here
+            </router-link>
+          </p>
+        </div>
+
         <!-- Secure Connection -->
         <div class="flex justify-center items-center mt-6">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -165,7 +175,9 @@ import { EyeIcon, EyeOffIcon } from '@heroicons/vue/solid'
 import GuestLayout from "../components/GuestLayout.vue";
 import store from "../store";
 import router from "../router";
+import { useRoute } from 'vue-router';
 
+const route = useRoute();
 const loading = ref(false);
 const errorMsg = ref("");
 const passwordShow = ref(false);
@@ -175,6 +187,14 @@ const user = ref({
   remember: false
 });
 
+// Check if coming from admin registration
+if (route.query.newAdmin) {
+  window.$notification.success(
+    'Admin account created successfully. Please login with your credentials.',
+    'Registration Successful'
+  );
+}
+
 function togglePassword() {
   passwordShow.value = !passwordShow.value;
 }
@@ -182,16 +202,30 @@ function togglePassword() {
 function login() {
   loading.value = true;
   store.dispatch('login', user.value)
-    .then(() => {
+    .then((data) => {
       loading.value = false;
       
-      // Show success notification after login
-      window.$notification.success(
-        'Login successful',
-        'Welcome back!'
-      );
-      
-      router.push({ name: 'app.dashboard' });
+      // Check if this is a first-time login requiring password change
+      if (data.user && data.user.force_password_change) {
+        // Show notification about required password change
+        window.$notification.info(
+          'Please change your password to continue',
+          'Security Step Required'
+        );
+        
+        // Redirect to password change page
+        router.push({ name: 'forcePasswordChange' });
+      } else {
+        // Show success notification for normal login
+        window.$notification.success(
+          'Login successful',
+          'Welcome back!'
+        );
+        
+        // Redirect to dashboard or the original requested page
+        const redirectPath = route.query.redirect || { name: 'app.dashboard' };
+        router.push(redirectPath);
+      }
     })
     .catch(({ response }) => {
       loading.value = false;
