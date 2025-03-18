@@ -157,6 +157,50 @@
                         <p v-if="errors.published" class="mt-1 text-sm text-red-600">{{ errors.published }}</p>
                       </div>
                     </div>
+                    
+                    <!-- Inventory tracking section -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <div class="flex items-start mt-5">
+                          <div class="flex items-center h-5">
+                            <input
+                              id="track-inventory-checkbox"
+                              name="track_inventory"
+                              type="checkbox"
+                              v-model="localProduct.track_inventory"
+                              class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                            />
+                          </div>
+                          <div class="ml-3 text-sm">
+                            <label for="track-inventory-checkbox" class="font-medium text-gray-700">Track Inventory</label>
+                            <p class="text-gray-500">Enable inventory management for this product</p>
+                          </div>
+                        </div>
+                        <p v-if="errors.track_inventory" class="mt-1 text-sm text-red-600">{{ errors.track_inventory }}</p>
+                      </div>
+                      <div v-if="localProduct.track_inventory">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Initial Stock Quantity</label>
+                        <input
+                          type="number"
+                          v-model.number="localProduct.quantity"
+                          min="0"
+                          class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                          placeholder="0"
+                        />
+                        <p v-if="errors.quantity" class="mt-1 text-sm text-red-600">{{ errors.quantity }}</p>
+                      </div>
+                      <div v-if="localProduct.track_inventory">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Reorder Level</label>
+                        <input
+                          type="number"
+                          v-model.number="localProduct.reorder_level"
+                          min="0"
+                          class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                          placeholder="5"
+                        />
+                        <p class="mt-1 text-xs text-gray-500">Alerts will trigger when stock falls below this level</p>
+                      </div>
+                    </div>
                   </div>
                   
                   <div class="bg-gray-50 px-6 py-4 flex justify-end space-x-3 border-t border-gray-200">
@@ -186,13 +230,13 @@
 </template>
 
 <script setup>
-import axiosClient from "../../axios";
-import { ref, watch, reactive, computed } from 'vue';
+import { ref, watch, reactive, computed, onBeforeUnmount } from 'vue';
 import { Dialog, DialogPanel, DialogTitle, DialogOverlay, TransitionChild, TransitionRoot } from '@headlessui/vue';
 import CustomInput from "../../components/core/CustomInput.vue";
 import store from "../../store/index.js";
 import Spinner from "../../components/core/Spinner.vue";
 import { cleanId, normalizePublished, formatCurrency, formatDate, prepareProductFormData, getImageUrl } from "../../utils/ProductUtils";
+import axiosClient from '../../axios';
 
 const props = defineProps({
   modelValue: {
@@ -208,7 +252,10 @@ const props = defineProps({
       image: '',
       description: '',
       price: '',
-      published: false
+      published: false,
+      track_inventory: false,
+      quantity: 0,
+      reorder_level: 5
     })
   }
 });
@@ -221,7 +268,10 @@ const errors = reactive({
   image: '',
   description: '',
   price: '',
-  published: ''
+  published: '',
+  track_inventory: '',
+  quantity: '',
+  reorder_level: ''
 });
 
 // Create a local copy of the product for editing
@@ -231,39 +281,66 @@ const localProduct = reactive({
   description: '',
   image: '',
   price: '',
-  published: false
+  published: false,
+  track_inventory: false, // Add this line
+  quantity: 0,            // Add this line
+  reorder_level: 5        // Add this line
 });
 
-// Clear all validation errors - DEFINE THIS FUNCTION BEFORE USING IT
+// Clear all validation errors
 function clearErrors() {
   Object.keys(errors).forEach(key => {
     errors[key] = '';
   });
 }
 
+// Clean up any blob URLs on unmount
+onBeforeUnmount(() => {
+  if (imagePreview.value && imagePreview.value.startsWith('blob:')) {
+    URL.revokeObjectURL(imagePreview.value);
+  }
+});
+
+// Replace your current watch function for props.product
 watch(() => props.product, (newVal) => {
   if (newVal) {
-    // Clean the ID if it contains a colon
-    const cleanedId = cleanId(newVal.id);
-    
-    Object.assign(localProduct, {
-      id: cleanedId,
-      title: newVal.title || '',
-      image: '', // Don't set image to the URL string
-      description: newVal.description || '',
-      price: newVal.price || '',
-      published: normalizePublished(newVal.published)
-    });
-    
-    // Set the image preview correctly
-    if (newVal.image_url) {
-      imagePreview.value = newVal.image_url;
-    } else {
-      imagePreview.value = null;
+    try {
+      // Clean the ID if it contains a colon
+      const cleanedId = cleanId(newVal.id);
+      
+      // Create a fresh object to avoid reactivity issues
+      const productData = {
+        id: cleanedId,
+        title: newVal.title || '',
+        image: '', // Don't set image to the URL string
+        description: newVal.description || '',
+        price: newVal.price || '',
+        published: normalizePublished(newVal.published),
+        track_inventory: Boolean(newVal.track_inventory),
+        quantity: parseInt(newVal.quantity || 0),
+        reorder_level: parseInt(newVal.reorder_level || 5)
+      };
+      
+      // Update the local product with the new values
+      Object.assign(localProduct, productData);
+      
+      // Set the image preview correctly
+      if (newVal.image_url) {
+        // Release the previous blob URL if there was one
+        if (imagePreview.value && imagePreview.value.startsWith('blob:')) {
+          URL.revokeObjectURL(imagePreview.value);
+        }
+        imagePreview.value = newVal.image_url;
+      } else {
+        imagePreview.value = null;
+      }
+      
+      // Clear errors when loading a new product
+      clearErrors();
+    } catch (error) {
+      console.error('Error setting up product data:', error);
+      notifyError('Error loading product data');
     }
-    
-    // Clear errors when loading a new product
-    clearErrors();
   }
 }, { immediate: true, deep: true });
 
@@ -300,57 +377,114 @@ function closeModal() {
 }
 
 function clearImage() {
+  // Revoke blob URL if it exists
+  if (imagePreview.value && imagePreview.value.startsWith('blob:')) {
+    URL.revokeObjectURL(imagePreview.value);
+  }
+  
   localProduct.image = '';
   imagePreview.value = null;
 }
 
 function handleFileChange(event) {
-  if (event.target && event.target.files && event.target.files.length > 0) {
-    const file = event.target.files[0];
-    if (file) {
-      // Validate file is an image
-      if (!file.type.match('image.*')) {
-        errors.image = 'Please select an image file';
-        return;
-      }
-      
-      try {
-        // Store the file reference
-        localProduct.image = file;
-        
-        // Create and display image preview
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          imagePreview.value = e.target.result;
-        };
-        reader.onerror = (e) => {
-          console.error('FileReader error:', e);
-          errors.image = 'Failed to read the image file';
-        };
-        reader.readAsDataURL(file);
-        
-        // Clear any previous error
-        errors.image = '';
-      } catch (error) {
-        console.error('Error handling file:', error);
-        errors.image = 'Error processing image';
-      }
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  // Check file type
+  if (!file.type.match('image.*')) {
+    errors.image = 'Please select an image file';
+    return;
+  }
+  
+  // Check file size (max 5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    errors.image = 'Image size should be less than 5MB';
+    return;
+  }
+  
+  try {
+    // Clean up previous preview URL if it exists
+    if (imagePreview.value && imagePreview.value.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreview.value);
     }
+    
+    // Store the file reference
+    localProduct.image = file;
+    
+    // Create and display image preview using URL.createObjectURL for better performance
+    imagePreview.value = URL.createObjectURL(file);
+    
+    // Clear any previous error
+    errors.image = '';
+  } catch (error) {
+    console.error('Error handling file:', error);
+    errors.image = 'Error processing image';
   }
 }
 
+// Replace your current validateForm function
 function validateForm() {
   let isValid = true;
   clearErrors();
   
-  if (!localProduct.title.trim()) {
+  // Title validation
+  if (!localProduct.title || !localProduct.title.trim()) {
     errors.title = 'Product title is required';
+    isValid = false;
+  } else if (localProduct.title.length > 255) {
+    errors.title = 'Product title must be less than 255 characters';
     isValid = false;
   }
   
-  if (!localProduct.price || parseFloat(localProduct.price) < 0) {
-    errors.price = 'Please enter a valid price';
+  // Price validation
+  if (!localProduct.price) {
+    errors.price = 'Price is required';
     isValid = false;
+  } else {
+    const price = parseFloat(localProduct.price);
+    if (isNaN(price) || price < 0) {
+      errors.price = 'Price must be a positive number';
+      isValid = false;
+    }
+  }
+  
+  // Description length check (optional field)
+  if (localProduct.description && localProduct.description.length > 1000) {
+    errors.description = 'Description must be less than 1000 characters';
+    isValid = false;
+  }
+  
+  // Validate inventory fields when tracking is enabled
+  if (localProduct.track_inventory) {
+    if (typeof localProduct.quantity !== 'number') {
+      // Try to convert to number if it's not already
+      localProduct.quantity = parseInt(localProduct.quantity || '0');
+      
+      if (isNaN(localProduct.quantity)) {
+        errors.quantity = 'Quantity must be a valid number';
+        isValid = false;
+      }
+    }
+    
+    if (localProduct.quantity < 0) {
+      errors.quantity = 'Quantity cannot be negative';
+      isValid = false;
+    }
+    
+    if (typeof localProduct.reorder_level !== 'number') {
+      // Try to convert to number if it's not already
+      localProduct.reorder_level = parseInt(localProduct.reorder_level || '5');
+      
+      if (isNaN(localProduct.reorder_level)) {
+        errors.reorder_level = 'Reorder level must be a valid number';
+        isValid = false;
+      }
+    }
+    
+    if (localProduct.reorder_level < 0) {
+      errors.reorder_level = 'Reorder level cannot be negative';
+      isValid = false;
+    }
   }
   
   return isValid;
@@ -364,23 +498,51 @@ function onSubmit() {
   loading.value = true;
   
   try {
-    // Log the image state for debugging
-    console.log('Image state before submit:', {
-      isFile: localProduct.image instanceof File,
-      imageType: localProduct.image instanceof File ? localProduct.image.type : typeof localProduct.image,
-      imagePreview: imagePreview.value ? 'set' : 'not set'
-    });
+    // Create FormData object
+    const formData = new FormData();
     
-    // Use the utility function to prepare form data
-    const formData = prepareProductFormData(localProduct, !!localProduct.id);
+    // Add basic fields - ensure correct data types
+    formData.append('title', localProduct.title.trim());
+    formData.append('description', localProduct.description || '');
     
+    // Ensure price is formatted as a valid number
+    const priceValue = parseFloat(localProduct.price);
+    formData.append('price', isNaN(priceValue) ? "0" : priceValue.toString());
+    
+    // Boolean values need to be 0/1 for Laravel
+    formData.append('published', localProduct.published ? '1' : '0');
+    formData.append('track_inventory', localProduct.track_inventory ? '1' : '0');
+    
+    // Only append inventory fields if tracking is enabled
+    if (localProduct.track_inventory) {
+      // Ensure these are numbers
+      const qtyValue = parseInt(localProduct.quantity) || 0;
+      const reorderValue = parseInt(localProduct.reorder_level) || 5;
+      
+      formData.append('quantity', qtyValue.toString());
+      formData.append('reorder_level', reorderValue.toString());
+    }
+    
+    // Only append image if it's a File object
+    if (localProduct.image instanceof File) {
+      formData.append('image', localProduct.image);
+    }
+    
+    
+   // In your onSubmit function in ProductModal.vue
+if (localProduct.id) {
+  const cleanedId = cleanId(localProduct.id);
+  formData.append('id', cleanedId); // Add this line
+  formData.append('_method', 'PUT');
+}
+    
+    // Use the store actions as in your original code
     const action = localProduct.id 
-      ? store.dispatch('updateProduct', formData)
-      : store.dispatch('createProduct', formData);
+  ? store.dispatch('updateProduct', formData)
+  : store.dispatch('createProduct', formData);
       
     action
       .then((response) => {
-        console.log('API Response:', response);
         store.dispatch('getProducts', { force: true });
         closeModal();
         notifySuccess(`Product "${localProduct.title}" ${localProduct.id ? 'updated' : 'created'} successfully!`);
@@ -399,18 +561,39 @@ function onSubmit() {
   }
 }
 
+// Replace your current handleApiError function
 function handleApiError(error) {
-  if (error.response && error.response.data && error.response.data.errors) {
-    // Map backend validation errors to our local error object
-    const backendErrors = error.response.data.errors;
-    Object.keys(backendErrors).forEach(key => {
-      if (errors.hasOwnProperty(key)) {
-        errors[key] = backendErrors[key][0]; // Usually the first error message is enough
-      }
-    });
+  if (error.response && error.response.data) {
+    // Handle Laravel validation errors
+    if (error.response.status === 422 && error.response.data.errors) {
+      // Map backend validation errors to our local error object
+      const backendErrors = error.response.data.errors;
+      Object.keys(backendErrors).forEach(key => {
+        // Handle Laravel's array of error messages
+        if (Array.isArray(backendErrors[key]) && backendErrors[key].length > 0) {
+          errors[key] = backendErrors[key][0];
+        } else {
+          errors[key] = backendErrors[key];
+        }
+      });
+      
+      // Scroll to first error field
+      setTimeout(() => {
+        const firstErrorField = document.querySelector('.text-red-600');
+        if (firstErrorField) {
+          firstErrorField.parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+    } else if (error.response.data.message) {
+      // Show general error message from server
+      notifyError(error.response.data.message);
+    } else {
+      // Fallback error message
+      notifyError('An error occurred while saving the product.');
+    }
   } else {
-    // General error handling
-    notifyError('An error occurred. Please try again.');
+    // Network or other error
+    notifyError('Network error. Please check your connection and try again.');
   }
 }
 </script>

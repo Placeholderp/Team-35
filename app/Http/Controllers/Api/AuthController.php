@@ -43,6 +43,44 @@ class AuthController extends Controller
     }
 
     /**
+     * Register a new admin user
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function register(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8',
+            'registration_code' => 'required|string',
+        ]);
+
+        // Verify the registration code
+        $validRegistrationCode = config('auth.admin_registration_code', env('ADMIN_REGISTRATION_CODE'));
+        
+        if ($request->registration_code !== $validRegistrationCode) {
+            return response()->json([
+                'message' => 'Invalid registration code'
+            ], 403);
+        }
+
+        // Create the user with admin role
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'is_admin' => true,
+        ]);
+
+        return response()->json([
+            'message' => 'Registration successful',
+            'user' => $user
+        ], 201);
+    }
+
+    /**
      * Get authenticated user details
      *
      * @param Request $request

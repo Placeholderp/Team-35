@@ -4,70 +4,79 @@ import router from "./router/index.js";
 import { cleanId } from "./utils/ProductUtils";
 
 const axiosClient = axios.create({
-  baseURL: `${import.meta.env.VITE_API_BASE_URL}/api`
+  baseURL: `${import.meta.env.VITE_API_BASE_URL}/api`,
+  withCredentials: true // Enable cookie-based authentication
 });
 
-// Authorization header interceptor
+// Authorization header interceptor 
 axiosClient.interceptors.request.use(config => {
-  config.headers.Authorization = `Bearer ${store.state.user.token}`;
+  // Only add Authorization header if token exists
+  if (store.state.user.token) {
+    config.headers.Authorization = `Bearer ${store.state.user.token}`;
+  }
   return config;
 });
 
 // Product ID cleaning interceptor
 axiosClient.interceptors.request.use(config => {
-  if (config.url) {
-    // Clean product IDs in URLs
-    const productsPattern = /\/products\/([^\/]+)/;
-    const match = config.url.match(productsPattern);
+  // Skip if no URL is present
+  if (!config.url) return config;
+
+  // Clean product IDs in URLs
+  const productsPattern = /\/products\/([^\/]+)/;
+  const match = config.url.match(productsPattern);
+  
+  if (match && match[1]) {
+    const originalId = match[1];
+    // Ensure we're using our utility function to clean the ID
+    const cleanedId = cleanId(originalId);
     
-    if (match && match[1]) {
-      const originalId = match[1];
-      // Ensure we're using our utility function to clean the ID
-      const cleanedId = cleanId(originalId);
-      
-      // Always replace the ID in the URL
-      if (originalId !== cleanedId) {
-        config.url = config.url.replace(`/products/${originalId}`, `/products/${cleanedId}`);
-      }
+    // Replace the ID in the URL if it changed
+    if (originalId !== cleanedId) {
+      config.url = config.url.replace(`/products/${originalId}`, `/products/${cleanedId}`);
     }
   }
   
-  // Clean product IDs in request body or FormData if present
-  if (config.data && (config.url?.includes('/products/') || config.url === '/products')) {
-    if (config.data instanceof FormData) {
-      // Handle FormData objects
-      if (config.data.has('id')) {
-        const id = config.data.get('id');
-        const cleanedId = cleanId(id);
-        
-        // Only update if cleaning actually changed something
-        if (id !== cleanedId) {
-          config.data.set('id', cleanedId);
+  // Only process data if we're working with products and data exists
+  const isProductsEndpoint = config.url.includes('/products/') || config.url === '/products';
+  if (!config.data || !isProductsEndpoint) return config;
+
+  // Handle FormData objects
+  if (config.data instanceof FormData) {
+    if (config.data.has('id')) {
+      const id = config.data.get('id');
+      const cleanedId = cleanId(id);
+      
+      // Only update if cleaning actually changed something
+      if (id !== cleanedId) {
+        config.data.set('id', cleanedId);
+      }
+    }
+    return config;
+  }
+  
+  // Handle stringified JSON
+  if (typeof config.data === 'string') {
+    try {
+      const dataObj = JSON.parse(config.data);
+      if (dataObj.id) {
+        const cleanedId = cleanId(dataObj.id);
+        if (dataObj.id !== cleanedId) {
+          dataObj.id = cleanedId;
+          config.data = JSON.stringify(dataObj);
         }
       }
-    } else if (typeof config.data === 'object') {
-      try {
-        // Handle stringified JSON
-        if (typeof config.data === 'string') {
-          const dataObj = JSON.parse(config.data);
-          if (dataObj.id) {
-            const cleanedId = cleanId(dataObj.id);
-            if (dataObj.id !== cleanedId) {
-              dataObj.id = cleanedId;
-              config.data = JSON.stringify(dataObj);
-            }
-          }
-        } 
-        // Handle direct objects
-        else if (config.data.id) {
-          const cleanedId = cleanId(config.data.id);
-          if (config.data.id !== cleanedId) {
-            config.data.id = cleanedId;
-          }
-        }
-      } catch (e) {
-        // Silent error handling for malformed JSON
-      }
+    } catch (e) {
+      console.warn('Error parsing JSON data for ID cleaning:', e.message);
+    }
+    return config;
+  }
+  
+  // Handle direct objects
+  if (typeof config.data === 'object' && config.data !== null && config.data.id) {
+    const cleanedId = cleanId(config.data.id);
+    if (config.data.id !== cleanedId) {
+      config.data.id = cleanedId;
     }
   }
   

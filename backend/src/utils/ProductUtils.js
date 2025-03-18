@@ -1,166 +1,355 @@
-// src/utils/ProductUtils.js
+/**
+ * Enhanced utility functions for product management
+ */
 
 /**
- * Clean an ID by removing any colon and subsequent characters
- * @param {string|number} id - The ID to clean
- * @returns {string} - The cleaned ID
+ * Cleans a product ID by removing any colon and everything after it
+ * This is useful when dealing with IDs from URL parameters
+ * 
+ * @param {string|number} id - The product ID to clean
+ * @returns {string} Cleaned ID
  */
 export function cleanId(id) {
-  if (id === undefined || id === null) return '';
+  if (!id) return '';
   
-  // Convert to string and split on colon
-  const idStr = String(id);
-  const parts = idStr.split(':');
+  // Convert to string if it's a number
+  const idStr = id.toString();
   
-  // Return only the first part (before any colon)
-  return parts[0];
+  // If the ID contains a colon (e.g., "12:1"), keep only the part before the colon
+  const colonIndex = idStr.indexOf(':');
+  return colonIndex > -1 ? idStr.substring(0, colonIndex) : idStr;
 }
 
 /**
-* Generate full URL for product images
-* @param {string} imagePath - The image path or filename
-* @returns {string|null} - The complete image URL or null if no image
-*/
+ * Normalizes the published status to a boolean
+ * Handles various data types that might be used to represent a boolean in data from API responses
+ * 
+ * @param {any} publishedStatus - The raw published status
+ * @returns {boolean} Normalized boolean value
+ */
+export function normalizePublished(publishedStatus) {
+  if (publishedStatus === null || publishedStatus === undefined) return false;
+  
+  // If it's already a boolean, return it
+  if (typeof publishedStatus === 'boolean') return publishedStatus;
+  
+  // If it's a number, 1 is true, everything else is false
+  if (typeof publishedStatus === 'number') return publishedStatus === 1;
+  
+  // If it's a string, check for various "truthy" values
+  if (typeof publishedStatus === 'string') {
+    const lowercaseStatus = publishedStatus.toLowerCase();
+    return lowercaseStatus === 'true' || 
+           lowercaseStatus === 'yes' || 
+           lowercaseStatus === '1' || 
+           lowercaseStatus === 'on';
+  }
+  
+  // For anything else, convert to boolean
+  return Boolean(publishedStatus);
+}
+
+/**
+ * Normalizes the track inventory status to a boolean
+ * 
+ * @param {any} trackInventory - The raw track inventory status
+ * @returns {boolean} Normalized boolean value
+ */
+export function normalizeTrackInventory(trackInventory) {
+  return normalizePublished(trackInventory); // Reuse the same logic
+}
+
+/**
+ * Formats a price value into a currency string
+ * 
+ * @param {number|string} price - The price to format
+ * @param {string} currencyCode - The currency code (default: USD)
+ * @param {string} locale - The locale to use for formatting (default: en-US)
+ * @returns {string} Formatted currency string
+ */
+export function formatCurrency(price, currencyCode = 'USD', locale = 'en-US') {
+  if (price === undefined || price === null || price === '') {
+    return '$0.00';
+  }
+  
+  const numericPrice = typeof price === 'string' ? parseFloat(price) : price;
+  
+  if (isNaN(numericPrice)) {
+    return '$0.00';
+  }
+  
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: currencyCode,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(numericPrice);
+}
+
+/**
+ * Formats a date string into a localized date format
+ * 
+ * @param {string} dateStr - The date string to format
+ * @param {string} locale - The locale to use for formatting (default: en-US)
+ * @returns {string} Formatted date string
+ */
+export function formatDate(dateStr, locale = 'en-US') {
+  if (!dateStr) return 'N/A';
+  
+  try {
+    const date = new Date(dateStr);
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      return 'Invalid Date';
+    }
+    
+    return new Intl.DateTimeFormat(locale, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return 'Error';
+  }
+}
+
+/**
+ * Get the full image URL for a product
+ * 
+ * @param {string} imagePath - The relative image path from the API
+ * @returns {string} The complete image URL
+ */
 export function getImageUrl(imagePath) {
-if (!imagePath) return null;
-
-// If it's already a full URL, return it as is
-if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-  return imagePath;
-}
-
-// For relative paths, construct the full URL
-// Adjust the base URL according to your environment
-const baseUrl = window.location.origin;
-return `${baseUrl}/storage/products/${imagePath}`;
-}
-
-/**
-* Normalize a published value to a boolean
-* @param {any} value - The value to normalize
-* @returns {boolean} - The normalized boolean value
-*/
-export function normalizePublished(value) {
-if (value === undefined || value === null) {
-  return false;
-}
-if (typeof value === 'boolean') {
-  return value;
-}
-if (typeof value === 'number') {
-  return value === 1;
-}
-if (typeof value === 'string') {
-  return value === '1' || value.toLowerCase() === 'true';
-}
-return false;
+  if (!imagePath) return null;
+  
+  // If the image path already includes http:// or https://, return it as is
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    return imagePath;
+  }
+  
+  // Otherwise, prepend the API base URL
+  // This assumes we have an API_BASE_URL constant or environment variable
+  const baseUrl = process.env.VUE_APP_API_URL || '';
+  return `${baseUrl}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
 }
 
 /**
-* Format a currency value
-* @param {number|string} value - The value to format
-* @returns {string} - The formatted currency string
-*/
-export function formatCurrency(value) {
-return new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD'
-}).format(value || 0);
-}
-
-/**
-* Format a date string
-* @param {string} dateString - The date string to format
-* @returns {string} - The formatted date string
-*/
-export function formatDate(dateString) {
-if (!dateString) return '';
-const date = new Date(dateString);
-return new Intl.DateTimeFormat('en-US', {
-  year: 'numeric',
-  month: 'short',
-  day: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit'
-}).format(date);
-}
-
-/**
-* Get inventory status based on quantity
-* @param {number} quantity - Current quantity in stock
-* @returns {Object} - Object containing status and color classes
-*/
-export function getInventoryStatus(quantity) {
-if (quantity === undefined || quantity === null) {
-  return { 
-    status: 'Unknown', 
-    colorClass: 'bg-gray-100 text-gray-800',
-    badgeColor: 'gray' 
+ * Validates a product object against required fields and constraints
+ * 
+ * @param {Object} product - The product object to validate
+ * @returns {Object} Object with valid (boolean) and errors (object) properties
+ */
+export function validateProduct(product) {
+  const errors = {};
+  
+  // Required fields
+  if (!product.title || !product.title.trim()) {
+    errors.title = 'Product title is required';
+  } else if (product.title.length > 255) {
+    errors.title = 'Product title must be less than 255 characters';
+  }
+  
+  if (!product.price) {
+    errors.price = 'Price is required';
+  } else {
+    const price = parseFloat(product.price);
+    if (isNaN(price) || price < 0) {
+      errors.price = 'Price must be a positive number';
+    }
+  }
+  
+  // Optional fields with constraints
+  if (product.description && product.description.length > 1000) {
+    errors.description = 'Description must be less than 1000 characters';
+  }
+  
+  // Inventory validation
+  if (product.track_inventory) {
+    const quantity = parseInt(product.quantity);
+    if (isNaN(quantity)) {
+      errors.quantity = 'Quantity must be a valid number';
+    } else if (quantity < 0) {
+      errors.quantity = 'Quantity cannot be negative';
+    }
+    
+    const reorderLevel = parseInt(product.reorder_level);
+    if (isNaN(reorderLevel)) {
+      errors.reorder_level = 'Reorder level must be a valid number';
+    } else if (reorderLevel < 0) {
+      errors.reorder_level = 'Reorder level cannot be negative';
+    }
+  }
+  
+  return {
+    valid: Object.keys(errors).length === 0,
+    errors
   };
 }
 
-const qty = parseInt(quantity);
+/**
+ * Safely prepares a product object for form submission
+ * Handles data type conversion and validation
+ * 
+ * @param {Object} product - The product data to prepare
+ * @param {boolean} forUpdate - Whether this is for an update operation (vs. create)
+ * @returns {FormData} FormData object ready for submission
+ */
+export function prepareProductFormData(product, forUpdate = false) {
+  // Ensure product is an object
+  if (!product || typeof product !== 'object') {
+    console.error('Invalid product object:', product);
+    throw new Error('Invalid product object provided');
+  }
 
-if (qty <= 0) {
-  return { 
-    status: 'Out of Stock', 
-    colorClass: 'bg-red-100 text-red-800',
-    badgeColor: 'red' 
-  };
-} else if (qty <= 5) {
-  return { 
-    status: 'Low Stock', 
-    colorClass: 'bg-yellow-100 text-yellow-800',
-    badgeColor: 'yellow' 
-  };
-} else {
-  return { 
-    status: 'In Stock', 
-    colorClass: 'bg-green-100 text-green-800',
-    badgeColor: 'green' 
-  };
-}
+  try {
+    // Validate the product first
+    const { valid, errors } = validateProduct(product);
+    
+    if (!valid) {
+      console.warn('Product validation warnings:', errors);
+      // Continue anyway but log the warnings
+    }
+    
+    const formData = new FormData();
+    
+    // Handle the ID and method for updates
+    if (forUpdate) {
+      if (!product.id) {
+        console.error('No product ID provided for update operation');
+        throw new Error('Product ID is required for update operations');
+      }
+      
+      const cleanedId = cleanId(product.id);
+      formData.append('id', cleanedId);
+      formData.append('_method', 'PUT');
+      
+      console.debug('Updating product with ID:', cleanedId);
+    }
+    
+    // Basic fields - with explicit type conversion
+    formData.append('title', String(product.title || '').trim());
+    formData.append('description', String(product.description || ''));
+    
+    // Ensure price is a proper number
+    let price = 0;
+    try {
+      price = parseFloat(product.price);
+      if (isNaN(price)) price = 0;
+    } catch (e) {
+      price = 0;
+    }
+    formData.append('price', price.toString());
+    
+    // Boolean fields - convert to 0/1 strings explicitly
+    const isPublished = normalizePublished(product.published);
+    formData.append('published', isPublished ? '1' : '0');
+    
+    const trackInventory = normalizeTrackInventory(product.track_inventory);
+    formData.append('track_inventory', trackInventory ? '1' : '0');
+    
+    // Inventory fields - only include if track_inventory is true
+    if (trackInventory) {
+      let quantity = 0;
+      try {
+        quantity = parseInt(product.quantity);
+        if (isNaN(quantity)) quantity = 0;
+      } catch (e) {
+        quantity = 0;
+      }
+      formData.append('quantity', quantity.toString());
+      
+      let reorderLevel = 5;
+      try {
+        reorderLevel = parseInt(product.reorder_level);
+        if (isNaN(reorderLevel)) reorderLevel = 5;
+      } catch (e) {
+        reorderLevel = 5;
+      }
+      formData.append('reorder_level', reorderLevel.toString());
+    }
+    
+    // Handle image - only append if it's a File object
+    if (product.image instanceof File) {
+      formData.append('image', product.image);
+    }
+    
+    // Debug log the form data entries
+    console.debug('Form data entries:');
+    for (let [key, value] of formData.entries()) {
+      console.debug(`${key}: ${value instanceof File ? 'File: ' + value.name : value}`);
+    }
+    
+    return formData;
+  } catch (error) {
+    console.error('Error preparing product form data:', error);
+    throw new Error(`Product validation failed: ${error.message}`);
+  }
 }
 
 /**
-* Prepare form data for product API requests
-* @param {Object} product - The product object
-* @param {boolean} isUpdate - Whether this is an update operation
-* @returns {FormData} - FormData ready for API submission
-*/
-export function prepareProductFormData(product, isUpdate = false) {
-const formData = new FormData();
-
-if (isUpdate) {
-  const id = cleanId(product.id);
-  formData.append('id', id);
-  formData.append('_method', 'PUT');
+ * Gets CSS class for stock status based on quantity and reorder level
+ * 
+ * @param {Object} product - The product object
+ * @returns {string} CSS class for styling the stock status
+ */
+export function getStockStatusClass(product) {
+  if (!product.track_inventory) return 'text-gray-500';
+  
+  if (product.quantity <= 0) {
+    return 'text-red-600 font-medium';
+  }
+  
+  const reorderLevel = product.reorder_level || 5;
+  
+  if (product.quantity <= reorderLevel) {
+    return 'text-yellow-600 font-medium';
+  }
+  
+  return 'text-green-600 font-medium';
 }
 
-formData.append('title', product.title || '');
-formData.append('description', product.description || '');
-formData.append('price', product.price || 0);
-formData.append('published', normalizePublished(product.published) ? 1 : 0);
+function handleApiError(error) {
+  console.group('API Error Details');
+  console.error('Error object:', error);
+  console.error('Response data:', error.response?.data);
+  console.error('Status code:', error.response?.status);
+  console.error('Validation errors:', error.response?.data?.errors);
+  console.groupEnd();
 
-// Add quantity for inventory management
-formData.append('quantity', product.quantity || 0);
-
-// Add category if available
-if (product.category_id) {
-  formData.append('category_id', product.category_id);
-}
-
-// Handle image correctly for both new uploads and updates
-if (product.image instanceof File) {
-  // New file being uploaded
-  formData.append('image', product.image);
-  console.log('Uploading new image file:', product.image.name);
-} else if (isUpdate && product.image === null) {
-  // Explicitly remove the image
-  formData.append('_remove_image', '1');
-}
-// If no new image and not explicitly removing, don't append anything
-// This indicates to the server to keep the existing image
-
-return formData;
+  if (error.response && error.response.data) {
+    // Handle Laravel validation errors
+    if (error.response.status === 422 && error.response.data.errors) {
+      // Map backend validation errors to our local error object
+      const backendErrors = error.response.data.errors;
+      Object.keys(backendErrors).forEach(key => {
+        // Handle Laravel's array of error messages
+        if (Array.isArray(backendErrors[key]) && backendErrors[key].length > 0) {
+          errors[key] = backendErrors[key][0];
+        } else {
+          errors[key] = backendErrors[key];
+        }
+      });
+      
+      // Scroll to first error field
+      setTimeout(() => {
+        const firstErrorField = document.querySelector('.text-red-600');
+        if (firstErrorField) {
+          firstErrorField.parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+    } else if (error.response.data.message) {
+      // Show general error message from server
+      notifyError(error.response.data.message);
+    } else {
+      // Fallback error message
+      notifyError('An error occurred while saving the product.');
+    }
+  } else {
+    // Network or other error
+    notifyError('Network error. Please check your connection and try again.');
+  }
 }

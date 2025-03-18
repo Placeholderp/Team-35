@@ -25,6 +25,34 @@ import Report from "../views/Reports/Report.vue";
 import OrdersReport from "../views/Reports/OrdersReport.vue";
 import CustomersReport from "../views/Reports/CustomersReport.vue";
 
+// Inventory component imports
+import InventoryDashboard from "../views/Inventory/InventoryDashboard.vue";
+
+import InventoryMovements from "../views/Inventory/InventoryAdjustmentModal.vue";
+
+
+// Inventory routes definition
+const inventoryRoutes = [
+  {
+    path: 'inventory',
+    name: 'app.inventory',
+    component: InventoryDashboard,
+    meta: {
+      requiresAuth: true
+    }
+  },
+  
+  {
+    path: 'inventory/movements',
+    name: 'app.inventory.movements',
+    component: InventoryMovements,
+    meta: {
+      requiresAuth: true
+    }
+  },
+  
+];
+
 const routes = [
   {
     path: '/',
@@ -146,6 +174,9 @@ const routes = [
           }
         ]
       },
+      
+      // Add inventory routes here
+      ...inventoryRoutes,
     ]
   },
   {
@@ -171,6 +202,14 @@ const routes = [
     meta: {
       requiresAuth: true,
       requiresPasswordChange: true
+    }
+  },
+  {
+    path: '/inventory/movements',
+    name: 'app.inventory.movements',
+    component: InventoryMovements,
+    meta: {
+      requiresAuth: true
     }
   },
   {

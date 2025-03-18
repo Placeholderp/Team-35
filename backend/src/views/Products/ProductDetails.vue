@@ -1,610 +1,679 @@
-<!-- views/Products/ProductDetails.vue -->
+<!-- ProductDetail.vue -->
+<!-- ProductDetail.vue -->
 <template>
-  <div class="py-6 px-4 sm:px-6 lg:px-8">
-    <!-- Page header -->
-    <div class="mb-8">
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 class="text-3xl font-bold text-gray-900 leading-tight">Product Details</h1>
-          <p class="mt-2 text-sm text-gray-600">
-            Add and manage products in your catalog
-          </p>
-        </div>
-        <div class="mt-4 md:mt-0 flex space-x-3">
-          <button
-            @click="router.push({ name: 'app.products' })"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            <svg class="-ml-1 mr-2 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-            </svg>
-            Back to Products
-          </button>
-          <button
-            @click="saveProduct"
-            :disabled="isSaving"
-            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            <svg v-if="isSaving" class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <svg v-else class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-            {{ isEditing ? 'Update Product' : 'Save Product' }}
-          </button>
-        </div>
-      </div>
+  <div v-if="loading" class="flex justify-center items-center py-12">
+    <div class="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full text-indigo-500" role="status">
+      <span class="visually-hidden">Loading...</span>
     </div>
-
-    <!-- Product Form -->
-    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-      <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
-        <h3 class="text-lg leading-6 font-medium text-gray-900">
-          {{ isEditing ? 'Edit Product' : 'Add New Product' }}
-        </h3>
-        <p class="mt-1 max-w-2xl text-sm text-gray-500">
-          {{ isEditing ? 'Update product information' : 'Enter product details to add to your catalog' }}
-        </p>
+  </div>
+  
+  <div v-else-if="product" class="bg-white rounded-lg shadow-lg overflow-hidden">
+    <div class="flex flex-col md:flex-row">
+      <!-- Product Image Section -->
+      <div class="md:w-2/5 relative">
+        <img 
+          v-if="product.image_url" 
+          :src="getImageUrl(product.image_url)" 
+          :alt="product.title"
+          class="w-full h-full object-cover object-center"
+        />
+        <div 
+          v-else
+          class="w-full h-full min-h-[300px] bg-gray-100 flex items-center justify-center"
+        >
+          <svg class="h-24 w-24 text-gray-300" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </div>
+        
+        <!-- Stock Badge -->
+        <div class="absolute top-4 right-4">
+          <span 
+            :class="getStockBadgeClass(product)"
+            class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+          >
+            {{ getStockBadgeText(product) }}
+          </span>
+        </div>
       </div>
       
-      <div class="px-4 py-5 sm:p-6">
-        <form @submit.prevent="saveProduct" class="space-y-6">
-          <!-- Main product info section -->
-          <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-            <div class="sm:col-span-6">
-              <label for="image-upload" class="block text-sm font-medium text-gray-700">
-                Product Image
-              </label>
-              <div class="mt-1 flex items-center">
-                <div v-if="imagePreview" class="flex-shrink-0 h-24 w-24 rounded-md overflow-hidden bg-gray-100">
-                  <img :src="imagePreview" alt="Product preview" class="h-24 w-24 object-cover">
+      <!-- Product Details Section -->
+      <div class="md:w-3/5 p-6 md:p-8">
+        <div class="flex flex-col h-full">
+          <!-- Header -->
+          <div class="mb-6">
+            <h1 class="text-2xl font-bold text-gray-900 mb-2">{{ product.title }}</h1>
+            <p class="text-3xl font-bold text-indigo-600">{{ formatCurrency(product.price) }}</p>
+          </div>
+          
+          <!-- Description -->
+          <div class="mb-6 flex-grow">
+            <h2 class="text-lg font-semibold text-gray-700 mb-2">Description</h2>
+            <p class="text-gray-600">{{ product.description || 'No description available' }}</p>
+          </div>
+          
+          <!-- Stock Information -->
+          <div class="mb-6">
+            <h2 class="text-lg font-semibold text-gray-700 mb-2">Stock Information</h2>
+            <div class="bg-gray-50 rounded-lg p-4">
+              <div v-if="product.track_inventory" class="flex flex-col space-y-2">
+                <!-- Current Stock Level -->
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600">Current Stock:</span>
+                  <span :class="getStockTextClass(product)" class="font-medium">
+                    {{ product.quantity }} units
+                  </span>
                 </div>
-                <div v-else class="flex-shrink-0 h-24 w-24 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
-                  <svg class="h-12 w-12 text-gray-300" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
+                
+                <!-- Stock Status -->
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600">Status:</span>
+                  <span :class="getStockTextClass(product)" class="font-medium">
+                    {{ getStockStatusText(product) }}
+                  </span>
                 </div>
-                <div class="ml-5">
-                  <div class="relative">
-                    <input
-                      id="image-upload"
-                      ref="imageInput"
-                      type="file"
-                      class="sr-only"
-                      accept="image/*"
-                      @change="handleImageUpload"
-                    >
-                    <label
-                      for="image-upload"
-                      class="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                    >
-                      <svg class="-ml-1 mr-2 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
-                      </svg>
-                      Upload
-                    </label>
+                
+                <!-- Reorder Level -->
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600">Reorder Level:</span>
+                  <span class="font-medium">{{ product.reorder_level || 5 }} units</span>
+                </div>
+                
+                <!-- Stock Progress Bar -->
+                <div class="mt-2">
+                  <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div 
+                      :class="getStockBarColor(product)"
+                      class="h-2.5 rounded-full" 
+                      :style="{ width: getStockPercentage(product) }"
+                    ></div>
                   </div>
-                  <p v-if="imagePreview" class="mt-2 text-xs text-gray-500">
-                    <button 
-                      type="button" 
-                      class="text-indigo-600 hover:text-indigo-900"
-                      @click="removeImage"
-                    >
-                      Remove image
-                    </button>
-                  </p>
                 </div>
               </div>
-            </div>
-
-            <div class="sm:col-span-4">
-              <label for="title" class="block text-sm font-medium text-gray-700">
-                Product Name
-              </label>
-              <div class="mt-1">
-                <input
-                  type="text"
-                  id="title"
-                  v-model="product.title"
-                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                  :class="{ 'border-red-300': validationErrors.title }"
-                  placeholder="Enter product name"
-                >
-                <p v-if="validationErrors.title" class="mt-1 text-sm text-red-600">
-                  {{ validationErrors.title }}
-                </p>
-              </div>
-            </div>
-
-            <div class="sm:col-span-2">
-              <label for="price" class="block text-sm font-medium text-gray-700">
-                Price
-              </label>
-              <div class="mt-1 relative rounded-md shadow-sm">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span class="text-gray-500 sm:text-sm">$</span>
-                </div>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  id="price"
-                  v-model="product.price"
-                  class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md"
-                  :class="{ 'border-red-300': validationErrors.price }"
-                  placeholder="0.00"
-                >
-                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                  <span class="text-gray-500 sm:text-sm">USD</span>
-                </div>
-              </div>
-              <p v-if="validationErrors.price" class="mt-1 text-sm text-red-600">
-                {{ validationErrors.price }}
-              </p>
-            </div>
-
-            <div class="sm:col-span-6">
-              <label for="description" class="block text-sm font-medium text-gray-700">
-                Description
-              </label>
-              <div class="mt-1">
-                <textarea
-                  id="description"
-                  v-model="product.description"
-                  rows="5"
-                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                  :class="{ 'border-red-300': validationErrors.description }"
-                  placeholder="Enter product description"
-                ></textarea>
-                <p v-if="validationErrors.description" class="mt-1 text-sm text-red-600">
-                  {{ validationErrors.description }}
-                </p>
-              </div>
-            </div>
-
-            <div class="sm:col-span-3">
-              <label for="category" class="block text-sm font-medium text-gray-700">
-                Category
-              </label>
-              <div class="mt-1">
-                <select
-                  id="category"
-                  v-model="product.category_id"
-                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                >
-                  <option value="">Select a category</option>
-                  <option v-for="category in categories" :key="category.id" :value="category.id">
-                    {{ category.name }}
-                  </option>
-                </select>
-              </div>
-            </div>
-
-            <div class="sm:col-span-3">
-              <label for="inventory" class="block text-sm font-medium text-gray-700">
-                Inventory
-              </label>
-              <div class="mt-1">
-                <input
-                  type="number"
-                  min="0"
-                  id="inventory"
-                  v-model="product.quantity"
-                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                  :class="{ 'border-red-300': validationErrors.quantity }"
-                  placeholder="Available stock"
-                >
-                <p v-if="validationErrors.quantity" class="mt-1 text-sm text-red-600">
-                  {{ validationErrors.quantity }}
-                </p>
+              <div v-else class="text-gray-500">
+                Inventory tracking is not enabled for this product.
               </div>
             </div>
           </div>
+          
+          <!-- Action Buttons -->
+          <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
+            <button
+              @click="$emit('edit-product', product)"
+              class="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Edit Product
+            </button>
+            
+            <button
+              v-if="product.track_inventory"
+              @click="showAdjustInventoryModal = true"
+              class="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+            >
+              <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+              </svg>
+              Adjust Inventory
+            </button>
 
-          <!-- Product status and additional settings -->
-          <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-            <div class="sm:col-span-6">
-              <div class="flex items-start">
-                <div class="flex items-center h-5">
-                  <input
-                    id="published"
-                    type="checkbox"
-                    v-model="product.published"
-                    class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
-                  >
-                </div>
-                <div class="ml-3 text-sm">
-                  <label for="published" class="font-medium text-gray-700">Publish product</label>
-                  <p class="text-gray-500">Make this product visible in your store</p>
-                </div>
-              </div>
-            </div>
-
-            <div class="sm:col-span-6">
-              <div class="flex items-start">
-                <div class="flex items-center h-5">
-                  <input
-                    id="featured"
-                    type="checkbox"
-                    v-model="product.featured"
-                    class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
-                  >
-                </div>
-                <div class="ml-3 text-sm">
-                  <label for="featured" class="font-medium text-gray-700">Featured product</label>
-                  <p class="text-gray-500">Highlight this product on your homepage</p>
-                </div>
-              </div>
-            </div>
+            <!-- Add Stock Button -->
+            <button
+              v-if="product.track_inventory"
+              @click="showAddStockModal = true"
+              class="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            >
+              <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Add Stock
+            </button>
+            
+            <button
+              v-else
+              @click="enableInventoryTracking"
+              class="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            >
+              <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Enable Inventory Tracking
+            </button>
           </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Product metadata section -->
-    <div v-if="isEditing" class="mt-6 bg-white shadow overflow-hidden sm:rounded-lg">
-      <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
-        <h3 class="text-lg leading-6 font-medium text-gray-900">
-          Product Information
-        </h3>
-        <p class="mt-1 max-w-2xl text-sm text-gray-500">
-          Additional details and metadata
-        </p>
-      </div>
-      <div class="border-t border-gray-200 px-4 py-5 sm:p-0">
-        <dl class="sm:divide-y sm:divide-gray-200">
-          <div class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-            <dt class="text-sm font-medium text-gray-500">Product ID</dt>
-            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ product.id || 'Not yet assigned' }}</dd>
-          </div>
-          <div class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-            <dt class="text-sm font-medium text-gray-500">Created at</dt>
-            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ formatDate(product.created_at) }}</dd>
-          </div>
-          <div class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-            <dt class="text-sm font-medium text-gray-500">Last updated</dt>
-            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ formatDate(product.updated_at) }}</dd>
-          </div>
-          <div class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-            <dt class="text-sm font-medium text-gray-500">Status</dt>
-            <dd class="mt-1 text-sm sm:mt-0 sm:col-span-2">
-              <span 
-                :class="[
-                  'px-2 inline-flex text-xs leading-5 font-semibold rounded-full', 
-                  product.published ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                ]"
-              >
-                {{ product.published ? 'Published' : 'Draft' }}
-              </span>
-            </dd>
-          </div>
-        </dl>
+        </div>
       </div>
     </div>
     
-    <!-- Order history for this product (only shown if editing existing product) -->
-    <div v-if="isEditing && orderHistory.length > 0" class="mt-6 bg-white shadow overflow-hidden sm:rounded-lg">
-      <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
-        <h3 class="text-lg leading-6 font-medium text-gray-900">
-          Order History
-        </h3>
-        <p class="mt-1 max-w-2xl text-sm text-gray-500">
-          Recent orders containing this product
-        </p>
+    <!-- Inventory movements section -->
+    <div v-if="product.track_inventory && inventoryMovements.length > 0" class="border-t border-gray-200">
+      <div class="px-6 py-4 bg-gray-50">
+        <h3 class="text-lg font-semibold text-gray-700">Inventory Movement History</h3>
+        <p class="text-sm text-gray-500">Recent changes to product inventory</p>
       </div>
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Order ID
-              </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Date
-              </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Customer
-              </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Quantity
-              </th>
-              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Total
-              </th>
-              <th scope="col" class="relative px-6 py-3">
-                <span class="sr-only">View</span>
-              </th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Change</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Before/After</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reference</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="order in orderHistory" :key="order.id" class="hover:bg-gray-50">
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                #{{ order.id }}
-              </td>
+            <tr v-for="movement in inventoryMovements" :key="movement.id" class="hover:bg-gray-50">
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ formatDate(order.created_at) }}
+                {{ formatDate(movement.created_at) }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ order.customer_name }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ order.quantity }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                ${{ formatNumber(order.total) }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <button
-                  @click="viewOrder(order.id)"
-                  class="text-indigo-600 hover:text-indigo-900"
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span 
+                  :class="getMovementTypeClass(movement.type)"
+                  class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
                 >
-                  View
-                </button>
+                  {{ movement.type }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm">
+                <span 
+                  :class="movement.quantity > 0 ? 'text-green-600' : 'text-red-600'"
+                  class="font-medium"
+                >
+                  {{ movement.quantity > 0 ? '+' : '' }}{{ movement.quantity }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{ movement.previous_quantity }} → {{ movement.new_quantity }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{ movement.reference || '—' }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{ movement.notes || '—' }}
               </td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
-    
-    <!-- Toast notification -->
-    <Toast position="bottom" />
   </div>
+  
+  <div v-else class="bg-white rounded-lg shadow-lg p-8 text-center">
+    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <h3 class="mt-2 text-lg font-medium text-gray-900">Product not found</h3>
+    <p class="mt-1 text-sm text-gray-500">The product you're looking for doesn't exist or has been removed.</p>
+    <div class="mt-6">
+      <button 
+        @click="$router.push({ name: 'app.products' })"
+        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+      >
+        Go back to products
+      </button>
+    </div>
+  </div>
+  
+  <!-- Adjust Inventory Modal -->
+  <div v-if="showAdjustInventoryModal" class="fixed inset-0 overflow-y-auto z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+      <!-- Background overlay -->
+      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" @click="showAdjustInventoryModal = false"></div>
+      
+      <!-- Modal panel -->
+      <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+          <div class="sm:flex sm:items-start">
+            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-purple-100 sm:mx-0 sm:h-10 sm:w-10">
+              <svg class="h-6 w-6 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+              </svg>
+            </div>
+            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+              <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                Adjust Inventory
+              </h3>
+              <div class="mt-4">
+                <form @submit.prevent="submitInventoryAdjustment">
+                  <div class="grid grid-cols-1 gap-y-4">
+                    <!-- Quantity Adjustment -->
+                    <div>
+                      <label for="adjustment-quantity" class="block text-sm font-medium text-gray-700">
+                        Quantity Change
+                      </label>
+                      <div class="mt-1 flex rounded-md shadow-sm">
+                        <div class="relative flex items-stretch flex-grow">
+                          <div class="absolute inset-y-0 left-0 flex items-center">
+                            <select
+                              v-model="adjustmentDirection"
+                              class="focus:ring-indigo-500 focus:border-indigo-500 h-full py-0 pl-3 pr-7 border-transparent bg-transparent text-gray-500 sm:text-sm rounded-l-md"
+                            >
+                              <option value="increase">+</option>
+                              <option value="decrease">-</option>
+                            </select>
+                          </div>
+                          <input
+                            type="number"
+                            id="adjustment-quantity"
+                            v-model="adjustmentQuantity"
+                            min="1"
+                            required
+                            class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-16 sm:text-sm border-gray-300 rounded-md"
+                            placeholder="Quantity"
+                          />
+                        </div>
+                      </div>
+                      <p class="mt-1 text-xs text-gray-500">
+                        Current quantity: <strong>{{ product.quantity }}</strong> units
+                      </p>
+                      <p v-if="newQuantity < 0" class="mt-1 text-xs text-red-500">
+                        Warning: This will result in negative inventory.
+                      </p>
+                    </div>
+
+                    <!-- Adjustment Type -->
+                    <div>
+                      <label for="adjustment-type" class="block text-sm font-medium text-gray-700">
+                        Adjustment Type
+                      </label>
+                      <select
+                        id="adjustment-type"
+                        v-model="adjustmentType"
+                        required
+                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                      >
+                        <option value="purchase">Purchase</option>
+                        <option value="sale">Sale</option>
+                        <option value="return">Return</option>
+                        <option value="adjustment">Manual Adjustment</option>
+                        <option value="loss">Loss/Damage</option>
+                      </select>
+                    </div>
+
+                    <!-- Reference -->
+                    <div>
+                      <label for="adjustment-reference" class="block text-sm font-medium text-gray-700">
+                        Reference (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        id="adjustment-reference"
+                        v-model="adjustmentReference"
+                        class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                        placeholder="Order #, Invoice #, etc."
+                      />
+                    </div>
+
+                    <!-- Notes -->
+                    <div>
+                      <label for="adjustment-notes" class="block text-sm font-medium text-gray-700">
+                        Notes (Optional)
+                      </label>
+                      <textarea
+                        id="adjustment-notes"
+                        v-model="adjustmentNotes"
+                        rows="3"
+                        class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                        placeholder="Additional details about this adjustment"
+                      ></textarea>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+          <button
+            type="button"
+            @click="submitInventoryAdjustment"
+            :disabled="isAdjusting"
+            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-600 text-base font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:ml-3 sm:w-auto sm:text-sm"
+          >
+            <svg v-if="isAdjusting" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Save Adjustment
+          </button>
+          <button
+            type="button"
+            @click="showAdjustInventoryModal = false"
+            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Stock Adjustment Modal -->
+  <Teleport to="body">
+    <div v-if="showAddStockModal" class="fixed inset-0 z-50 overflow-y-auto">
+      <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <!-- Background overlay -->
+        <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" @click="showAddStockModal = false"></div>
+        <!-- This centers the modal -->
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+        
+        <!-- Modal panel -->
+        <div class="inline-block overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+          <QuickStockAdjustment 
+            :product="product" 
+            @cancel="showAddStockModal = false" 
+            @success="onStockAdded"
+          />
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
-import { useRouter, useRoute } from 'vue-router';
-import store from "../../store";
-import Toast from "../../components/core/Toast.vue";
-import { normalizePublished, cleanId, formatDate } from "../../utils/ProductUtils";
-import axiosClient from "../../axios.js";
+import { ref, computed, onMounted, onUnmounted, defineEmits, defineProps } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { formatCurrency, getImageUrl, normalizeTrackInventory } from '../../utils/ProductUtils';
+import axiosClient from '../../axios';
+import QuickStockAdjustment from './QuickStockAdjustment.vue';
+import { useStore } from 'vuex'; 
 
 const router = useRouter();
 const route = useRoute();
-const isSaving = ref(false);
-const imageInput = ref(null);
-const imagePreview = ref(null);
-const validationErrors = ref({});
-const orderHistory = ref([]);
-const categories = ref([
-  { id: 1, name: 'Electronics' },
-  { id: 2, name: 'Clothing' },
-  { id: 3, name: 'Home & Kitchen' },
-  { id: 4, name: 'Books' },
-  { id: 5, name: 'Beauty & Personal Care' }
-]);
+const store = useStore();
 
-// Initialize the product object
-const product = ref({
-  id: null,
-  title: '',
-  description: '',
-  price: '',
-  image: null,
-  image_url: null,
-  category_id: '',
-  quantity: 0,
-  published: false,
-  featured: false,
-  created_at: null,
-  updated_at: null
-});
+const emit = defineEmits(['edit-product', 'adjust-inventory', 'enable-tracking']);
 
-// Determine if we're editing an existing product or creating a new one
-const isEditing = computed(() => {
-  return !!product.value.id;
-});
-
-// Helper methods for formatting
-function formatNumber(value) {
-  return parseFloat(value || 0).toFixed(2);
-}
-
-// Check if a product ID was provided in the route
-onMounted(async () => {
-  // Check if we're editing an existing product
-  const productId = route.params.id;
-  if (productId) {
-    await loadProduct(productId);
-    await loadOrderHistory(productId);
+const props = defineProps({
+  id: {
+    type: [String, Number],
+    required: false
   }
 });
 
-// Load product data
-async function loadProduct(id) {
-  try {
-    const response = await store.dispatch('getProduct', cleanId(id));
-    if (response && response.data) {
-      // Update our local product object with the received data
-      const receivedProduct = response.data;
-      
-      // Normalize the published value and update the product ref
-      product.value = {
-        ...receivedProduct,
-        published: normalizePublished(receivedProduct.published)
-      };
-      
-      // Set the image preview if there's an image URL
-      if (receivedProduct.image_url) {
-        imagePreview.value = receivedProduct.image_url;
-      }
-    }
-  } catch (error) {
-    console.error('Error loading product:', error);
-    store.commit('showToast', 'Failed to load product data', 'error');
+const product = ref(null);
+const loading = ref(true);
+const inventoryMovements = ref([]);
+
+// Inventory Adjustment Modal
+const showAdjustInventoryModal = ref(false);
+const adjustmentQuantity = ref(1);
+const adjustmentDirection = ref('increase');
+const adjustmentType = ref('purchase');
+const adjustmentReference = ref('');
+const adjustmentNotes = ref('');
+const isAdjusting = ref(false);
+
+// Quick Stock Addition Modal
+const showAddStockModal = ref(false);
+
+// Computed value for what the new quantity will be after adjustment
+const newQuantity = computed(() => {
+  if (!product.value) return 0;
+  
+  const change = parseInt(adjustmentQuantity.value) || 0;
+  const currentQty = parseInt(product.value.quantity) || 0;
+  
+  return adjustmentDirection.value === 'increase' 
+    ? currentQty + change
+    : currentQty - change;
+});
+
+// Set up event listeners for keyboard shortcuts
+onMounted(() => {
+  fetchProduct();
+  document.addEventListener('keydown', handleKeyDown);
+});
+
+// Remove event listeners on component unmount
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeyDown);
+});
+
+// Handle keyboard shortcuts
+function handleKeyDown(event) {
+  // Close modal on escape key
+  if (event.key === 'Escape' && showAdjustInventoryModal.value) {
+    showAdjustInventoryModal.value = false;
+  }
+  
+  // Also close quick stock modal on escape
+  if (event.key === 'Escape' && showAddStockModal.value) {
+    showAddStockModal.value = false;
   }
 }
 
-// Load order history for the product
-async function loadOrderHistory(id) {
-  try {
-    // This would be a real API call in a production app
-    // For demo purposes, we'll just simulate some order history
-    orderHistory.value = [
-      {
-        id: '1001',
-        created_at: new Date(2025, 1, 15),
-        customer_name: 'John Doe',
-        quantity: 1,
-        total: product.value.price
-      },
-      {
-        id: '982',
-        created_at: new Date(2025, 1, 10),
-        customer_name: 'Jane Smith',
-        quantity: 2,
-        total: product.value.price * 2
-      },
-      {
-        id: '864',
-        created_at: new Date(2025, 0, 25),
-        customer_name: 'Michael Johnson',
-        quantity: 1,
-        total: product.value.price
-      }
-    ];
-  } catch (error) {
-    console.error('Error loading order history:', error);
-  }
+// Stock level thresholds
+const LOW_STOCK_THRESHOLD = 5;
+
+// Stock status helpers
+function isOutOfStock(product) {
+  return product.track_inventory && product.quantity <= 0;
 }
 
-// Handle image uploads
-function handleImageUpload(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  
-  // Check file type
-  if (!file.type.match('image.*')) {
-    store.commit('showToast', 'Please select an image file', 'error');
-    return;
+function isLowStock(product) {
+  return product.track_inventory && product.quantity > 0 && product.quantity <= (product.reorder_level || LOW_STOCK_THRESHOLD);
+}
+
+function isInStock(product) {
+  return product.track_inventory && product.quantity > (product.reorder_level || LOW_STOCK_THRESHOLD);
+}
+
+// Badge helpers
+function getStockBadgeText(product) {
+  if (!product.track_inventory) return 'Status Unknown';
+  if (isOutOfStock(product)) return 'Out of Stock';
+  if (isLowStock(product)) return 'Low Stock';
+  return 'In Stock';
+}
+
+function getStockBadgeClass(product) {
+  if (!product.track_inventory) return 'bg-gray-100 text-gray-800';
+  if (isOutOfStock(product)) return 'bg-red-100 text-red-800';
+  if (isLowStock(product)) return 'bg-yellow-100 text-yellow-800';
+  return 'bg-green-100 text-green-800';
+}
+
+// Stock text and icon helpers
+function getStockTextClass(product) {
+  if (isOutOfStock(product)) return 'text-red-600';
+  if (isLowStock(product)) return 'text-yellow-600';
+  return 'text-green-600';
+}
+
+function getStockStatusText(product) {
+  if (isOutOfStock(product)) return 'Out of Stock';
+  if (isLowStock(product)) return 'Low Stock';
+  return 'In Stock';
+}
+
+// Stock bar helpers
+function getStockBarColor(product) {
+  if (isOutOfStock(product)) return 'bg-red-600';
+  if (isLowStock(product)) return 'bg-yellow-500';
+  return 'bg-green-600';
+}
+
+function getStockPercentage(product) {
+  if (!product.track_inventory || product.quantity <= 0) {
+    return '0%';
   }
   
-  // Check file size (max 5MB)
-  if (file.size > 5 * 1024 * 1024) {
-    store.commit('showToast', 'Image size should be less than 5MB', 'error');
-    return;
-  }
-  
-  // Create preview
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    imagePreview.value = e.target.result;
+  const maxStock = Math.max(product.reorder_level * 2 || 10, product.quantity);
+  const percentage = Math.min(100, (product.quantity / maxStock) * 100);
+  return `${percentage}%`;
+}
+
+// Movement type helpers
+function getMovementTypeClass(type) {
+  const typeClasses = {
+    'purchase': 'bg-blue-100 text-blue-800',
+    'sale': 'bg-purple-100 text-purple-800',
+    'adjustment': 'bg-yellow-100 text-yellow-800',
+    'return': 'bg-green-100 text-green-800',
+    'loss': 'bg-red-100 text-red-800'
   };
-  reader.readAsDataURL(file);
   
-  // Store file for form submission
-  product.value.image = file;
+  return typeClasses[type.toLowerCase()] || 'bg-gray-100 text-gray-800';
 }
 
-// Remove the selected image
-function removeImage() {
-  imagePreview.value = null;
-  product.value.image = null;
-  if (imageInput.value) {
-    imageInput.value.value = '';
-  }
+// Format date for display
+function formatDate(dateString) {
+  if (!dateString) return '';
+  
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(date);
 }
 
-// Validate the form
-function validateForm() {
-  const errors = {};
-  
-  // Title validation
-  if (!product.value.title.trim()) {
-    errors.title = 'Product name is required';
-  } else if (product.value.title.length > 255) {
-    errors.title = 'Product name must be less than 255 characters';
-  }
-  
-  // Price validation
-  if (!product.value.price) {
-    errors.price = 'Price is required';
-  } else if (isNaN(parseFloat(product.value.price)) || parseFloat(product.value.price) < 0) {
-    errors.price = 'Price must be a positive number';
-  }
-  
-  // Description validation (optional)
-  if (product.value.description && product.value.description.length > 1000) {
-    errors.description = 'Description must be less than 1000 characters';
-  }
-  
-  // Quantity validation
-  if (product.value.quantity === '' || isNaN(parseInt(product.value.quantity))) {
-    errors.quantity = 'Inventory quantity must be a number';
-  } else if (parseInt(product.value.quantity) < 0) {
-    errors.quantity = 'Inventory quantity cannot be negative';
-  }
-  
-  validationErrors.value = errors;
-  return Object.keys(errors).length === 0;
-}
-
-// Save the product
-async function saveProduct() {
-  if (!validateForm()) {
-    store.commit('showToast', 'Please fix the errors before saving', 'error');
-    return;
-  }
-  
-  isSaving.value = true;
+// Fetch product data from API
+async function fetchProduct() {
+  loading.value = true;
   
   try {
-    // Create FormData for file upload
-    const formData = new FormData();
-    
-    // Add fields to FormData
-    for (const [key, value] of Object.entries(product.value)) {
-      // Skip image URL since we don't need to send it back
-      if (key === 'image_url') continue;
-      
-      // Skip null/undefined values and the image (handled separately)
-      if (value !== null && value !== undefined && key !== 'image') {
-        formData.append(key, value);
-      }
+    const productId = props.id || route.params.id;
+    if (!productId) {
+      loading.value = false;
+      return;
     }
     
-    // Only append image if a new one was selected
-    if (product.value.image) {
-      formData.append('image', product.value.image);
+    const response = await axiosClient.get(`/products/${productId}`);
+    product.value = response.data;
+    
+    // Normalize boolean values
+    if (product.value) {
+      product.value.track_inventory = normalizeTrackInventory(product.value.track_inventory);
     }
     
-    // Add method for PUT requests
-    if (isEditing.value) {
-      formData.append('_method', 'PUT');
+    // If inventory is tracked, fetch movement history
+    if (product.value && product.value.track_inventory) {
+      await fetchInventoryMovements(productId);
     }
     
-    let response;
-    if (isEditing.value) {
-      response = await store.dispatch('updateProduct', formData);
-    } else {
-      response = await store.dispatch('createProduct', formData);
-    }
+  } catch (error) {
+    console.error('Error fetching product:', error);
+    // Handle error state
+  } finally {
+    loading.value = false;
+  }
+}
+
+// Fetch inventory movements from API
+async function fetchInventoryMovements(productId) {
+  try {
+    const response = await axiosClient.get(`/products/${productId}/inventory-movements`);
+    inventoryMovements.value = response.data;
+  } catch (error) {
+    console.error('Error fetching inventory movements:', error);
+    // Fail gracefully - this isn't critical functionality
+  }
+}
+
+// Enable inventory tracking for this product
+async function enableInventoryTracking() {
+  try {
+    const updatedProduct = { 
+      ...product.value,
+      track_inventory: true,
+      quantity: 0,
+      reorder_level: 5
+    };
+    
+    const response = await axiosClient.put(`/products/${product.value.id}`, updatedProduct);
+    
+    // Update local product data
+    product.value = response.data;
+    
+    // Emit event for parent component
+    emit('enable-tracking', product.value);
     
     // Show success message
-    store.commit('showToast', `Product ${isEditing.value ? 'updated' : 'created'} successfully`);
+    alert('Inventory tracking has been enabled successfully!');
     
-    // Navigate back to products page
-    router.push({ name: 'app.products' });
+    // Refresh inventory movements
+    await fetchInventoryMovements(product.value.id);
+    
   } catch (error) {
-    console.error('Error saving product:', error);
-    
-    // Handle validation errors from server
-    if (error.response && error.response.status === 422) {
-      validationErrors.value = error.response.data.errors;
-      store.commit('showToast', 'Please fix the validation errors', 'error');
-    } else {
-      store.commit('showToast', `Failed to ${isEditing.value ? 'update' : 'create'} product`, 'error');
-    }
-  } finally {
-    isSaving.value = false;
+    console.error('Error enabling inventory tracking:', error);
+    alert('Failed to enable inventory tracking. Please try again.');
   }
 }
 
-// Navigate to view an order
-function viewOrder(orderId) {
-  router.push({ name: 'app.orders.view', params: { id: orderId } });
+// Submit inventory adjustment
+async function submitInventoryAdjustment() {
+  isAdjusting.value = true;
+  
+  try {
+    // Calculate the actual quantity change (positive or negative)
+    const quantityChange = adjustmentDirection.value === 'increase' 
+      ? parseInt(adjustmentQuantity.value)
+      : -parseInt(adjustmentQuantity.value);
+    
+    // Create the adjustment data
+    const adjustmentData = {
+      quantity: quantityChange,
+      type: adjustmentType.value,
+      reference: adjustmentReference.value,
+      notes: adjustmentNotes.value
+    };
+    
+    // Send the adjustment to the server
+    const response = await axiosClient.post(`/products/${product.value.id}/adjust-inventory`, adjustmentData);
+    
+    // Update the product with the new data
+    product.value = response.data.product;
+    
+    // Add the new movement to the list
+    if (response.data.movement) {
+      inventoryMovements.value.unshift(response.data.movement);
+    }
+    
+    // Close the modal and reset form
+    showAdjustInventoryModal.value = false;
+    resetAdjustmentForm();
+    
+  } catch (error) {
+    console.error('Error adjusting inventory:', error);
+    // Show error notification
+    alert('Failed to adjust inventory. Please try again.');
+  } finally {
+    isAdjusting.value = false;
+  }
+}
+
+// Reset the adjustment form
+function resetAdjustmentForm() {
+  adjustmentQuantity.value = 1;
+  adjustmentDirection.value = 'increase';
+  adjustmentType.value = 'purchase';
+  adjustmentReference.value = '';
+  adjustmentNotes.value = '';
+}
+
+// Handle successful stock addition from QuickStockAdjustment component
+function onStockAdded(result) {
+  // Update the local product data
+  product.value.quantity = result.newTotal;
+  
+  // Close the modal
+  showAddStockModal.value = false;
+  
+  // Show success notification
+  store.commit('showToast', {
+    type: 'success',
+    message: `Added ${result.addedQuantity} pieces to inventory. New total: ${result.newTotal} pieces.`,
+    title: 'Stock Updated'
+  });
+  
+  // Refresh product data from API to ensure it's up to date
+  fetchProduct();
 }
 </script>

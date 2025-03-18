@@ -6,6 +6,10 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\SupplierController;
+use App\Http\Controllers\Admin\InventoryController;
+use App\Http\Controllers\Admin\StockMovementController;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,7 +23,8 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['guestOrVerified'])->group(function () {
     Route::get('/', [ProductController::class, 'index'])->name('home');
     Route::get('/product/{product:slug}', [ProductController::class, 'view'])->name('product.view');
-    
+    // For Laravel
+Route::post('/api/inventory/adjust', 'InventoryController@adjust');
     // Add missing routes
     Route::get('/shop', [ProductController::class, 'shop'])->name('shop');
     Route::get('/blog', [ProductController::class, 'blog'])->name('blog');
@@ -34,7 +39,7 @@ Route::get('/privacy-policy', function () {
 Route::get('/terms-of-service', function () {
     return view('termsofservice');
 })->name('terms-of-service');
-
+Route::get('/sanctum/csrf-cookie', [Laravel\Sanctum\Http\Controllers\CsrfCookieController::class, 'show']);
 Route::get('/modern-day-slavery-statement', function () {
     return view('moderndayslaverystatement');
 })->name('modern-day-slavery-statement');
@@ -57,5 +62,7 @@ Route::middleware(['auth', 'verified'])->group(function() {
     Route::get('/orders', [OrderController::class, 'index'])->name('order.index');
     Route::get('/orders/{order}', [OrderController::class, 'view'])->name('order.view');
 });
+
+
 
 require __DIR__ . '/auth.php';

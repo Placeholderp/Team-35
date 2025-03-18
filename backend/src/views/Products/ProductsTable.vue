@@ -82,12 +82,12 @@
             >
               Price
             </th>
-            
-            <!-- Inventory Status (NEW) -->
+
+            <!-- Inventory (new column) -->
             <th
               class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
             >
-              Inventory
+              Stock
             </th>
 
             <!-- Status (centered) -->
@@ -193,40 +193,21 @@
               {{ formatCurrency(product.price) }}
             </td>
             
-            <!-- Inventory Status (NEW) -->
-            <td class="px-6 py-4 text-center whitespace-nowrap">
-              <div class="flex flex-col items-center">
-                <span
-                  :class="[
-                    'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
-                    getInventoryStatus(product.quantity).colorClass
-                  ]"
+            <!-- Inventory Stock (centered) -->
+            <td class="px-6 py-4 whitespace-nowrap text-center">
+              <div v-if="product.track_inventory" class="flex items-center justify-center space-x-1">
+                <span :class="getStockStatusClass(product)" class="font-medium">{{ product.quantity || 0 }}</span>
+                <button 
+                  @click="manageInventory(product)"
+                  class="ml-1 p-1 text-gray-400 hover:text-indigo-600 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  title="Manage inventory"
                 >
-                  {{ getInventoryStatus(product.quantity).status }}
-                </span>
-                <span class="text-xs text-gray-500 mt-1">
-                  {{ product.quantity || 0 }} units
-                </span>
-                <div class="mt-1 flex space-x-1">
-                  <button 
-                    @click="adjustInventory(product, -1)" 
-                    class="p-1 rounded-md hover:bg-gray-100"
-                    :disabled="!product.quantity || product.quantity <= 0"
-                  >
-                    <svg class="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
-                    </svg>
-                  </button>
-                  <button 
-                    @click="adjustInventory(product, 1)" 
-                    class="p-1 rounded-md hover:bg-gray-100"
-                  >
-                    <svg class="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                  </button>
-                </div>
+                  <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                </button>
               </div>
+              <span v-else class="text-gray-400 text-sm">Not tracked</span>
             </td>
 
             <!-- Status (centered) -->
@@ -282,6 +263,25 @@
                   Edit
                 </button>
                 <button
+                  @click="manageInventory(product)"
+                  class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-purple-700 bg-purple-100 hover:bg-purple-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors"
+                >
+                  <svg
+                    class="mr-1.5 h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"
+                    />
+                  </svg>
+                  Inventory
+                </button>
+                <button
                   @click="deleteProduct(product)"
                   class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
                 >
@@ -323,131 +323,244 @@
           class="relative z-0 inline-flex shadow-sm rounded-md -space-x-px"
           aria-label="Pagination"
         >
-          <a v-for="(link, i) in products.links" 
-             :key="i"
-             :disabled="!link.url"
-             href="#"
-             @click.prevent="getForPage($event, link)"
-             :class="[
+          <template v-for="(link, i) in products.links" :key="i">
+            <button
+              :disabled="!link.url"
+              href="#"
+              @click="getForPage($event, link)"
+              :class="[
                 'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
                 link.active ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600' : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50',
                 i === 0 ? 'rounded-l-md' : '',
                 i === products.links.length - 1 ? 'rounded-r-md' : '',
                 !link.url ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''
-             ]"
-          >
-            <!-- Previous page arrow icon -->
-            <template v-if="i === 0">
-              <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-              </svg>
-              <span class="sr-only">Previous</span>
-            </template>
-            
-            <!-- Next page arrow icon -->
-            <template v-else-if="i === products.links.length - 1">
-              <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-              </svg>
-              <span class="sr-only">Next</span>
-            </template>
-            
-            <!-- Regular page numbers -->
-            <template v-else>
-              {{ link.label }}
-            </template>
-          </a>
+              ]"
+            >
+              <!-- Previous page arrow icon -->
+              <template v-if="i === 0">
+                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                <span class="sr-only">Previous</span>
+              </template>
+              
+              <!-- Next page arrow icon -->
+              <template v-else-if="i === products.links.length - 1">
+                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+                <span class="sr-only">Next</span>
+              </template>
+              
+              <!-- Regular page numbers -->
+              <template v-else>
+                {{ link.label }}
+              </template>
+            </button>
+          </template>
         </nav>
       </div>
     </div>
-    
-    <!-- Inventory Adjustment Modal -->
-    <div v-if="showInventoryModal" class="fixed z-10 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+  </div>
+</template>
 
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+<script setup>
+import { computed, onMounted, ref, defineEmits } from "vue";
+import store from "../../store";
+import axiosClient from "../../axios";
+import Spinner from "../../components/core/Spinner.vue";
+import { PRODUCTS_PER_PAGE } from "../../constants";
+import TableHeaderCell from "../../components/core/Table/TableHeaderCell.vue";
+import { cleanId, normalizePublished, formatCurrency, formatDate, prepareProductFormData, getImageUrl } from "../../utils/ProductUtils";
+import { getStockStatusClass, getStockStatusText, getStockStatusBadgeClass } from "../../utils/InventoryUtils";
 
-        <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-          <div>
-            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100">
-              <svg class="h-6 w-6 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-              </svg>
-            </div>
-            <div class="mt-3 text-center sm:mt-5">
-              <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                Adjust Inventory for {{ inventoryProduct.title }}
-              </h3>
-              <div class="mt-2">
-                <p class="text-sm text-gray-500">
-                  Current stock: {{ inventoryProduct.quantity || 0 }} units
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          <div class="mt-5 sm:mt-6">
-            <div class="mb-4">
-              <label for="new-quantity" class="block text-sm font-medium text-gray-700">New Quantity</label>
-              <div class="mt-1 flex items-center">
-                <input
-                  type="number"
-                  id="new-quantity"
-                  v-model="newQuantity"
-                  min="0"
-                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                  placeholder="Enter quantity"
-                />
-              </div>
-            </div>
-            
-            <div class="mb-4">
-              <label for="adjustment-reason" class="block text-sm font-medium text-gray-700">Reason for Adjustment</label>
-              <div class="mt-1">
-                <select
-                  id="adjustment-reason"
-                  v-model="adjustmentReason"
-                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                >
-                  <option value="restock">New Stock Received</option>
-                  <option value="adjustment">Inventory Count Adjustment</option>
-                  <option value="damaged">Damaged/Defective Items</option>
-                  <option value="returned">Customer Returns</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-            </div>
-            
-            <div v-if="adjustmentReason === 'other'" class="mb-4">
-              <label for="other-reason" class="block text-sm font-medium text-gray-700">Specify Reason</label>
-              <div class="mt-1">
-                <input
-                  type="text"
-                  id="other-reason"
-                  v-model="otherReason"
-                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                  placeholder="Enter reason"
-                />
-              </div>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                @click="cancelInventoryAdjustment"
-                class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                @click="saveInventoryAdjustment"
-                class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm"
-              >
-                Save Changes
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+const perPage = ref(PRODUCTS_PER_PAGE);
+const search = ref("");
+const searchTimeout = ref(null);
+
+const products = computed(() => store.state.products);
+const sortField = ref("updated_at");
+const sortDirection = ref("desc");
+
+const emit = defineEmits(["clickEdit", "statusChanged", "manageInventory"]);
+
+onMounted(() => {
+  getProducts();
+});
+
+function getForPage(ev, link) {
+  ev.preventDefault();
+  if (!link.url || link.active) return;
+  getProducts(link.url);
+}
+
+function getProducts(url = null) {
+  store.dispatch("getProducts", {
+    url,
+    search: search.value,
+    per_page: perPage.value,
+    sort_field: sortField.value,
+    sort_direction: sortDirection.value
+  });
+}
+
+// Debounced search
+function debounceSearch() {
+  if (searchTimeout.value) clearTimeout(searchTimeout.value);
+  searchTimeout.value = setTimeout(() => {
+    getProducts();
+  }, 300);
+}
+
+function sortProducts(field) {
+  if (field === sortField.value) {
+    sortDirection.value = sortDirection.value === "desc" ? "asc" : "desc";
+  } else {
+    sortField.value = field;
+    sortDirection.value = "asc";
+  }
+  getProducts();
+}
+
+function isPublished(product) {
+  return normalizePublished(product?.published);
+}
+
+function togglePublishStatus(product) {
+  const currentStatus = isPublished(product);
+  const newStatus = !currentStatus;
+  const id = cleanId(product.id);
+  
+  // Create a copy of the product with the updated published status
+  const updatedProductData = {
+    ...product,
+    id,
+    published: newStatus
+  };
+  
+  // Create FormData using our utility
+  const formData = prepareProductFormData(updatedProductData, true);
+
+  // Optimistic UI update - important to create a deep copy first
+  store.commit('setProducts', [true]);
+  // Update the product in the list before the API call completes
+  store.commit('updateProductInList', updatedProductData);
+
+  // Make the API call to update the product
+  axiosClient.post(`/products/${id}`, formData)
+    .then(() => {
+      // Refresh product list with cache-busting
+      return store.dispatch('getProducts', {
+        force: true,
+        search: search.value,
+        per_page: perPage.value,
+        sort_field: sortField.value,
+        sort_direction: sortDirection.value
+      });
+    })
+    .then(() => {
+      emit('statusChanged');
+      
+      // Show success notification
+      if (window.$notification) {
+        window.$notification.success(
+          `Product "${product.title}" is now ${newStatus ? 'published' : 'unpublished'}.`,
+          'Status Updated'
+        );
+      } else {
+        store.commit('showToast', {
+          type: 'success',
+          message: `Product "${product.title}" is now ${newStatus ? 'published' : 'unpublished'}.`,
+          title: 'Status Updated'
+        });
+      }
+    })
+    .catch((error) => {
+      // Revert optimistic update on error
+      store.commit('updateProductInList', {
+        ...updatedProductData,
+        published: currentStatus
+      });
+      
+      // Show error notification
+      const errorMessage = error.response?.data?.message || 'Failed to update product status. Please try again.';
+      
+      if (window.$notification) {
+        window.$notification.error(errorMessage);
+      } else {
+        store.commit('showToast', {
+          type: 'error',
+          message: errorMessage,
+          title: 'Error'
+        });
+      }
+    })
+    .finally(() => {
+      store.commit('setProducts', [false]);
+    });
+}
+
+function editProduct(product) {
+  const cleanedProduct = { ...product };
+  cleanedProduct.id = cleanId(product.id);
+  emit("clickEdit", cleanedProduct);
+}
+
+function manageInventory(product) {
+  const cleanedProduct = { ...product };
+  cleanedProduct.id = cleanId(product.id);
+  emit("manageInventory", cleanedProduct);
+}
+
+function deleteProduct(product) {
+  if (!confirm(`Are you sure you want to delete "${product.title}"?`)) return;
+  const id = cleanId(product.id);
+
+  store.commit('setProducts', [true]);
+  axiosClient.delete(`/products/${id}`)
+    .then(() => {
+      store.dispatch("getProducts", {
+        search: search.value,
+        per_page: perPage.value,
+        sort_field: sortField.value,
+        sort_direction: sortDirection.value,
+        force: true
+      });
+      if (window.$notification) {
+        window.$notification.success(`Product "${product.title}" was deleted successfully.`);
+      } else {
+        store.commit('showToast', {
+          type: 'success',
+          message: `Product "${product.title}" was deleted successfully.`,
+          title: 'Success'
+        });
+      }
+    })
+    .catch(() => {
+      if (window.$notification) {
+        window.$notification.error('Failed to delete the product. Please try again.');
+      } else {
+        store.commit('showToast', {
+          type: 'error',
+          message: 'Failed to delete the product. Please try again.',
+          title: 'Error'
+        });
+      }
+    })
+    .finally(() => {
+      store.commit('setProducts', [false]);
+    });
+}
+</script>
+
+<style scoped>
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+.animate-ping {
+  animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+</style>

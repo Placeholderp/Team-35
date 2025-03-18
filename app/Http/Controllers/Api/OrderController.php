@@ -154,4 +154,93 @@ class OrderController extends Controller
             ], 500);
         }
     }
+    /**
+ * Place a new order.
+ *
+ * @param  \Illuminate\Http\Request  $request
+ * @return \Illuminate\Http\Response
+ */
+public function placeOrder(Request $request)
+{
+    /** @var \App\Models\User $user */
+    $user = $request->user();
+    
+    // Validate the request
+    $validated = $request->validate([
+        'items' => 'required|array',
+        'items.*.product_id' => 'required|exists:products,id',
+        'items.*.quantity' => 'required|integer|min:1',
+        // Add other fields as needed
+    ]);
+    
+    // Start a database transaction to ensure data integrity
+    \DB::beginTransaction();
+    
+    try {
+        // Create the order
+        $order = new Order();
+        $order->status = 'pending';
+        $order->created_by = $user->id;
+        // Set other order properties from the request as needed
+        $order->save();
+        
+        $totalAmount = 0;
+        
+        // Process each item
+        foreach ($validated['items'] as $itemData) {
+            $product = \App\Models\Product::findOrFail($itemData['product_id']);
+            
+            // Check if there's enough inventory
+            if ($product->track_inventory && $product->quantity < $itemData['quantity'] && !$product->allow_backorder) {
+                throw new \Exception("Not enough inventory for {$product->title}. Available: {$product->quantity}");
+            }
+            
+            // Calculate item price
+            $itemPrice = $product->price;
+            $itemTotal = $itemPrice * $itemData['quantity'];
+            $totalAmount += $itemTotal;
+            
+            // Create order item
+            $item = $order->items()->create([
+                'product_id' => $product->id,
+                'quantity' => $itemData['quantity'],
+                'unit_price' => $itemPrice,
+                'total_price' => $itemTotal,
+            ]);
+            
+            // Adjust inventory if tracking is enabled
+            if ($product->track_inventory) {
+                $product->adjustInventory(
+                    -$itemData['quantity'], // Negative quantity to decrease stock
+                    'sale',
+                    'Order #' . $order->id,
+                    'Order placed by ' . $user->name
+                );
+            }
+        }
+        
+        // Update order with total amount
+        $order->total_amount = $totalAmount;
+        $order->save();
+        
+        // Commit the transaction
+        \DB::commit();
+        
+        // Return a success response
+        return response()->json([
+            'success' => true,
+            'message' => 'Order placed successfully',
+            'order' => $order->load('items.product')
+        ]);
+    } catch (\Exception $e) {
+        // Rollback the transaction on failure
+        \DB::rollBack();
+        
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 422);
+    }
+}
+
 }

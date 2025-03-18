@@ -60,7 +60,7 @@
           <select
             id="perPage"
             v-model="perPage"
-            @change="getProducts(null)"
+            @change="getProducts()"
             class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
           >
             <option value="10">10</option>
@@ -75,7 +75,7 @@
           <select
             id="sortBy"
             v-model="sortField"
-            @change="getProducts(null)"
+            @change="getProducts()"
             class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
           >
             <option value="title">Title</option>
@@ -90,7 +90,7 @@
           <select
             id="sortDirection"
             v-model="sortDirection"
-            @change="getProducts(null)"
+            @change="getProducts()"
             class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
           >
             <option value="asc">Ascending</option>
@@ -197,11 +197,11 @@
     </div>
 
     <!-- Pagination -->
-    <div v-if="!products.loading && productsToShow.length > 0" class="mt-6 flex justify-center">
+    <div v-if="!products.loading && productsToShow.length > 0 && products.links && products.links.length > 0" class="mt-6 flex justify-center">
       <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
         <a v-for="(link, i) of products.links" 
            :key="i"
-           :disabled="!link.url"
+           :disabled="!link.url || link.active"
            href="#"
            @click.prevent="getForPage($event, link)"
            :class="[
@@ -225,13 +225,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch, onBeforeUnmount } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import axiosClient from "../../axios";
 import store from "../../store";
 import ProductModal from "../Products/ProductModal.vue";
 import Toast from "../../components/core/Toast.vue";
-import { normalizePublished, cleanId, prepareProductFormData } from "../../utils/ProductUtils";
+import { normalizePublished, cleanId, prepareProductFormData, formatCurrency } from "../../utils/ProductUtils";
 
 const route = useRoute();
 const router = useRouter();
@@ -274,18 +274,43 @@ const totalPublished = computed(() => {
 
 const averagePrice = computed(() => {
   if (!productsToShow.value.length) return '0.00';
-  const total = productsToShow.value.reduce((sum, product) => sum + parseFloat(product.price || 0), 0);
-  return (total / productsToShow.value.length).toFixed(2);
+  
+  const validPrices = productsToShow.value
+    .map(product => parseFloat(product.price) || 0)
+    .filter(price => !isNaN(price));
+    
+  if (validPrices.length === 0) return '0.00';
+  
+  const total = validPrices.reduce((sum, price) => sum + price, 0);
+  return (total / validPrices.length).toFixed(2);
 });
 
 const totalRevenue = computed(() => {
   if (!productsToShow.value.length) return '0.00';
-  const total = productsToShow.value.reduce((sum, product) => sum + parseFloat(product.price || 0), 0);
+  
+  const total = productsToShow.value.reduce((sum, product) => {
+    const price = parseFloat(product.price) || 0;
+    return sum + price;
+  }, 0);
+  
   return total.toFixed(2);
 });
 
-// Process URL query parameters
+// Process URL query parameters and load initial data
 onMounted(() => {
+  loadFromQueryParams();
+  refreshProducts();
+});
+
+// Clean up timers on unmount
+onBeforeUnmount(() => {
+  if (searchTimeout.value) {
+    clearTimeout(searchTimeout.value);
+  }
+});
+
+// Load query parameters from the URL
+function loadFromQueryParams() {
   // Get query parameters from route
   if (route.query.per_page) {
     perPage.value = parseInt(route.query.per_page) || 50;
@@ -302,10 +327,7 @@ onMounted(() => {
   if (route.query.search) {
     search.value = route.query.search;
   }
-  
-  // Load products on mount with appropriate filters
-  refreshProducts();
-});
+}
 
 // Watch for changes to refresh data
 watch([perPage, sortField, sortDirection], () => {
@@ -333,16 +355,19 @@ function showError(message, title = 'Error') {
 
 // Debounced search
 function debounceSearch() {
-  if (searchTimeout.value) clearTimeout(searchTimeout.value);
+  if (searchTimeout.value) {
+    clearTimeout(searchTimeout.value);
+  }
   
   searchTimeout.value = setTimeout(() => {
     refreshProducts();
   }, 300);
 }
 
-// Get products with the current filters - load all products first, then filter client-side
-function refreshProducts() {
+// Get products with the current filters
+function getProducts(url = null) {
   store.dispatch('getProducts', {
+    url,
     force: true,
     search: search.value,
     per_page: perPage.value,
@@ -351,11 +376,17 @@ function refreshProducts() {
   });
 }
 
+// Call the refresh function
+function refreshProducts() {
+  getProducts();
+}
+
 // Pagination
 function getForPage(ev, link) {
   ev.preventDefault();
   if (!link.url || link.active) return;
-  store.dispatch('getProducts', { url: link.url });
+  
+  getProducts(link.url);
 }
 
 function editProduct(p) {
@@ -365,37 +396,61 @@ function editProduct(p) {
     return;
   }
   
-  // Create a safe copy with cleaned ID and normalized published status
-  const productToEdit = { 
-    ...p,
-    id: cleanId(p.id),
-    published: normalizePublished(p.published)
-  };
-  
-  productModel.value = productToEdit;
-  showProductModal.value = true;
+  try {
+    // Create a safe copy with cleaned ID and normalized published status
+    const productToEdit = { 
+      ...p,
+      id: cleanId(p.id),
+      published: normalizePublished(p.published)
+    };
+    
+    productModel.value = productToEdit;
+    showProductModal.value = true;
+  } catch (error) {
+    console.error('Error editing product:', error);
+    showError('Failed to edit product.');
+  }
 }
 
 function unpublishProduct(product) {
-  if (!confirm(`Are you sure you want to unpublish "${product.title}"?`)) return;
+  if (!product || !product.id) {
+    showError('Invalid product - cannot unpublish');
+    return;
+  }
   
-  const id = cleanId(product.id);
-  const updatedProduct = {
-    ...product,
-    id,
-    published: false
-  };
+  // Use browser confirm instead of custom confirm modal for simplicity
+  if (!confirm(`Are you sure you want to unpublish "${product.title}"?`)) {
+    return;
+  }
   
-  const formData = prepareProductFormData(updatedProduct, true);
-  
-  axiosClient.post(`/products/${id}`, formData)
-    .then(() => {
-      refreshProducts();
-      showSuccess(`Product "${product.title}" has been unpublished.`);
-    })
-    .catch((error) => {
-      showError(`Failed to unpublish product. ${error.response?.data?.message || 'Please try again.'}`);
-    });
+  try {
+    const id = cleanId(product.id);
+    
+    // Create a form data object with updated published status
+    const formData = new FormData();
+    formData.append('id', id);
+    formData.append('published', 0); // Set published to false
+    formData.append('_method', 'PUT'); // Use PUT method for update
+    
+    // Add other product properties to ensure we don't lose data
+    if (product.title) formData.append('title', product.title);
+    if (product.price) formData.append('price', product.price);
+    if (product.description) formData.append('description', product.description);
+    
+    // Send update request
+    axiosClient.post(`/products/${id}`, formData)
+      .then(() => {
+        refreshProducts();
+        showSuccess(`Product "${product.title}" has been unpublished.`);
+      })
+      .catch((error) => {
+        console.error('Error unpublishing product:', error);
+        showError(`Failed to unpublish product. ${error.response?.data?.message || 'Please try again.'}`);
+      });
+  } catch (error) {
+    console.error('Error in unpublish process:', error);
+    showError('Failed to process unpublish request.');
+  }
 }
 
 function onModalClose() {

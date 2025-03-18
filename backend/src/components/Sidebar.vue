@@ -48,6 +48,27 @@
           label="Orders"
         />
         
+        <!-- Inventory Section -->
+        <div class="pt-5">
+          <div v-if="!isCollapsed" class="px-3 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+            Inventory
+          </div>
+          <div v-else class="border-t border-gray-700 my-2"></div>
+          
+          <!-- Inventory Dashboard -->
+          <SidebarNavItem 
+            :to="{ name: 'app.inventory' }" 
+            :is-collapsed="isCollapsed"
+            icon="ArchiveIcon"
+            label="Inventory"
+          />
+          
+          
+          
+          
+          
+        </div>
+        
         <!-- Users Section -->
         <div class="pt-5">
           <div v-if="!isCollapsed" class="px-3 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
@@ -108,7 +129,10 @@ import {
   ChartBarIcon,
   ClipboardListIcon,
   ShoppingBagIcon,
-  ChartPieIcon
+  ChartPieIcon,
+  ArchiveIcon,
+  CubeIcon,
+  SwitchVerticalIcon
 } from '@heroicons/vue/outline';
 
 // Component imports
@@ -123,7 +147,10 @@ export default {
     ChartBarIcon,
     ClipboardListIcon,
     ShoppingBagIcon,
-    ChartPieIcon
+    ChartPieIcon,
+    ArchiveIcon,
+    CubeIcon,
+    SwitchVerticalIcon
   },
   props: {
     isCollapsed: {
@@ -134,22 +161,3 @@ export default {
   emits: ['toggle-collapse']
 }
 </script>
-
-<style scoped>
-.scrollbar-thin::-webkit-scrollbar {
-  width: 4px;
-}
-
-.scrollbar-thin::-webkit-scrollbar-track {
-  background: #374151;
-}
-
-.scrollbar-thin::-webkit-scrollbar-thumb {
-  background: #4B5563;
-  border-radius: 2px;
-}
-
-.scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: #6B7280;
-}
-</style>

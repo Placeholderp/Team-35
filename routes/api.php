@@ -7,7 +7,7 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\ReportController;
-
+use App\Http\Controllers\InventoryController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -19,12 +19,21 @@ use App\Http\Controllers\ReportController;
 |
 */
 
+Route::get('/inventory/movements', [InventoryController::class, 'getMovements']);
+Route::get('/inventory/low-stock', [InventoryController::class, 'getLowStockProducts']);
+Route::post('/inventory/adjust', [InventoryController::class, 'adjustInventory']);
 Route::post('/login', [AuthController::class, 'login']);
-Route::post('/register', [App\Http\Controllers\Auth\RegisterController::class, 'register']);
+Route::post('/register', [AuthController::class, 'register']);
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+    Route::post('/orders', [OrderController::class, 'placeOrder']);
+    Route::post('/orders/{order}/cancel', [OrderController::class, 'cancelOrder']);
+    Route::post('/orders/{order}/return', [OrderController::class, 'processReturn']);
+    Route::post('/orders', [OrderController::class, 'placeOrder']);
+    Route::post('/orders/{order}/cancel', [OrderController::class, 'cancelOrder']);
+    Route::post('/orders/{order}/return', [OrderController::class, 'returnItems']);
     Route::get('/user', [AuthController::class, 'getUser']);
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::middleware('auth:sanctum')->post('/change-password', [App\Http\Controllers\Auth\PasswordController::class, 'changePassword']);
+
     Route::get('products', [ProductController::class, 'index']);
     Route::post('products', [ProductController::class, 'store']);
     Route::get('products/{id}', [ProductController::class, 'show']);
@@ -48,6 +57,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('/dashboard/orders-by-country', [DashboardController::class, 'ordersByCountry']);
     Route::get('/dashboard/latest-customers', [DashboardController::class, 'latestCustomers']);
     Route::get('/dashboard/latest-orders', [DashboardController::class, 'latestOrders']);
+
 
     // Report routes
     Route::prefix('reports')->group(function () {

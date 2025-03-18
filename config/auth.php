@@ -66,5 +66,16 @@ return [
     */
 
     'password_timeout' => 10800,
+    
+    /*
+    |--------------------------------------------------------------------------
+    | Admin Registration Code
+    |--------------------------------------------------------------------------
+    |
+    | This code is required for new admin registrations
+    |
+    */
+    
+    'admin_registration_code' => env('ADMIN_REGISTRATION_CODE', 'default_secure_code'),
 
 ];
