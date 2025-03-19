@@ -73,6 +73,14 @@ class Product extends Model
     }
 
     /**
+ * Get the category that owns the product.
+ */
+public function category()
+{
+    return $this->belongsTo(Category::class);
+}
+
+    /**
      * Check if the product has sufficient stock for the requested quantity.
      *
      * @param int $requestedQuantity

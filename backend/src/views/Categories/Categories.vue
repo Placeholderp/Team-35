@@ -191,13 +191,18 @@ function editCategory(category) {
   }
 }
 
+
+
+// Fixed function:
 function onModalClose() {
   // Refresh categories
   refreshCategories();
   
-  // Reset the category model
-  categoryModel.value = { ...DEFAULT_CATEGORY };
-  showCategoryModal.value = false;
+  // Reset the category model - need to delay this to avoid UI issues
+  setTimeout(() => {
+    categoryModel.value = { ...DEFAULT_CATEGORY };
+    showCategoryModal.value = false;
+  }, 100);
 }
 
 onMounted(() => {

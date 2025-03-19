@@ -14,6 +14,11 @@ export default {
     limit: 10,
     total: null
   },
+  // Add categories state
+  categories: {
+    loading: false,
+    data: []
+  },
   users: {
     loading: false,
     data: [],

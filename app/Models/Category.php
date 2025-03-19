@@ -17,7 +17,6 @@ class Category extends Model
     protected $fillable = [
         'name',
         'description',
-        'parent_id',
         'is_active',
         'image',
         'image_mime',
@@ -30,7 +29,6 @@ class Category extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'sort_order' => 'integer',
-        'parent_id' => 'integer',
     ];
 
     /**
@@ -49,22 +47,6 @@ class Category extends Model
     public function products()
     {
         return $this->hasMany(Product::class);
-    }
-
-    /**
-     * Get the parent category.
-     */
-    public function parent()
-    {
-        return $this->belongsTo(Category::class, 'parent_id');
-    }
-
-    /**
-     * Get the child categories.
-     */
-    public function children()
-    {
-        return $this->hasMany(Category::class, 'parent_id');
     }
 
     /**

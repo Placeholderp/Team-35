@@ -1,3 +1,4 @@
+<!-- ProductModal.vue -->
 <template>
   <Teleport to="body">
     <TransitionRoot as="template" :show="modelValue">
@@ -156,27 +157,38 @@
                         </div>
                         <p v-if="errors.published" class="mt-1 text-sm text-red-600">{{ errors.published }}</p>
                       </div>
-                      
-                      <!-- Category Selection - ADDED -->
-                      <div>
-                        <label for="category-id" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                        <select
-                          id="category-id"
-                          v-model="localProduct.category_id"
-                          class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                        >
-                          <option :value="null">No Category</option>
-                          <option 
-                            v-for="category in categories" 
-                            :key="category.id" 
-                            :value="category.id"
-                          >
-                            {{ category.name }}
-                          </option>
-                        </select>
-                        <p v-if="errors.category_id" class="mt-1 text-sm text-red-600">{{ errors.category_id }}</p>
-                      </div>
                     </div>
+                      
+                      <!-- Category Selection -->
+                      <div class="md:col-span-2">
+                        <label for="category_id" class="block text-sm font-medium text-gray-700 mb-1">
+                          Category <span class="text-red-600">*</span>
+                        </label>
+                        <div class="relative">
+                          <select
+                            id="category_id"
+                            v-model="localProduct.category_id"
+                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                          >
+                            <option value="" disabled>-- Select a category --</option>
+                            <option v-for="category in categories" :key="category.id" :value="category.id">
+                              {{ category.name }}
+                            </option>
+                          </select>
+                          <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                              <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                            </svg>
+                          </div>
+                        </div>
+                        <p v-if="errors.category_id" class="mt-1 text-sm text-red-600">{{ errors.category_id }}</p>
+                        <p v-if="categories.length === 0 && !categoriesLoading" class="mt-1 text-xs text-gray-500">
+                          No categories available. Please use the Categories page to create categories first.
+                        </p>
+                        <p v-if="categories.length > 0 && !localProduct.category_id" class="mt-1 text-xs text-gray-500">
+                          Please select a category for this product
+                        </p>
+                      </div>
                     
                     <!-- Inventory tracking section -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -255,8 +267,8 @@ import { Dialog, DialogPanel, DialogTitle, DialogOverlay, TransitionChild, Trans
 import CustomInput from "../../components/core/CustomInput.vue";
 import store from "../../store/index.js";
 import Spinner from "../../components/core/Spinner.vue";
-import { cleanId, normalizePublished, formatCurrency, formatDate, prepareProductFormData, getImageUrl } from "../../utils/ProductUtils";
-import axiosClient from '../../axios';
+import { cleanId, normalizePublished, normalizeTrackInventory, formatCurrency, formatDate, prepareProductFormData, getImageUrl } from "../../utils/ProductUtils";
+import axiosClient from '../../axios.js';
 
 const props = defineProps({
   modelValue: {
@@ -313,8 +325,11 @@ const localProduct = reactive({
   track_inventory: false,
   quantity: 0,
   reorder_level: 5,
-  category_id: null  // Added category_id field
+  category_id: ''  // Initialize with empty string to work with the placeholder
 });
+
+// Check if categories are loaded
+const categoriesLoading = computed(() => store.state.categories.loading);
 
 // Clear all validation errors
 function clearErrors() {
@@ -323,10 +338,45 @@ function clearErrors() {
   });
 }
 
+function createNewCategory() {
+  // Open a modal or dialog for creating a new category
+  const newCategoryName = prompt("Enter new category name:");
+  
+  if (newCategoryName && newCategoryName.trim()) {
+    const categoryData = {
+      name: newCategoryName.trim(),
+      is_active: true
+    };
+    
+    store.dispatch('createCategory', categoryData)
+      .then(newCategory => {
+        // Automatically select the newly created category
+        localProduct.category_id = newCategory.id;
+        
+        // Show success notification
+        if (window.$notification) {
+          window.$notification.success(`Category "${newCategory.name}" created successfully`);
+        }
+      })
+      .catch(error => {
+        console.error('Error creating category:', error);
+        if (window.$notification) {
+          window.$notification.error('Failed to create category');
+        }
+      });
+  }
+}
 // Clean up any blob URLs on unmount
 onBeforeUnmount(() => {
   if (imagePreview.value && imagePreview.value.startsWith('blob:')) {
     URL.revokeObjectURL(imagePreview.value);
+  }
+});
+
+onMounted(() => {
+  // Load categories if not already loaded
+  if (store.state.categories.data.length === 0 && !store.state.categories.loading) {
+    store.dispatch('getCategories');
   }
 });
 
@@ -337,9 +387,6 @@ watch(() => props.product, (newVal) => {
       // Clean the ID if it contains a colon
       const cleanedId = cleanId(newVal.id);
       
-      // Log incoming product data for debugging
-      console.log('Product being edited:', newVal);
-      
       // Create a fresh object to avoid reactivity issues
       const productData = {
         id: cleanedId,
@@ -347,11 +394,11 @@ watch(() => props.product, (newVal) => {
         description: newVal.description || '',
         price: newVal.price || '',
         published: normalizePublished(newVal.published),
-        track_inventory: Boolean(newVal.track_inventory),
+        track_inventory: normalizeTrackInventory(newVal.track_inventory),
         quantity: parseInt(newVal.quantity || 0),
         reorder_level: parseInt(newVal.reorder_level || 5),
         image_url: newVal.image_url || '',
-        category_id: newVal.category_id !== undefined ? newVal.category_id : null  // Handle category_id
+        category_id: newVal.category_id !== undefined ? newVal.category_id : ''  // Use empty string for category_id
       };
       
       // Update the local product with the new values
@@ -470,6 +517,12 @@ function validateForm() {
     isValid = false;
   }
   
+  // Category validation
+  if (!localProduct.category_id) {
+    errors.category_id = 'Please select a category';
+    isValid = false;
+  }
+  
   // Price validation
   if (!localProduct.price) {
     errors.price = 'Price is required';
@@ -536,60 +589,13 @@ function onSubmit() {
   loading.value = true;
   
   try {
-    // Create FormData object
-    const formData = new FormData();
+    // Use the utility function to prepare form data consistently
+    const formData = prepareProductFormData(localProduct, !!localProduct.id);
     
-    // Add basic fields - ensure correct data types
-    formData.append('title', localProduct.title.trim());
-    formData.append('description', localProduct.description || '');
-    
-    // Ensure price is formatted as a valid number
-    const priceValue = parseFloat(localProduct.price);
-    formData.append('price', isNaN(priceValue) ? "0" : priceValue.toString());
-    
-    // Boolean values need to be 0/1 for Laravel
-    formData.append('published', localProduct.published ? '1' : '0');
-    formData.append('track_inventory', localProduct.track_inventory ? '1' : '0');
-    
-    // Add category_id - handle null value appropriately
-    if (localProduct.category_id !== null) {
-      formData.append('category_id', localProduct.category_id);
-    } else {
-      // Send empty string or null depending on backend expectations
-      formData.append('category_id', '');
+    // For debugging
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Sending product data:', localProduct);
     }
-    
-    // Only append inventory fields if tracking is enabled
-    if (localProduct.track_inventory) {
-      // Ensure these are numbers
-      const qtyValue = parseInt(localProduct.quantity) || 0;
-      const reorderValue = parseInt(localProduct.reorder_level) || 5;
-      
-      formData.append('quantity', qtyValue.toString());
-      formData.append('reorder_level', reorderValue.toString());
-    }
-    
-    // Only append image if it's a File object (new upload)
-    if (localProduct.image instanceof File) {
-      formData.append('image', localProduct.image);
-    } else if (localProduct.id && !imagePreview.value) {
-      // If editing a product and image was cleared, explicitly tell the server to remove it
-      formData.append('remove_image', '1');
-    }
-    
-    // For updating existing products
-    if (localProduct.id) {
-      const cleanedId = cleanId(localProduct.id);
-      formData.append('id', cleanedId);
-      formData.append('_method', 'PUT');
-    }
-    
-    // Debug: Log all form data being sent
-    console.log('---- FORM DATA BEING SENT ----');
-    for (let [key, value] of formData.entries()) {
-      console.log(`${key}: ${value}`);
-    }
-    console.log('---- END FORM DATA ----');
     
     // Use the store actions
     const action = localProduct.id 
@@ -598,8 +604,10 @@ function onSubmit() {
       
     action
       .then((response) => {
-        console.log('Product saved response:', response);
-        store.dispatch('getProducts', { force: true });
+        store.dispatch('getProducts', { 
+          force: true,
+          include: 'category' // Make sure to include category data in the refresh
+        });
         closeModal();
         notifySuccess(`Product "${localProduct.title}" ${localProduct.id ? 'updated' : 'created'} successfully!`);
       })
@@ -616,6 +624,24 @@ function onSubmit() {
     loading.value = false;
   }
 }
+
+const categories = computed(() => {
+  // Return active categories, sorted by name
+  return store.state.categories.data
+    .filter(category => category.is_active !== false)
+    .sort((a, b) => a.name.localeCompare(b.name));
+});
+
+onMounted(() => {
+  // Load categories if not already loaded
+  if (store.state.categories.data.length === 0 && !store.state.categories.loading) {
+    store.dispatch('getCategories', { 
+      per_page: 100,  // Fetch all categories
+      sort_field: 'name',
+      sort_direction: 'asc'
+    });
+  }
+});
 
 // Handle API errors
 function handleApiError(error) {
@@ -653,3 +679,15 @@ function handleApiError(error) {
   }
 }
 </script>
+
+<style scoped>
+/* Add CSS for select placeholder */
+select option[value=""] {
+  color: #6b7280; /* Gray-500 */
+  font-style: italic;
+}
+
+select:invalid {
+  color: #6b7280; /* Gray-500 */
+}
+</style>

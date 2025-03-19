@@ -29,11 +29,6 @@ class CategoryController extends Controller
             });
         }
         
-        // Apply parent filter
-        if ($request->filled('parent_id')) {
-            $query->where('parent_id', $request->parent_id);
-        }
-        
         // Apply active filter
         if ($request->filled('is_active')) {
             $query->where('is_active', $request->boolean('is_active'));
@@ -62,7 +57,6 @@ class CategoryController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'parent_id' => 'nullable|exists:categories,id',
             'is_active' => 'boolean',
             'sort_order' => 'nullable|integer|min:0',
             'image' => 'nullable|image|max:1024' // max 1MB
@@ -89,6 +83,22 @@ class CategoryController extends Controller
         $category = Category::create($validated);
         
         return new CategoryResource($category);
+    }
+    public function canDelete(Category $category)
+    {
+        $canDelete = true;
+        $reason = '';
+        
+        // Check for associated products
+        if ($category->products()->count() > 0) {
+            $canDelete = false;
+            $reason = 'This category has associated products. Please remove or reassign these products before deleting.';
+        }
+        
+        return response()->json([
+            'can_delete' => $canDelete,
+            'reason' => $reason
+        ]);
     }
 
     /**
@@ -124,19 +134,10 @@ class CategoryController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'parent_id' => 'nullable|exists:categories,id',
             'is_active' => 'boolean',
             'sort_order' => 'nullable|integer|min:0',
             'image' => 'nullable|image|max:1024' // max 1MB
         ]);
-        
-        // Prevent category from being its own parent
-        if (isset($validated['parent_id']) && $validated['parent_id'] == $id) {
-            return response()->json([
-                'message' => 'A category cannot be its own parent',
-                'errors' => ['parent_id' => ['A category cannot be its own parent']]
-            ], 422);
-        }
         
         // Set boolean fields explicitly to avoid null values
         $validated['is_active'] = $request->boolean('is_active', true);
@@ -192,14 +193,6 @@ class CategoryController extends Controller
             ], 422);
         }
         
-        // Check if category has children
-        if ($category->children()->count() > 0) {
-            return response()->json([
-                'message' => 'Cannot delete category with child categories',
-                'errors' => ['general' => ['This category has child categories. Please reassign or delete those categories first.']]
-            ], 422);
-        }
-        
         // Delete image if exists
         if ($category->image) {
             Storage::disk('public')->delete($category->image);
@@ -220,7 +213,7 @@ class CategoryController extends Controller
     {
         $categories = Category::where('is_active', true)
             ->orderBy('name')
-            ->get(['id', 'name', 'parent_id']);
+            ->get(['id', 'name']);
         
         return response()->json($categories);
     }

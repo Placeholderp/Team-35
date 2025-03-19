@@ -84,25 +84,6 @@
                       </div>
                       
                       <div>
-                        <label for="parent-id" class="block text-sm font-medium text-gray-700 mb-1">Parent Category</label>
-                        <select
-                          id="parent-id"
-                          v-model="localCategory.parent_id"
-                          class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                        >
-                          <option :value="null">None (Top Level Category)</option>
-                          <option 
-                            v-for="category in availableParentCategories" 
-                            :key="category.id" 
-                            :value="category.id"
-                          >
-                            {{ category.name }}
-                          </option>
-                        </select>
-                        <p v-if="errors.parent_id" class="mt-1 text-sm text-red-600">{{ errors.parent_id }}</p>
-                      </div>
-                      
-                      <div>
                         <label for="sort-order" class="block text-sm font-medium text-gray-700 mb-1">Sort Order</label>
                         <input
                           type="number"
@@ -181,7 +162,6 @@ const props = defineProps({
       name: '',
       description: '',
       is_active: true,
-      parent_id: null,
       sort_order: 0
     })
   }
@@ -192,7 +172,6 @@ const loading = ref(false);
 const errors = reactive({
   name: '',
   description: '',
-  parent_id: '',
   sort_order: '',
   is_active: ''
 });
@@ -203,19 +182,7 @@ const localCategory = reactive({
   name: '',
   description: '',
   is_active: true,
-  parent_id: null,
   sort_order: 0
-});
-
-// All parent categories
-const parentCategories = ref([]);
-
-// Computed list of available parent categories (excluding self and children)
-const availableParentCategories = computed(() => {
-  if (!localCategory.id) return parentCategories.value;
-  
-  // Filter out self and potentially children if we implement hierarchical categories
-  return parentCategories.value.filter(category => category.id !== localCategory.id);
 });
 
 // Clear all validation errors
@@ -223,17 +190,6 @@ function clearErrors() {
   Object.keys(errors).forEach(key => {
     errors[key] = '';
   });
-}
-
-// Load all categories for parent dropdown
-function loadParentCategories() {
-  axiosClient.get('/categories/list')
-    .then(response => {
-      parentCategories.value = response.data;
-    })
-    .catch(error => {
-      console.error('Error loading parent categories:', error);
-    });
 }
 
 // Watch for changes to the category prop
@@ -245,9 +201,8 @@ watch(() => props.category, (newVal) => {
         id: newVal.id || '',
         name: newVal.name || '',
         description: newVal.description || '',
-        is_active: newVal.is_active !== undefined ? newVal.is_active : true,
-        parent_id: newVal.parent_id || null,
-        sort_order: newVal.sort_order !== undefined ? newVal.sort_order : 0
+        is_active: typeof newVal.is_active !== 'undefined' ? Boolean(newVal.is_active) : true,
+        sort_order: typeof newVal.sort_order !== 'undefined' ? parseInt(newVal.sort_order) : 0
       };
       
       // Update the local category with the new values
@@ -278,6 +233,30 @@ function showNotification(message, type = 'success') {
     }
   }
 }
+function selectCategory() {
+  // Check if there are any categories available
+  if (!props.categories || props.categories.length === 0) {
+    alert("No categories available.");
+    return;
+  }
+  
+  // Build a string listing the available categories
+  const categoryOptions = props.categories
+    .map(category => `${category.id}: ${category.name}`)
+    .join('\n');
+  
+  // Use a prompt for demonstration; in a production app you might show a modal instead
+  const selected = prompt(`Select a category by entering its ID:\n${categoryOptions}`);
+  const selectedId = parseInt(selected);
+  
+  // Verify that the selected ID exists in the categories list
+  if (props.categories.some(cat => cat.id === selectedId)) {
+    localProduct.category_id = selectedId;
+  } else {
+    alert("Invalid category selection");
+  }
+}
+
 
 // Close modal function
 function closeModal() {
@@ -300,12 +279,6 @@ function validateForm() {
     isValid = false;
   }
   
-  // Parent validation
-  if (localCategory.parent_id && localCategory.parent_id === localCategory.id) {
-    errors.parent_id = 'A category cannot be its own parent';
-    isValid = false;
-  }
-  
   // Sort order validation
   if (localCategory.sort_order < 0) {
     errors.sort_order = 'Sort order cannot be negative';
@@ -325,9 +298,8 @@ function onSubmit() {
   const categoryData = {
     name: localCategory.name.trim(),
     description: localCategory.description || '',
-    is_active: localCategory.is_active ? 1 : 0,
-    sort_order: localCategory.sort_order,
-    parent_id: localCategory.parent_id
+    is_active: localCategory.is_active ? 1 : 0,  // Ensure boolean is converted to 1/0
+    sort_order: parseInt(localCategory.sort_order) || 0,  // Ensure it's a number
   };
   
   // For updating existing categories
@@ -383,8 +355,4 @@ function handleApiError(error) {
     showNotification('Network error. Please check your connection and try again', 'error');
   }
 }
-
-onMounted(() => {
-  loadParentCategories();
-});
 </script>

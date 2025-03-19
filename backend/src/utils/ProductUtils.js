@@ -126,27 +126,21 @@ export function formatDate(dateStr, locale = 'en-US') {
 export function getImageUrl(url, forceRefresh = false) {
   if (!url) return null;
   
-  // For debugging
-  console.log('Processing image URL:', url);
+  console.log('Original image URL:', url);
   
-  // Handle both absolute and relative URLs
-  if (url.startsWith('http')) {
-    // If we're in dev mode and URL points to a different host, fix it
-    const currentHost = window.location.host;
-    const urlObj = new URL(url);
-    
-    if (urlObj.host !== currentHost) {
-      // Keep the pathname (which should include /storage/products/filename.jpg)
-      const pathname = urlObj.pathname;
-      url = `${window.location.protocol}//${currentHost}${pathname}`;
+  // If we have a URL with localhost:8000 but we're running on localhost:5173
+  if (url && url.includes('localhost:8000') && 
+      (window.location.port === '5173' || window.location.hostname.includes('localhost:5173'))) {
+    try {
+      // Extract just the path portion (e.g., /storage/products/filename)
+      const urlObj = new URL(url);
+      url = urlObj.pathname;
+      console.log('Using path portion for proxy:', url);
+    } catch (error) {
+      console.error('Invalid URL:', url);
     }
-  } 
-  else if (!url.startsWith('/')) {
-    // If the URL is relative without a leading slash, add it
-    url = '/' + url;
   }
   
-  // Add cache busting if needed
   return forceRefresh ? `${url}?t=${new Date().getTime()}` : url;
 }
 /**
@@ -262,6 +256,14 @@ export function prepareProductFormData(product, forUpdate = false) {
     
     const trackInventory = normalizeTrackInventory(product.track_inventory);
     formData.append('track_inventory', trackInventory ? '1' : '0');
+    
+    // Category ID handling
+    if (product.category_id !== null && product.category_id !== undefined) {
+      formData.append('category_id', product.category_id.toString());
+    } else {
+      // Send empty string for null category
+      formData.append('category_id', '');
+    }
     
     // Inventory fields - only include if track_inventory is true
     if (trackInventory) {

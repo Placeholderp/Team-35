@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use App\Models\Category;
 
 return new class extends Migration
 {
@@ -13,9 +14,12 @@ return new class extends Migration
      */
     public function up()
     {
-        // Add category_id to products table
         Schema::table('products', function (Blueprint $table) {
-            $table->foreignId('category_id')->nullable()->after('slug')->constrained('categories')->nullOnDelete();
+            // Add nullable foreign key for category
+            $table->foreignIdFor(Category::class)
+                  ->nullable()
+                  ->constrained()
+                  ->onDelete('set null'); // When category is deleted, set product's category to null
         });
     }
 
@@ -27,7 +31,8 @@ return new class extends Migration
     public function down()
     {
         Schema::table('products', function (Blueprint $table) {
-            $table->dropConstrainedForeignId('category_id');
+            // Drop the foreign key constraint
+            $table->dropForeignIdFor(Category::class);
         });
     }
 };

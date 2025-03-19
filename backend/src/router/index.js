@@ -80,12 +80,6 @@ const routes = [
         name: 'app.products.all',
         component: AllProducts
       },
-      
-      {
-        path: '/category/:slug',
-        name: 'category',
-        component: () => import('../views/shop/CategoryListingPage.vue')
-      },
       {
         path: '/app/categories',
         name: 'app.categories',
@@ -93,6 +87,14 @@ const routes = [
         meta: {
           requiresAuth: true,
           title: 'Categories Management'
+        }
+      },
+      {
+        path: 'inventory/bulk-adjustment',
+        name: 'app.inventory.bulk',
+        component: () => import('../views/Inventory/BulkStockAdjustment.vue'),
+        meta: {
+          requiresAuth: true
         }
       },
       

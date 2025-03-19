@@ -67,21 +67,21 @@ class ProductController extends Controller
      * @return string|null
      */
     private function getImageUrl($path)
-    {
-        if (!$path) {
-            return null;
-        }
-        
-        // Generate the correct storage URL
-        $url = asset('storage/' . $path);
-        
-        Log::info('Generated front-end image URL', [
-            'path' => $path,
-            'url' => $url
-        ]);
-        
-        return $url;
+{
+    if (!$path) {
+        return null;
     }
+    
+    // Generate full storage URL
+    $url = asset('storage/' . $path);
+    
+    Log::info('Generated image URL', [
+        'path' => $path,
+        'url' => $url
+    ]);
+    
+    return $url;
+}
 
     /**
      * Display a listing of the resource for API.
@@ -140,7 +140,7 @@ class ProductController extends Controller
         $cleanId = $this->cleanProductId($id);
         
         // Find the product with the cleaned ID
-        $product = Product::findOrFail($cleanId);
+        $product = Product::with('category')->findOrFail($cleanId);
         
         // Ensure published is always set
         if (!isset($product->published)) {
@@ -163,51 +163,57 @@ class ProductController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $id)
-    {
-        // Clean the ID
-        $cleanId = $this->cleanProductId($id);
-        
-        // Log the incoming data for debugging
-        Log::info('Product update request', [
-            'product_id' => $cleanId,
-            'title' => $request->input('title'),
-            'all_data' => $request->all()
-        ]);
-        
-        // Find the product
-        $product = Product::findOrFail($cleanId);
-        
-        // Validate the request data
-        $validated = $request->validate([
-            'title' => 'required|string|max:2000',
-            'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            'published' => 'boolean',
-            'track_inventory' => 'boolean',
-            'quantity' => 'nullable|numeric|min:0',
-            'reorder_level' => 'nullable|numeric|min:0',
-        ]);
-        
-        // Set boolean fields explicitly to avoid null values
-        $validated['published'] = $request->boolean('published', false);
-        $validated['track_inventory'] = $request->boolean('track_inventory', false);
-        
-        // Set user who updated the product
-        if (auth()->check()) {
-            $validated['updated_by'] = auth()->id();
-        }
-        
-        // Update the product with validated data
-        $product->update($validated);
-        
-        // Log the update for debugging
-        Log::info('Product updated', [
-            'product_id' => $product->id
-        ]);
-        
-        // Return the updated product as a resource
-        return new ProductResource($product);
+{
+    // Clean the ID
+    $cleanId = $this->cleanProductId($id);
+    
+    // Log the incoming data for debugging
+    Log::info('Product update request', [
+        'product_id' => $cleanId,
+        'title' => $request->input('title'),
+        'all_data' => $request->all()
+    ]);
+    
+    // Find the product
+    $product = Product::findOrFail($cleanId);
+    
+    // Validate the request data
+    $validated = $request->validate([
+        'title' => 'required|string|max:2000',
+        'description' => 'nullable|string',
+        'price' => 'required|numeric|min:0',
+        'published' => 'boolean',
+        'track_inventory' => 'boolean',
+        'quantity' => 'nullable|numeric|min:0',
+        'reorder_level' => 'nullable|numeric|min:0',
+        'category_id' => 'nullable|exists:categories,id', // Add this line
+    ]);
+    
+    // Set boolean fields explicitly to avoid null values
+    $validated['published'] = $request->boolean('published', false);
+    $validated['track_inventory'] = $request->boolean('track_inventory', false);
+    
+    // Set user who updated the product
+    if (auth()->check()) {
+        $validated['updated_by'] = auth()->id();
     }
+    
+    // Update the product with validated data
+    $product->update($validated);
+    
+    // Reload the product with the category relationship
+    $product = $product->fresh(['category']);
+    
+    // Log the update for debugging
+    Log::info('Product updated', [
+        'product_id' => $product->id,
+        'category_id' => $product->category_id,
+        'has_category' => $product->category ? true : false
+    ]);
+    
+    // Return the updated product as a resource
+    return new ProductResource($product);
+}
     
     /**
      * Remove the specified resource from storage.

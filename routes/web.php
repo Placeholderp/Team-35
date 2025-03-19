@@ -6,10 +6,10 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\CategoryController;
-use App\Http\Controllers\Admin\SupplierController;
-use App\Http\Controllers\Admin\InventoryController;
-use App\Http\Controllers\Admin\StockMovementController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\StockMovementController;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,7 +21,7 @@ use App\Http\Controllers\Admin\StockMovementController;
 */
 
 Route::middleware(['guestOrVerified'])->group(function () {
-    Route::get('/', [ProductController::class, 'index'])->name('home');
+    Route::get('/', [ProductController::class, 'WebIndex'])->name('home');
     Route::get('/product/{product:slug}', [ProductController::class, 'view'])->name('product.view');
     // For Laravel
     Route::get('/shop', 'App\Http\Controllers\ProductController@shop')->name('shop');

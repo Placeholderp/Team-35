@@ -8,6 +8,24 @@ function normalizeIsAdmin(value) {
   return false;
 }
 
+export function createCategory({commit, dispatch}, categoryData) {
+  return axiosClient.post('/categories', categoryData)
+    .then(response => {
+      // Trigger a refresh of categories after creation
+      return dispatch('getCategories', { force: true })
+        .then(() => response.data);
+    });
+}
+
+export function updateCategory({commit, dispatch}, {id, categoryData}) {
+  return axiosClient.put(`/categories/${id}`, categoryData)
+    .then(response => {
+      // Trigger a refresh of categories after update
+      return dispatch('getCategories', { force: true })
+        .then(() => response.data);
+    });
+}
+
 export function getCurrentUser({commit}, data) {
   return axiosClient.get('/user', data)
     .then(({data}) => {
@@ -96,16 +114,82 @@ export function getOrder({commit}, id) {
   return axiosClient.get(`/orders/${id}`)
 }
 
-export function getProducts({commit, state}, {url = null, search = '', per_page, sort_field, sort_direction, force = false} = {}) {
+export function getCategories({commit, state}, {
+  url = null, 
+  search = '', 
+  per_page, 
+  sort_field, 
+  sort_direction, 
+  force = false
+} = {}) {
+  // Commit loading state
+  commit('setCategories', [true]);
+  
+  // Use existing URL or default to categories endpoint
+  url = url || '/categories';
+  
+  const params = {
+    per_page: state.categories.limit || 10,
+    include: 'products_count' // Optional: include product count with categories
+  };
+  
+  // Add cache-busting timestamp when force is true
+  if (force) {
+    params._t = new Date().getTime();
+  }
+  
+  // Add optional parameters
+  if (search) params.search = search;
+  if (per_page) params.per_page = per_page;
+  if (sort_field) params.sort_field = sort_field;
+  if (sort_direction) params.sort_direction = sort_direction;
+  
+  return axiosClient.get(url, { params })
+    .then((response) => {
+      // Process and normalize category data
+      const categories = response.data.data || response.data;
+      
+      // Commit the categories to the store
+      commit('setCategories', [false, categories]);
+      
+      return response.data;
+    })
+    .catch((error) => {
+      console.error('Error fetching categories:', error);
+      
+      // Commit loading state with failure
+      commit('setCategories', [false]);
+      
+      // Rethrow the error for the caller to handle
+      throw error;
+    });
+}
+
+// Updated getProducts action to include category data
+export function getProducts({commit, state}, {
+  url = null, 
+  search = '', 
+  per_page, 
+  sort_field, 
+  sort_direction, 
+  category_id = null, // Add category_id parameter
+  force = false
+} = {}) {
   commit('setProducts', [true])
   url = url || '/products'
   const params = {
     per_page: state.products.limit,
+    include: 'category' // Include category in response data
   }
   
   // Add a timestamp parameter when force is true to bust the cache
   if (force) {
     params._t = new Date().getTime();
+  }
+  
+  // Add category filter if specified
+  if (category_id) {
+    params.category_id = category_id;
   }
   
   return axiosClient.get(url, {
@@ -140,7 +224,11 @@ export function getProduct({commit}, id) {
   // Clean the ID
   const productId = cleanId(id);
   
-  return axiosClient.get(`/products/${productId}`)
+  return axiosClient.get(`/products/${productId}`, {
+    params: {
+      include: 'category' // Include category data
+    }
+  })
     .then(response => {
       // If the response contains product data, normalize published status
       if (response.data) {
@@ -186,7 +274,11 @@ export function updateProduct({commit}, product) {
         console.log('UPDATE PRODUCT RESPONSE:', response.data);
         
         // Force refresh product data from server
-        return axiosClient.get(`/products/${id}`)
+        return axiosClient.get(`/products/${id}`, {
+          params: {
+            include: 'category' // Include category data when refreshing
+          }
+        })
           .then(refreshResponse => {
             console.log('REFRESHED PRODUCT DATA:', refreshResponse.data);
             
@@ -289,6 +381,7 @@ export function getCustomers({commit, state}, {url = null, search = '', per_page
     .catch(() => {
       commit('setCustomers', [false])
     })
+
 }
 
 export function getCustomer({commit}, id) {

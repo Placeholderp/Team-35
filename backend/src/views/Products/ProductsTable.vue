@@ -37,7 +37,7 @@
             >
               <option value="">All Categories</option>
               <option 
-                v-for="category in categories" 
+                v-for="category in availableCategories" 
                 :key="category.id" 
                 :value="category.id"
               >
@@ -174,6 +174,7 @@
             :key="product.id"
             class="hover:bg-gray-50 transition-colors"
           >
+            <!-- Rest of the template remains the same -->
             <!-- ID -->
             <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
               {{ product.id }}
@@ -220,6 +221,9 @@
             <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
               <span v-if="product.category" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                 {{ product.category.name }}
+              </span>
+              <span v-else-if="product.category_id" class="text-gray-400">
+                Category ID: {{ product.category_id }}
               </span>
               <span v-else class="text-gray-400">No category</span>
             </td>
@@ -426,9 +430,33 @@ const products = computed(() => store.state.products);
 const sortField = ref("updated_at");
 const sortDirection = ref("desc");
 
+// Compute available categories from store and props
+const availableCategories = computed(() => {
+  const storeCategories = store.state.categories.data || [];
+  const propsCategories = props.categories || [];
+  
+  // Use categories from store if available, otherwise use props
+  return storeCategories.length > 0 ? storeCategories : propsCategories;
+});
+
 const emit = defineEmits(["clickEdit", "statusChanged", "manageInventory"]);
 
+// Watch for changes in URL query parameters (for category filtering from other pages)
 onMounted(() => {
+  // Get category_id from URL if present
+  const urlParams = new URLSearchParams(window.location.search);
+  const categoryId = urlParams.get('category_id');
+  
+  if (categoryId) {
+    // Convert to string to ensure consistency
+    categoryFilter.value = categoryId.toString();
+  }
+  
+  // Load categories if they're not already loaded
+  if (store.state.categories.data.length === 0 && !store.state.categories.loading) {
+    store.dispatch('getCategories');
+  }
+  
   // Load products
   getProducts();
 });
@@ -451,14 +479,18 @@ function getProducts(url = null) {
   params.per_page = perPage.value;
   params.sort_field = sortField.value;
   params.sort_direction = sortDirection.value;
+  params.include = 'category'; // Always include category data
   
   // Add category filter
   if (categoryFilter.value) {
-    params.category_id = categoryFilter.value;
+    // Convert to string to ensure consistent comparison
+    params.category_id = categoryFilter.value.toString();
+    console.log('Filtering by category_id:', params.category_id);
   }
   
   // For debugging
   console.log('Fetching products with params:', params);
+  console.log('Available categories:', availableCategories.value);
   
   return axiosClient.get(url, { params })
     .then((response) => {
@@ -505,7 +537,7 @@ function togglePublishStatus(product) {
   const id = cleanId(product.id);
   
   // Create a copy of the product with the updated published status
-  const updatedProductData = {
+  const updatedProductData = { 
     ...product,
     id,
     published: newStatus
@@ -529,7 +561,8 @@ function togglePublishStatus(product) {
         per_page: perPage.value,
         sort_field: sortField.value,
         sort_direction: sortDirection.value,
-        category_id: categoryFilter.value // Include category filter in refresh
+        category_id: categoryFilter.value, // Include category filter in refresh
+        include: 'category' // Always include category data
       });
     })
     .then(() => {
@@ -593,6 +626,7 @@ function deleteProduct(product) {
         sort_field: sortField.value,
         sort_direction: sortDirection.value,
         category_id: categoryFilter.value, // Include category filter in refresh
+        include: 'category', // Always include category data
         force: true
       });
       if (window.$notification) {

@@ -24,7 +24,11 @@ class ProductRequest extends FormRequest
             'image' => ['nullable', 'image'],
             'price' => ['required', 'numeric'],
             'description' => ['nullable', 'string'],
-            'published' => ['required', 'boolean']
+            'published' => ['required', 'boolean'],
+            'category_id' => ['nullable', 'exists:categories,id'], // Add this line
+            'track_inventory' => ['nullable', 'boolean'],          // Add these too if needed
+            'quantity' => ['nullable', 'numeric', 'min:0'],
+            'reorder_level' => ['nullable', 'numeric', 'min:0']
         ];
     }
 }

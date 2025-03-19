@@ -23,7 +23,6 @@ return new class extends Migration
             $table->string('image_mime')->nullable();
             $table->integer('image_size')->nullable();
             $table->boolean('is_active')->default(true);
-            $table->integer('parent_id')->nullable()->default(null);
             $table->integer('sort_order')->default(0);
             $table->foreignIdFor(User::class, 'created_by')->nullable();
             $table->foreignIdFor(User::class, 'updated_by')->nullable();

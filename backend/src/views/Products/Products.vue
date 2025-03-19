@@ -19,6 +19,15 @@
             </svg>
             Export
           </button>
+          <button
+            @click="assignDefaultCategories"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            <svg class="-ml-1 mr-2 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+            </svg>
+            Assign Categories
+          </button>
           <router-link
             :to="{name: 'app.inventory'}"
             class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
@@ -224,8 +233,8 @@ import store from "../../store";
 import ProductModal from "./ProductModal.vue";
 import ProductsTable from "./ProductsTable.vue";
 import Toast from "../../components/core/Toast.vue";
-import { normalizePublished, cleanId, formatCurrency, prepareProductFormData } from "../../utils/ProductUtils";
-import axiosClient from "../../axios";
+import { normalizePublished, cleanId, formatCurrency } from "../../utils/ProductUtils";
+import axiosClient from "../../axios"; // Make sure you have this import
 
 const router = useRouter();
 const DEFAULT_PRODUCT = {
@@ -350,6 +359,30 @@ function goToInventory(product) {
     name: 'app.inventory',
     query: { productId: product.id } // Pass the product ID as a query parameter
   });
+}
+
+// Function to assign default categories to products
+async function assignDefaultCategories() {
+  try {
+    store.commit('setLoading', true);
+    
+    // Call the API endpoint to assign categories
+    const response = await axiosClient.post('/api/products/assign-categories');
+    
+    if (response.data.count > 0) {
+      showSuccess(`Categories assigned to ${response.data.count} products.`);
+    } else {
+      showSuccess('All products already have categories assigned.');
+    }
+    
+    // Refresh the products list
+    refreshProducts();
+  } catch (error) {
+    console.error('Error assigning categories:', error);
+    showError('Failed to assign categories. Please try again.');
+  } finally {
+    store.commit('setLoading', false);
+  }
 }
 
 // Make the notification methods available globally (with safer global access)

@@ -75,12 +75,7 @@
               Products
             </th>
 
-            <!-- Parent Category -->
-            <th
-              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-            >
-              Parent
-            </th>
+           
 
             <!-- Status (centered) -->
             <th
@@ -166,10 +161,7 @@
               {{ category.product_count || 0 }}
             </td>
             
-            <!-- Parent Category -->
-            <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
-              {{ getParentCategoryName(category.parent_id) || 'None' }}
-            </td>
+           
 
             <!-- Status (centered) -->
             <td class="px-6 py-4 text-center whitespace-nowrap">
@@ -359,11 +351,21 @@ function loadParentCategories() {
     });
 }
 
-function getParentCategoryName(parentId) {
-  if (!parentId) return null;
+
+
+
+
+// Cleaned up and explicit return:
+function debounceSearch() {
+  if (searchTimeout.value) {
+    clearTimeout(searchTimeout.value);
+  }
   
-  const parent = parentCategories.value.find(c => c.id === parentId);
-  return parent ? parent.name : `Category #${parentId}`;
+  searchTimeout.value = setTimeout(() => {
+    getCategories();
+  }, 300);
+  
+  return null; // explicit return
 }
 
 function formatDate(dateStr) {
@@ -422,13 +424,7 @@ function getCategories(url = null) {
     });
 }
 
-// Debounced search
-function debounceSearch() {
-  if (searchTimeout.value) clearTimeout(searchTimeout.value);
-  searchTimeout.value = setTimeout(() => {
-    getCategories();
-  }, 300);
-}
+
 
 function showError(message, title = 'Error') {
   if (window.$notification) {
@@ -473,15 +469,28 @@ function toggleStatus(category) {
     });
 }
 
+// Replace your current deleteCategory function with this:
+
 function deleteCategory(category) {
+  // If category has products, prevent deletion with warning
+  if (category.product_count && category.product_count > 0) {
+    showError(
+      `This category has ${category.product_count} associated products. Please remove or reassign these products before deleting.`,
+      'Cannot Delete'
+    );
+    return;
+  }
+  
+  // Confirm deletion
   if (!confirm(`Are you sure you want to delete "${category.name}"? This action cannot be undone.`)) {
     return;
   }
   
   loading.value = true;
   
+  // Attempt to delete the category
   axiosClient.delete(`/categories/${category.id}`)
-    .then(() => {
+    .then(response => {
       // Success notification
       if (window.$notification) {
         window.$notification.success(
@@ -496,12 +505,39 @@ function deleteCategory(category) {
     .catch(error => {
       console.error('Error deleting category:', error);
       
-      // Show specific error message from server if available
+      // Detailed error handling
       let errorMessage = 'Failed to delete category. Please try again.';
-      if (error.response && error.response.data && error.response.data.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.response && error.response.data && error.response.data.errors && error.response.data.errors.general) {
-        errorMessage = error.response.data.errors.general[0];
+      
+      if (error.response) {
+        const { status, data } = error.response;
+        
+        // Handle 422 validation errors
+        if (status === 422 && data) {
+          if (data.message) {
+            errorMessage = data.message;
+          } else if (data.errors) {
+            // Check for specific error types
+            if (data.errors.products) {
+              errorMessage = `This category has associated products. Please remove or reassign these products before deleting.`;
+            } else if (data.errors.children) {
+              errorMessage = `This category has subcategories. Please delete or reassign these subcategories first.`;
+            } else if (data.errors.general) {
+              errorMessage = data.errors.general[0];
+            } else {
+              // Find first error message from any validation field
+              const firstErrorField = Object.keys(data.errors)[0];
+              if (firstErrorField && data.errors[firstErrorField][0]) {
+                errorMessage = data.errors[firstErrorField][0];
+              }
+            }
+          }
+        } else if (status === 403) {
+          errorMessage = 'You do not have permission to delete this category.';
+        } else if (status === 404) {
+          errorMessage = 'Category not found. It may have already been deleted.';
+        } else if (status >= 500) {
+          errorMessage = 'Server error occurred. Please try again later.';
+        }
       }
       
       showError(errorMessage);
@@ -521,7 +557,7 @@ function viewProducts(category) {
 
 onMounted(() => {
   getCategories();
-  loadParentCategories();
+  
 });
 </script>
 

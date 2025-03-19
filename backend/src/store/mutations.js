@@ -1,5 +1,5 @@
 import { normalizePublished } from "../utils/ProductUtils";
-
+import { normalizeActiveStatus } from "../utils/CategoryUtils";
 
 export function setUser(state, user) {
   state.user.data = user;
@@ -14,6 +14,21 @@ export function setToken(state, token) {
   }
 }
 
+// Add setCategories mutation
+export function setCategories(state, [loading, data = null]) {
+  if (data) {
+    // Normalize is_active status if present
+    if (Array.isArray(data)) {
+      data = data.map(category => ({
+        ...category,
+        is_active: normalizeActiveStatus(category.is_active)
+      }));
+    }
+    
+    state.categories.data = data;
+  }
+  state.categories.loading = loading;
+}
 
 export function setProducts(state, [loading, data = null]) {
   if (data) {
