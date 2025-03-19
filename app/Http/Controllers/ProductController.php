@@ -4,9 +4,48 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
+use App\Http\Resources\ProductResource;
+use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request)
+    {
+        // Validate the request data
+        $validated = $request->validate([
+            'title' => 'required|string|max:2000',
+            'description' => 'nullable|string',
+            'price' => 'required|numeric|min:0',
+            'published' => 'boolean',
+            'track_inventory' => 'boolean',
+            'quantity' => 'nullable|numeric|min:0',
+            'reorder_level' => 'nullable|numeric|min:0',
+            'category_id' => 'nullable|exists:categories,id',
+        ]);
+        
+        // Set boolean fields explicitly to avoid null values
+        $validated['published'] = $request->boolean('published', false);
+        $validated['track_inventory'] = $request->boolean('track_inventory', false);
+        
+        // Set user who created the product
+        if (auth()->check()) {
+            $validated['created_by'] = auth()->id();
+            $validated['updated_by'] = auth()->id();
+        }
+        
+        // Create the product
+        $product = new Product($validated);
+        $product->save();
+        
+        return new ProductResource($product);
+    }
+
     /**
      * Clean a product ID by removing anything after a colon
      * 
@@ -22,15 +61,73 @@ class ProductController extends Controller
     }
 
     /**
- * Display the cart page
- *
- * @return \Illuminate\Http\Response
- */
-public function cart()
-{
-    return view('cart.index');
-}
+     * Generate the correct image URL for a product
+     * 
+     * @param string $path
+     * @return string|null
+     */
+    private function getImageUrl($path)
+    {
+        if (!$path) {
+            return null;
+        }
+        
+        // Generate the correct storage URL
+        $url = asset('storage/' . $path);
+        
+        Log::info('Generated front-end image URL', [
+            'path' => $path,
+            'url' => $url
+        ]);
+        
+        return $url;
+    }
+
+    /**
+     * Display a listing of the resource for API.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function index(Request $request)
+    {
+        $query = Product::query();
+        
+        // Apply search filter
+        if ($request->filled('search')) {
+            $searchTerm = '%' . $request->search . '%';
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('title', 'like', $searchTerm)
+                  ->orWhere('description', 'like', $searchTerm);
+            });
+        }
+        
+        // Apply sorting
+        $sortField = $request->input('sort_field', 'updated_at');
+        $sortDirection = $request->input('sort_direction', 'desc');
+        $query->orderBy($sortField, $sortDirection);
+        
+        // Paginate results
+        $products = $query->paginate($request->input('per_page', 10));
+        
+        return ProductResource::collection($products);
+    }
     
+    /**
+     * Display a listing of the resource for web views.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function webIndex()
+    {
+        $products = Product::query()
+            ->where('published', true)
+            ->latest()
+            ->get();
+        
+        return view('index', compact('products'));
+    }
+
     /**
      * Display the specified resource.
      *
@@ -42,93 +139,24 @@ public function cart()
         // Clean the ID
         $cleanId = $this->cleanProductId($id);
         
+        // Find the product with the cleaned ID
         $product = Product::findOrFail($cleanId);
-        return response()->json($product);
-    }
+        
+        // Ensure published is always set
+        if (!isset($product->published)) {
+            $product->published = false;
+        }
 
-    public function index()
-    {
-        $products = Product::query()
-            ->where('published', true)
-            ->latest()
-            ->get();
-    
-        return view('index', compact('products'));
-    }
+        // Add image URL if present
+        if ($product->image) {
+            $product->image_url = $this->getImageUrl($product->image);
+        }
 
-    /**
-     * Display the product view page
-     *
-     * @param  Product  $product
-     * @return \Illuminate\Http\Response
-     */
-    public function view(Product $product)
-    {
-        return view('product', compact('product'));
+        return new ProductResource($product);
     }
 
     /**
-     * Display the shop page with all published products
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function shop()
-    {
-        $products = Product::where('published', true)->get();
-        return view('shop', compact('products'));
-    }
-
-    /**
-     * Display the blog page
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function blog()
-    {
-        return view('blog');
-    }
-
-    /**
-     * Display the about page
-     *
-     * @return \Illuminate\Http\Response
-     */
- /**
- * Display the about page
- *
- * @return \Illuminate\Http\Response
- */
-public function about()
-{
-    return view('about_us');
-}
-    /**
-     * Display the calorie calculator page
-     *
-     * @return \Illuminate\Http\Response
-     */
-   /**
- * Display the calorie calculator page
- *
- * @return \Illuminate\Http\Response
- */
-public function calorieCalculator()
-{
-    return view('Calorie_Calculator');
-}
-
-    /**
-     * Display the contact page
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function contact()
-    {
-        return view('Contact_us');
-    }
-    
-    /**
-     * Update the specified resource.
+     * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  string|int  $id
@@ -139,10 +167,46 @@ public function calorieCalculator()
         // Clean the ID
         $cleanId = $this->cleanProductId($id);
         
-        $product = Product::findOrFail($cleanId);
-        // Update product logic...
+        // Log the incoming data for debugging
+        Log::info('Product update request', [
+            'product_id' => $cleanId,
+            'title' => $request->input('title'),
+            'all_data' => $request->all()
+        ]);
         
-        return response()->json($product);
+        // Find the product
+        $product = Product::findOrFail($cleanId);
+        
+        // Validate the request data
+        $validated = $request->validate([
+            'title' => 'required|string|max:2000',
+            'description' => 'nullable|string',
+            'price' => 'required|numeric|min:0',
+            'published' => 'boolean',
+            'track_inventory' => 'boolean',
+            'quantity' => 'nullable|numeric|min:0',
+            'reorder_level' => 'nullable|numeric|min:0',
+        ]);
+        
+        // Set boolean fields explicitly to avoid null values
+        $validated['published'] = $request->boolean('published', false);
+        $validated['track_inventory'] = $request->boolean('track_inventory', false);
+        
+        // Set user who updated the product
+        if (auth()->check()) {
+            $validated['updated_by'] = auth()->id();
+        }
+        
+        // Update the product with validated data
+        $product->update($validated);
+        
+        // Log the update for debugging
+        Log::info('Product updated', [
+            'product_id' => $product->id
+        ]);
+        
+        // Return the updated product as a resource
+        return new ProductResource($product);
     }
     
     /**
@@ -160,5 +224,80 @@ public function calorieCalculator()
         $product->delete();
         
         return response()->noContent();
+    }
+
+    /**
+     * Display the product view page
+     *
+     * @param  \App\Models\Product  $product
+     * @return \Illuminate\Http\Response
+     */
+    public function view(Product $product)
+    {
+        return view('product', compact('product'));
+    }
+
+    /**
+     * Display the shop page with all published products
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function shop()
+    {
+        $query = Product::where('published', true);
+        
+        $products = $query->latest()->get();
+        
+        return view('shop', compact('products'));
+    }
+
+    /**
+     * Display the cart page
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function cart()
+    {
+        return view('cart.index');
+    }
+
+    /**
+     * Display the blog page
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function blog()
+    {
+        return view('blog');
+    }
+
+    /**
+     * Display the about page
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function about()
+    {
+        return view('about_us');
+    }
+
+    /**
+     * Display the calorie calculator page
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function calorieCalculator()
+    {
+        return view('Calorie_Calculator');
+    }
+
+    /**
+     * Display the contact page
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function contact()
+    {
+        return view('Contact_us');
     }
 }

@@ -293,11 +293,16 @@ function register() {
     .then(() => {
       loading.value = false;
       
-      // Show success notification
-      window.$notification.success(
-        'Registration successful',
-        'Your admin account has been created. Please change your password after first login.'
-      );
+      // Try to show success notification if notification system exists
+      if (window.$notification && typeof window.$notification.success === 'function') {
+        window.$notification.success(
+          'Registration successful',
+          'Your admin account has been created. Please change your password after first login.'
+        );
+      } else {
+        // Fallback to simple alert if notification system is not available
+        alert('Registration successful! Your admin account has been created. Please change your password after first login.');
+      }
       
       // Redirect to login page
       router.push({ 
@@ -305,15 +310,22 @@ function register() {
         query: { newAdmin: true }  // Flag to indicate a new admin was registered
       });
     })
-    .catch(({ response }) => {
+    .catch((error) => {
       loading.value = false;
-      errorMsg.value = response?.data?.message || "Registration failed. Please try again.";
+      // Safely extract error message
+      const errorMessage = error.response?.data?.message || "Registration failed. Please try again.";
+      errorMsg.value = errorMessage;
       
-      // Show error notification
-      window.$notification.error(
-        response?.data?.message || "Registration failed. Please try again.",
-        'Registration Failed'
-      );
+      // Try to show error notification if notification system exists
+      if (window.$notification && typeof window.$notification.error === 'function') {
+        window.$notification.error(
+          errorMessage,
+          'Registration Failed'
+        );
+      } else {
+        // Log error to console for debugging
+        console.error('Registration failed:', error);
+      }
     });
 }
 </script>

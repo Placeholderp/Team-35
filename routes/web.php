@@ -24,6 +24,8 @@ Route::middleware(['guestOrVerified'])->group(function () {
     Route::get('/', [ProductController::class, 'index'])->name('home');
     Route::get('/product/{product:slug}', [ProductController::class, 'view'])->name('product.view');
     // For Laravel
+    Route::get('/shop', 'App\Http\Controllers\ProductController@shop')->name('shop');
+Route::get('/category/{slug}', 'App\Http\Controllers\CategoryController@show')->name('category.show');
 Route::post('/api/inventory/adjust', 'InventoryController@adjust');
     // Add missing routes
     Route::get('/shop', [ProductController::class, 'shop'])->name('shop');
@@ -49,9 +51,12 @@ Route::get('/modern-day-slavery-statement', function () {
         Route::post('/remove/{product:slug}', [CartController::class, 'remove'])->name('remove');
         Route::post('/update-quantity/{product:slug}', [CartController::class, 'updateQuantity'])->name('update-quantity');
     });
+    Route::get('/shop/{category?}', [ProductController::class, 'shop'])->name('shop');
 });
 
 Route::middleware(['auth', 'verified'])->group(function() {
+        // Admin category management pages
+        Route::get('/admin/categories', 'App\Http\Controllers\AdminController@categories')->name('app.categories');
     Route::get('/profile', [ProfileController::class, 'view'])->name('profile');
     Route::post('/profile', [ProfileController::class, 'store'])->name('profile.update');
     Route::post('/profile/password-update', [ProfileController::class, 'passwordUpdate'])->name('profile_password.update');

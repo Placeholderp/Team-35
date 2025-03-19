@@ -224,7 +224,8 @@ import store from "../../store";
 import ProductModal from "./ProductModal.vue";
 import ProductsTable from "./ProductsTable.vue";
 import Toast from "../../components/core/Toast.vue";
-import { normalizePublished, cleanId, formatCurrency } from "../../utils/ProductUtils";
+import { normalizePublished, cleanId, formatCurrency, prepareProductFormData } from "../../utils/ProductUtils";
+import axiosClient from "../../axios";
 
 const router = useRouter();
 const DEFAULT_PRODUCT = {
@@ -382,7 +383,6 @@ onMounted(() => {
   store.dispatch('getOrders', {});
 });
 
-// Add this function to the script section of Products.vue
 // Add this function to the script section of Products.vue
 function enableInventoryTracking() {
   if (!confirm("This will enable inventory tracking for all products. Continue?")) {

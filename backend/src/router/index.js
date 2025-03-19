@@ -27,7 +27,6 @@ import CustomersReport from "../views/Reports/CustomersReport.vue";
 
 // Inventory component imports
 import InventoryDashboard from "../views/Inventory/InventoryDashboard.vue";
-
 import InventoryMovements from "../views/Inventory/InventoryAdjustmentModal.vue";
 
 
@@ -50,7 +49,6 @@ const inventoryRoutes = [
       requiresAuth: true
     }
   },
-  
 ];
 
 const routes = [
@@ -81,6 +79,27 @@ const routes = [
         path: 'products/all',
         name: 'app.products.all',
         component: AllProducts
+      },
+      
+      {
+        path: '/category/:slug',
+        name: 'category',
+        component: () => import('../views/shop/CategoryListingPage.vue')
+      },
+      {
+        path: '/app/categories',
+        name: 'app.categories',
+        component: () => import('../views/Categories/Categories.vue'),
+        meta: {
+          requiresAuth: true,
+          title: 'Categories Management'
+        }
+      },
+      
+      {
+        path: '/product/:slug',
+        name: 'product',
+        component: () => import('../views/Products/ProductDetails.vue')
       },
       {
         path: 'products/published',

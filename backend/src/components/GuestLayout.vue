@@ -5,7 +5,7 @@
       <div>
         <img 
           class="mx-auto h-12 w-auto" 
-          src="C:\xampp\htdocs\team-35l\backend\src\assets\logo.png"
+          src="C:\xampp\htdocs\team-35\backend\src\assets\logo.png"
           alt="Your Company" 
         />
         <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">

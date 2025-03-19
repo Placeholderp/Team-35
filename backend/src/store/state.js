@@ -1,3 +1,4 @@
+// src/store/state.js
 export default {
   user: {
     token: sessionStorage.getItem('TOKEN'),

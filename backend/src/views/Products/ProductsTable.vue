@@ -26,25 +26,46 @@
           </div>
         </div>
 
-        <!-- Right side - Search -->
-        <div class="w-full md:w-64">
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fill-rule="evenodd"
-                  d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                  clip-rule="evenodd"
-                />
-              </svg>
+        <!-- Search and Filters -->
+        <div class="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-3 w-full md:w-auto">
+          <!-- Category Filter -->
+          <div class="w-full md:w-64">
+            <select
+              v-model="categoryFilter"
+              @change="getProducts(null)"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm"
+            >
+              <option value="">All Categories</option>
+              <option 
+                v-for="category in categories" 
+                :key="category.id" 
+                :value="category.id"
+              >
+                {{ category.name }}
+              </option>
+            </select>
+          </div>
+          
+          <!-- Search -->
+          <div class="w-full md:w-64">
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path
+                    fill-rule="evenodd"
+                    d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </div>
+              <input
+                v-model="search"
+                @input="debounceSearch"
+                type="text"
+                class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm"
+                placeholder="Search products..."
+              />
             </div>
-            <input
-              v-model="search"
-              @input="debounceSearch"
-              type="text"
-              class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm"
-              placeholder="Search products..."
-            />
           </div>
         </div>
       </div>
@@ -74,6 +95,13 @@
               class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
             >
               Product Details
+            </th>
+
+            <!-- Category (New column) -->
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Category
             </th>
 
             <!-- Price (left-aligned) -->
@@ -116,7 +144,7 @@
         <!-- Loading / Empty State -->
         <tbody v-if="products.loading || !products.data.length" class="bg-white divide-y divide-gray-200">
           <tr>
-            <td colspan="8" class="px-6 py-10 text-center">
+            <td colspan="9" class="px-6 py-10 text-center">
               <Spinner v-if="products.loading" />
               <div v-else class="text-gray-500">
                 <svg
@@ -186,6 +214,14 @@
               >
                 {{ product.description }}
               </div>
+            </td>
+
+            <!-- Category (New column) -->
+            <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
+              <span v-if="product.category" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                {{ product.category.name }}
+              </span>
+              <span v-else class="text-gray-400">No category</span>
             </td>
 
             <!-- Price (left-aligned) -->
@@ -365,7 +401,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, defineEmits } from "vue";
+import { computed, onMounted, ref, defineEmits, watch, defineProps } from "vue";
 import store from "../../store";
 import axiosClient from "../../axios";
 import Spinner from "../../components/core/Spinner.vue";
@@ -374,10 +410,18 @@ import TableHeaderCell from "../../components/core/Table/TableHeaderCell.vue";
 import { cleanId, normalizePublished, formatCurrency, formatDate, prepareProductFormData, getImageUrl } from "../../utils/ProductUtils";
 import { getStockStatusClass, getStockStatusText, getStockStatusBadgeClass } from "../../utils/InventoryUtils";
 
+// Define props to receive categories from parent component
+const props = defineProps({
+  categories: {
+    type: Array,
+    default: () => []
+  }
+});
+
 const perPage = ref(PRODUCTS_PER_PAGE);
 const search = ref("");
+const categoryFilter = ref(""); // Add new ref for category filter
 const searchTimeout = ref(null);
-
 const products = computed(() => store.state.products);
 const sortField = ref("updated_at");
 const sortDirection = ref("desc");
@@ -385,6 +429,7 @@ const sortDirection = ref("desc");
 const emit = defineEmits(["clickEdit", "statusChanged", "manageInventory"]);
 
 onMounted(() => {
+  // Load products
   getProducts();
 });
 
@@ -395,13 +440,41 @@ function getForPage(ev, link) {
 }
 
 function getProducts(url = null) {
-  store.dispatch("getProducts", {
-    url,
-    search: search.value,
-    per_page: perPage.value,
-    sort_field: sortField.value,
-    sort_direction: sortDirection.value
-  });
+  store.commit('setProducts', [true]);
+  url = url || '/products';
+  
+  // Prepare query parameters
+  const params = {};
+  
+  // Add standard parameters
+  params.search = search.value || '';
+  params.per_page = perPage.value;
+  params.sort_field = sortField.value;
+  params.sort_direction = sortDirection.value;
+  
+  // Add category filter
+  if (categoryFilter.value) {
+    params.category_id = categoryFilter.value;
+  }
+  
+  // For debugging
+  console.log('Fetching products with params:', params);
+  
+  return axiosClient.get(url, { params })
+    .then((response) => {
+      console.log('API response:', response.data);
+      
+      // Check first product to see its structure
+      if (response.data && response.data.data && response.data.data.length > 0) {
+        console.log('First product in response:', response.data.data[0]);
+      }
+      
+      store.commit('setProducts', [false, response.data]);
+    })
+    .catch((error) => {
+      console.error('Error fetching products:', error);
+      store.commit('setProducts', [false]);
+    });
 }
 
 // Debounced search
@@ -455,7 +528,8 @@ function togglePublishStatus(product) {
         search: search.value,
         per_page: perPage.value,
         sort_field: sortField.value,
-        sort_direction: sortDirection.value
+        sort_direction: sortDirection.value,
+        category_id: categoryFilter.value // Include category filter in refresh
       });
     })
     .then(() => {
@@ -506,12 +580,6 @@ function editProduct(product) {
   emit("clickEdit", cleanedProduct);
 }
 
-function manageInventory(product) {
-  const cleanedProduct = { ...product };
-  cleanedProduct.id = cleanId(product.id);
-  emit("manageInventory", cleanedProduct);
-}
-
 function deleteProduct(product) {
   if (!confirm(`Are you sure you want to delete "${product.title}"?`)) return;
   const id = cleanId(product.id);
@@ -524,6 +592,7 @@ function deleteProduct(product) {
         per_page: perPage.value,
         sort_field: sortField.value,
         sort_direction: sortDirection.value,
+        category_id: categoryFilter.value, // Include category filter in refresh
         force: true
       });
       if (window.$notification) {
@@ -550,6 +619,10 @@ function deleteProduct(product) {
     .finally(() => {
       store.commit('setProducts', [false]);
     });
+}
+
+function manageInventory(product) {
+  emit("manageInventory", product);
 }
 </script>
 

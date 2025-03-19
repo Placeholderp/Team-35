@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\InventoryController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -25,15 +26,11 @@ Route::post('/inventory/adjust', [InventoryController::class, 'adjustInventory']
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
-    Route::post('/orders', [OrderController::class, 'placeOrder']);
-    Route::post('/orders/{order}/cancel', [OrderController::class, 'cancelOrder']);
-    Route::post('/orders/{order}/return', [OrderController::class, 'processReturn']);
-    Route::post('/orders', [OrderController::class, 'placeOrder']);
-    Route::post('/orders/{order}/cancel', [OrderController::class, 'cancelOrder']);
-    Route::post('/orders/{order}/return', [OrderController::class, 'returnItems']);
+    Route::get('/categories/list', 'App\Http\Controllers\CategoryController@list');
+    Route::resource('/categories', 'App\Http\Controllers\CategoryController');
     Route::get('/user', [AuthController::class, 'getUser']);
     Route::post('/logout', [AuthController::class, 'logout']);
-
+    Route::post('/change-password', [AuthController::class, 'changePassword']);
     Route::get('products', [ProductController::class, 'index']);
     Route::post('products', [ProductController::class, 'store']);
     Route::get('products/{id}', [ProductController::class, 'show']);
@@ -44,10 +41,14 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::apiResource('customers', CustomerController::class);
     Route::get('/countries', [CustomerController::class, 'countries']);
 
+    // Order Routes
     Route::get('orders', [OrderController::class, 'index']);
     Route::get('orders/statuses', [OrderController::class, 'getStatuses']);
+    Route::post('orders', [OrderController::class, 'placeOrder']);
     Route::post('orders/change-status/{order}/{status}', [OrderController::class, 'changeStatus']);
     Route::get('orders/{order}', [OrderController::class, 'view']);
+    Route::post('orders/{order}/cancel', [OrderController::class, 'cancelOrder']);
+    Route::post('orders/{order}/return', [OrderController::class, 'processReturn']);
 
     // Dashboard Routes
     Route::get('/dashboard/customers-count', [DashboardController::class, 'activeCustomers']);
@@ -57,7 +58,6 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('/dashboard/orders-by-country', [DashboardController::class, 'ordersByCountry']);
     Route::get('/dashboard/latest-customers', [DashboardController::class, 'latestCustomers']);
     Route::get('/dashboard/latest-orders', [DashboardController::class, 'latestOrders']);
-
 
     // Report routes
     Route::prefix('reports')->group(function () {

@@ -168,49 +168,36 @@ export function createProduct({commit}, product) {
 }
 
 export function updateProduct({commit}, product) {
-  // Extract and clean the ID upfront
   let id;
   
   if (product instanceof FormData) {
-    // Get the ID from FormData if it exists
     id = product.get('id');
+    id = cleanId(id);
     
-    if (id) {
-      // Clean the ID
-      id = cleanId(id);
-      
-      // Update ID in the FormData
-      product.delete('id');
-      product.append('id', id);
+    // Debug the data being sent
+    console.log('UPDATE PRODUCT REQUEST DATA:');
+    for (let [key, value] of product.entries()) {
+      console.log(`${key}: ${value}`);
     }
     
-    // Ensure _method is set for PUT simulation
-    if (!product.has('_method')) {
-      product.append('_method', 'PUT');
-    }
-    
-    return axiosClient.post(`/products/${id}`, product);
+    // Make the request
+    return axiosClient.post(`/products/${id}`, product)
+      .then(response => {
+        console.log('UPDATE PRODUCT RESPONSE:', response.data);
+        
+        // Force refresh product data from server
+        return axiosClient.get(`/products/${id}`)
+          .then(refreshResponse => {
+            console.log('REFRESHED PRODUCT DATA:', refreshResponse.data);
+            
+            // Update in store with the fresh data
+            commit('updateProductInList', refreshResponse.data.data);
+            return response; // Return original response
+          });
+      });
   }
   
-  // Clean the ID
-  id = cleanId(product.id);
-  
-  // Use our utility function to prepare the FormData
-  const formData = prepareProductFormData(product, true);
-  
-  // Use clean ID in URL
-  return axiosClient.post(`/products/${id}`, formData)
-    .then(response => {
-      // Update product in store if successful
-      if (response.data && response.data.data) {
-        commit('updateProductInList', {
-          ...response.data.data,
-          id: cleanId(response.data.data.id),
-          published: normalizePublished(response.data.data.published)
-        });
-      }
-      return response;
-    });
+  // Rest of the function...
 }
 
 export function deleteProduct({commit}, id) {

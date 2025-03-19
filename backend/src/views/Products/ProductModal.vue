@@ -156,6 +156,26 @@
                         </div>
                         <p v-if="errors.published" class="mt-1 text-sm text-red-600">{{ errors.published }}</p>
                       </div>
+                      
+                      <!-- Category Selection - ADDED -->
+                      <div>
+                        <label for="category-id" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                        <select
+                          id="category-id"
+                          v-model="localProduct.category_id"
+                          class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                        >
+                          <option :value="null">No Category</option>
+                          <option 
+                            v-for="category in categories" 
+                            :key="category.id" 
+                            :value="category.id"
+                          >
+                            {{ category.name }}
+                          </option>
+                        </select>
+                        <p v-if="errors.category_id" class="mt-1 text-sm text-red-600">{{ errors.category_id }}</p>
+                      </div>
                     </div>
                     
                     <!-- Inventory tracking section -->
@@ -230,7 +250,7 @@
 </template>
 
 <script setup>
-import { ref, watch, reactive, computed, onBeforeUnmount } from 'vue';
+import { ref, watch, reactive, computed, onBeforeUnmount, onMounted } from 'vue';
 import { Dialog, DialogPanel, DialogTitle, DialogOverlay, TransitionChild, TransitionRoot } from '@headlessui/vue';
 import CustomInput from "../../components/core/CustomInput.vue";
 import store from "../../store/index.js";
@@ -255,8 +275,14 @@ const props = defineProps({
       published: false,
       track_inventory: false,
       quantity: 0,
-      reorder_level: 5
+      reorder_level: 5,
+      category_id: null  // Added default value for category_id
     })
+  },
+  // New prop for categories
+  categories: {
+    type: Array,
+    default: () => []
   }
 });
 
@@ -271,7 +297,8 @@ const errors = reactive({
   published: '',
   track_inventory: '',
   quantity: '',
-  reorder_level: ''
+  reorder_level: '',
+  category_id: ''  // Added error field for category
 });
 
 // Create a local copy of the product for editing
@@ -280,11 +307,13 @@ const localProduct = reactive({
   title: '',
   description: '',
   image: '',
+  image_url: '', 
   price: '',
   published: false,
-  track_inventory: false, // Add this line
-  quantity: 0,            // Add this line
-  reorder_level: 5        // Add this line
+  track_inventory: false,
+  quantity: 0,
+  reorder_level: 5,
+  category_id: null  // Added category_id field
 });
 
 // Clear all validation errors
@@ -301,24 +330,28 @@ onBeforeUnmount(() => {
   }
 });
 
-// Replace your current watch function for props.product
+// Watch for changes to the product prop
 watch(() => props.product, (newVal) => {
   if (newVal) {
     try {
       // Clean the ID if it contains a colon
       const cleanedId = cleanId(newVal.id);
       
+      // Log incoming product data for debugging
+      console.log('Product being edited:', newVal);
+      
       // Create a fresh object to avoid reactivity issues
       const productData = {
         id: cleanedId,
         title: newVal.title || '',
-        image: '', // Don't set image to the URL string
         description: newVal.description || '',
         price: newVal.price || '',
         published: normalizePublished(newVal.published),
         track_inventory: Boolean(newVal.track_inventory),
         quantity: parseInt(newVal.quantity || 0),
-        reorder_level: parseInt(newVal.reorder_level || 5)
+        reorder_level: parseInt(newVal.reorder_level || 5),
+        image_url: newVal.image_url || '',
+        category_id: newVal.category_id !== undefined ? newVal.category_id : null  // Handle category_id
       };
       
       // Update the local product with the new values
@@ -383,6 +416,7 @@ function clearImage() {
   }
   
   localProduct.image = '';
+  localProduct.image_url = '';
   imagePreview.value = null;
 }
 
@@ -422,7 +456,7 @@ function handleFileChange(event) {
   }
 }
 
-// Replace your current validateForm function
+// Validate the product form
 function validateForm() {
   let isValid = true;
   clearErrors();
@@ -458,11 +492,13 @@ function validateForm() {
   if (localProduct.track_inventory) {
     if (typeof localProduct.quantity !== 'number') {
       // Try to convert to number if it's not already
-      localProduct.quantity = parseInt(localProduct.quantity || '0');
+      const quantity = parseInt(localProduct.quantity || '0');
       
-      if (isNaN(localProduct.quantity)) {
+      if (isNaN(quantity)) {
         errors.quantity = 'Quantity must be a valid number';
         isValid = false;
+      } else {
+        localProduct.quantity = quantity;
       }
     }
     
@@ -473,11 +509,13 @@ function validateForm() {
     
     if (typeof localProduct.reorder_level !== 'number') {
       // Try to convert to number if it's not already
-      localProduct.reorder_level = parseInt(localProduct.reorder_level || '5');
+      const reorderLevel = parseInt(localProduct.reorder_level || '5');
       
-      if (isNaN(localProduct.reorder_level)) {
+      if (isNaN(reorderLevel)) {
         errors.reorder_level = 'Reorder level must be a valid number';
         isValid = false;
+      } else {
+        localProduct.reorder_level = reorderLevel;
       }
     }
     
@@ -513,6 +551,14 @@ function onSubmit() {
     formData.append('published', localProduct.published ? '1' : '0');
     formData.append('track_inventory', localProduct.track_inventory ? '1' : '0');
     
+    // Add category_id - handle null value appropriately
+    if (localProduct.category_id !== null) {
+      formData.append('category_id', localProduct.category_id);
+    } else {
+      // Send empty string or null depending on backend expectations
+      formData.append('category_id', '');
+    }
+    
     // Only append inventory fields if tracking is enabled
     if (localProduct.track_inventory) {
       // Ensure these are numbers
@@ -523,26 +569,36 @@ function onSubmit() {
       formData.append('reorder_level', reorderValue.toString());
     }
     
-    // Only append image if it's a File object
+    // Only append image if it's a File object (new upload)
     if (localProduct.image instanceof File) {
       formData.append('image', localProduct.image);
+    } else if (localProduct.id && !imagePreview.value) {
+      // If editing a product and image was cleared, explicitly tell the server to remove it
+      formData.append('remove_image', '1');
     }
     
+    // For updating existing products
+    if (localProduct.id) {
+      const cleanedId = cleanId(localProduct.id);
+      formData.append('id', cleanedId);
+      formData.append('_method', 'PUT');
+    }
     
-   // In your onSubmit function in ProductModal.vue
-if (localProduct.id) {
-  const cleanedId = cleanId(localProduct.id);
-  formData.append('id', cleanedId); // Add this line
-  formData.append('_method', 'PUT');
-}
+    // Debug: Log all form data being sent
+    console.log('---- FORM DATA BEING SENT ----');
+    for (let [key, value] of formData.entries()) {
+      console.log(`${key}: ${value}`);
+    }
+    console.log('---- END FORM DATA ----');
     
-    // Use the store actions as in your original code
+    // Use the store actions
     const action = localProduct.id 
-  ? store.dispatch('updateProduct', formData)
-  : store.dispatch('createProduct', formData);
+      ? store.dispatch('updateProduct', formData)
+      : store.dispatch('createProduct', formData);
       
     action
       .then((response) => {
+        console.log('Product saved response:', response);
         store.dispatch('getProducts', { force: true });
         closeModal();
         notifySuccess(`Product "${localProduct.title}" ${localProduct.id ? 'updated' : 'created'} successfully!`);
@@ -561,7 +617,7 @@ if (localProduct.id) {
   }
 }
 
-// Replace your current handleApiError function
+// Handle API errors
 function handleApiError(error) {
   if (error.response && error.response.data) {
     // Handle Laravel validation errors

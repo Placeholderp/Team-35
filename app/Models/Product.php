@@ -14,7 +14,21 @@ class Product extends Model
     use HasSlug;
     use SoftDeletes;
 
-    protected $fillable = ['title', 'description', 'price', 'image', 'published', 'image_mime', 'image_size', 'created_by', 'updated_by', 'quantity', 'track_inventory', 'reorder_level'];
+    protected $fillable = [
+        'title',
+        'description',
+        'price',
+        'published',
+        'image',
+        'image_mime',
+        'image_size',
+        'track_inventory',
+        'quantity',
+        'reorder_level',
+        'category_id',
+        'created_by',
+        'updated_by'
+    ];
 
     protected $casts = [
         'published' => 'boolean',

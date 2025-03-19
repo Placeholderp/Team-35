@@ -6,6 +6,30 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
     <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" />
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+    <style>
+        .category-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            margin-bottom: 10px;
+            background-color: #7272ff; /* A light blue that matches your theme */
+            color: white;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .category-filter {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        
+        .category-filter .btn {
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+    </style>
 @endsection
 
 @section('navigation')
@@ -92,6 +116,26 @@
         </div>
     </section>
 
+    <!-- Category Filter Section -->
+    @if(isset($categories) && count($categories) > 0)
+    <section id="category-filter" class="container my-5">
+        <div class="category-filter">
+            <h4 class="mb-3">Browse By Category</h4>
+            <div class="d-flex flex-wrap">
+                <a href="{{ route('shop') }}" class="btn {{ !request('category') ? 'btn-primary' : 'btn-outline-primary' }}">
+                    All Categories
+                </a>
+                @foreach($categories as $category)
+                    <a href="{{ route('shop', ['category' => $category->slug]) }}" 
+                       class="btn {{ request('category') == $category->slug ? 'btn-primary' : 'btn-outline-primary' }}">
+                        {{ $category->name }}
+                    </a>
+                @endforeach
+            </div>
+        </div>
+    </section>
+    @endif
+
     <section id="featured" class="my-5 pb-5">
         <div class="container text-center mt-5 py-5">
             <h3>Our Featured</h3>
@@ -101,13 +145,19 @@
         <div class="row mx-auto container-fluid">
             @foreach($products ?? [] as $product)
                 <div class="product text-center col-lg-3 col-md-4 col-12">
-                    <img class="img-fluid mb-3" src="{{ asset($product->image) }}" alt="{{ $product->name }}">
+                    <img class="img-fluid mb-3" src="{{ asset($product->image) }}" alt="{{ $product->title ?? $product->name }}">
                     <div class="star">
                         @for($i = 0; $i < 5; $i++)
                             <i class="fas fa-star"></i>
                         @endfor
                     </div>
-                    <h5 class="p-name">{{ $product->name }}</h5>
+                    
+                    <!-- Category Badge -->
+                    @if(isset($product->category) && $product->category)
+                        <span class="category-badge">{{ $product->category->name }}</span>
+                    @endif
+                    
+                    <h5 class="p-name">{{ $product->title ?? $product->name }}</h5>
                     <h4 class="p-price">${{ number_format($product->price, 2) }}</h4>
                     <button class="buy-btn">Buy Now</button>
                 </div>
@@ -349,7 +399,7 @@
                 <button class="buy-btn">Buy Now</button>
             </div>
             <div class="product text-center col-lg-3 col-md-4 col-12">
-                <img class="img-fluid mb-3" src="{{ asset('storage/images/shoes/5.jpg') }}" alt="">
+                <img class="img-fluid mb-3" src="{{ isset($product) && isset($product->image_url) ? $product->image_url : (isset($product) && isset($product->image) ? asset($product->image) : asset('storage/images/shoes/5.jpg')) }}" alt="{{ isset($product) ? $product->title ?? $product->name : 'Product' }}">
                 <div class="star">
                     <i class="fas fa-star"></i>
                     <i class="fas fa-star"></i>

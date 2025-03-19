@@ -118,25 +118,37 @@ export function formatDate(dateStr, locale = 'en-US') {
 }
 
 /**
- * Get the full image URL for a product
- * 
- * @param {string} imagePath - The relative image path from the API
- * @returns {string} The complete image URL
+ * Gets the correct image URL for a product
+ * @param {string} url - The image URL or path from the server
+ * @param {boolean} forceRefresh - Add cache-busting parameter
+ * @returns {string|null} - Properly formatted image URL
  */
-export function getImageUrl(imagePath) {
-  if (!imagePath) return null;
+export function getImageUrl(url, forceRefresh = false) {
+  if (!url) return null;
   
-  // If the image path already includes http:// or https://, return it as is
-  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-    return imagePath;
+  // For debugging
+  console.log('Processing image URL:', url);
+  
+  // Handle both absolute and relative URLs
+  if (url.startsWith('http')) {
+    // If we're in dev mode and URL points to a different host, fix it
+    const currentHost = window.location.host;
+    const urlObj = new URL(url);
+    
+    if (urlObj.host !== currentHost) {
+      // Keep the pathname (which should include /storage/products/filename.jpg)
+      const pathname = urlObj.pathname;
+      url = `${window.location.protocol}//${currentHost}${pathname}`;
+    }
+  } 
+  else if (!url.startsWith('/')) {
+    // If the URL is relative without a leading slash, add it
+    url = '/' + url;
   }
   
-  // Otherwise, prepend the API base URL
-  // This assumes we have an API_BASE_URL constant or environment variable
-  const baseUrl = process.env.VUE_APP_API_URL || '';
-  return `${baseUrl}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
+  // Add cache busting if needed
+  return forceRefresh ? `${url}?t=${new Date().getTime()}` : url;
 }
-
 /**
  * Validates a product object against required fields and constraints
  * 
@@ -275,12 +287,6 @@ export function prepareProductFormData(product, forUpdate = false) {
     // Handle image - only append if it's a File object
     if (product.image instanceof File) {
       formData.append('image', product.image);
-    }
-    
-    // Debug log the form data entries
-    console.debug('Form data entries:');
-    for (let [key, value] of formData.entries()) {
-      console.debug(`${key}: ${value instanceof File ? 'File: ' + value.name : value}`);
     }
     
     return formData;

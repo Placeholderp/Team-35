@@ -1,26 +1,26 @@
 <template>
   <aside 
-  class="min-h-screen flex flex-col bg-gray-800 text-white transition-all duration-300 ease-in-out"
-  :class="[
-    isCollapsed ? 'w-16' : 'w-64'
-  ]"
->
- <!-- Logo Section (fixed at top) -->
-<div class="flex-shrink-0 flex items-center justify-center h-16 border-b border-gray-700">
-  <img 
-    v-if="isCollapsed" 
-    src="C:\xampp\htdocs\team-35l\backend\src\assets\logo.png" 
-    alt="Logo" 
-    class="h-10 w-10 object-cover brightness-0 invert" 
-  />
-  <img 
-    v-else 
-    src="C:\xampp\htdocs\team-35l\backend\src\assets\logo.png" 
-    alt="Logo" 
-    class="h-10 w-32 object-contain brightness-0 invert" 
-  />
-</div>
-    
+    class="min-h-screen flex flex-col bg-gray-800 text-white transition-all duration-300 ease-in-out"
+    :class="[
+      isCollapsed ? 'w-16' : 'w-64'
+    ]"
+  >
+    <!-- Logo Section (fixed at top) -->
+    <div class="flex-shrink-0 flex items-center justify-center h-16 border-b border-gray-700">
+      <img 
+        v-if="isCollapsed" 
+        src="/src/assets/logo.png" 
+        alt="Logo" 
+        class="h-10 w-10 object-cover brightness-0 invert" 
+      />
+      <img 
+        v-else 
+        src="/src/assets/logo.png" 
+        alt="Logo" 
+        class="h-10 w-32 object-contain brightness-0 invert" 
+      />
+    </div>
+        
     <!-- Navigation (scrollable) -->
     <nav class="flex-1 overflow-y-auto scrollbar-thin py-4">
       <div class="px-2 space-y-1">
@@ -39,6 +39,14 @@
           icon="ShoppingBagIcon"
           label="Products"
         />
+        
+        <!-- Categories -->
+<SidebarNavItem 
+  :to="{ name: 'app.categories' }" 
+  :is-collapsed="isCollapsed"
+  icon="TagIcon"
+  label="Categories"
+/>
         
         <!-- Orders -->
         <SidebarNavItem 
@@ -62,11 +70,6 @@
             icon="ArchiveIcon"
             label="Inventory"
           />
-          
-          
-          
-          
-          
         </div>
         
         <!-- Users Section -->
@@ -132,7 +135,8 @@ import {
   ChartPieIcon,
   ArchiveIcon,
   CubeIcon,
-  SwitchVerticalIcon
+  SwitchVerticalIcon,
+  TagIcon
 } from '@heroicons/vue/outline';
 
 // Component imports
@@ -150,7 +154,8 @@ export default {
     ChartPieIcon,
     ArchiveIcon,
     CubeIcon,
-    SwitchVerticalIcon
+    SwitchVerticalIcon,
+    TagIcon
   },
   props: {
     isCollapsed: {

@@ -72,12 +72,47 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'is_admin' => true,
+            'force_password_change' => true, // Force password change on first login
         ]);
 
         return response()->json([
             'message' => 'Registration successful',
             'user' => $user
         ], 201);
+    }
+
+    /**
+     * Change user password
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|min:8|confirmed',
+            'new_password_confirmation' => 'required'
+        ]);
+
+        $user = $request->user();
+
+        // Verify current password
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'message' => 'Current password is incorrect'
+            ], 422);
+        }
+
+        // Update the password
+        $user->password = Hash::make($request->new_password);
+        $user->force_password_change = false; // Remove the force password change flag
+        $user->save();
+
+        return response()->json([
+            'message' => 'Password changed successfully',
+            'user' => $user
+        ]);
     }
 
     /**
