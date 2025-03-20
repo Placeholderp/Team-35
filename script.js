@@ -3,7 +3,6 @@ const toggleRegister = document.querySelector(".toggle-register");
 const toggleLogin = document.querySelector(".toggle-login");
 const formContainer = document.querySelector(".form-container");
 
-
 function showRegisterForm() {
     formContainer.classList.add("active");
 }
