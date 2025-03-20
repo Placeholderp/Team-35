@@ -155,7 +155,14 @@ class ProductController extends Controller
      * @param string|int $id
      * @return \App\Http\Resources\ProductResource
      */
-    public function update(ProductRequest $request, $id)
+    /**
+ * Update the specified resource in storage.
+ * 
+ * @param \App\Http\Requests\ProductRequest $request
+ * @param string|int $id
+ * @return \App\Http\Resources\ProductResource
+ */
+public function update(ProductRequest $request, $id)
 {
     // Clean the ID
     $cleanId = $this->cleanProductId($id);
@@ -169,9 +176,16 @@ class ProductController extends Controller
     // Handle published field conversion
     $data['published'] = $request->boolean('published', false);
     
-    // IMPORTANT: Explicitly handle category_id even if not in validated data
+    // Handle track_inventory field conversion
+    if ($request->has('track_inventory')) {
+        $data['track_inventory'] = $request->boolean('track_inventory', false);
+    }
+    
+    // Handle category_id - treat empty string as null
     if ($request->has('category_id')) {
-        $data['category_id'] = $request->input('category_id');
+        $data['category_id'] = $request->input('category_id') !== '' 
+            ? $request->input('category_id') 
+            : null;
         
         // Add debug log for category
         Log::info('Category data in update', [
@@ -185,7 +199,7 @@ class ProductController extends Controller
         'published'      => $data['published'],
         'published_type' => gettype($data['published']),
         'has_image'      => isset($data['image']) ? 'yes' : 'no',
-        'category_id'    => $data['category_id'] ?? null // Log category ID
+        'category_id'    => $data['category_id'] ?? null
     ]);
     
     // Handle image upload
@@ -262,22 +276,31 @@ class ProductController extends Controller
  * @param string $path
  * @return string
  */
+/**
+ * Function to generate correct image URL
+ * 
+ * @param string $path
+ * @return string|null
+ */
+/**
+ * Function to generate correct image URL
+ * 
+ * @param string $path
+ * @return string|null
+ */
 private function getImageUrl($path)
 {
-    // First try using asset helper
-    $url = asset('C:\xampp\htdocs\team-35\storage\app\public' . $path);
-    
-    // If we're on the Vite dev server (localhost:5173), ensure URL matches
-    if (request()->getHost() === 'localhost:5173' || request()->getHost() === '127.0.0.1:5173') {
-        // Replace http://localhost with http://localhost:5173 if needed
-        if (strpos($url, 'http://localhost/') === 0 && strpos($url, 'http://localhost:5173/') !== 0) {
-            $url = str_replace('http://localhost/', 'http://localhost:5173/', $url);
-        }
+    if (!$path) {
+        return null;
     }
     
+    // Use Storage facade to generate proper URL regardless of environment
+    $url = Storage::url($path);
+    
+    // Log the generated URL for debugging
     Log::info('Generated image URL', [
         'path' => $path,
-        'generated_url' => $url
+        'url' => $url
     ]);
     
     return $url;

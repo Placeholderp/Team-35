@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use Illuminate\Support\Facades\Storage;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use App\Http\Resources\ProductResource;
@@ -66,15 +66,28 @@ class ProductController extends Controller
      * @param string $path
      * @return string|null
      */
-    private function getImageUrl($path)
+    /**
+ * Function to generate correct image URL
+ * 
+ * @param string $path
+ * @return string|null
+ */
+/**
+ * Function to generate correct image URL
+ * 
+ * @param string $path
+ * @return string|null
+ */
+private function getImageUrl($path)
 {
     if (!$path) {
         return null;
     }
     
-    // Generate full storage URL
-    $url = asset('storage/' . $path);
+    // Use Storage facade to generate proper URL regardless of environment
+    $url = Storage::url($path);
     
+    // Log the generated URL for debugging
     Log::info('Generated image URL', [
         'path' => $path,
         'url' => $url
@@ -82,7 +95,6 @@ class ProductController extends Controller
     
     return $url;
 }
-
     /**
      * Display a listing of the resource for API.
      *

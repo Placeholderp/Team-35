@@ -381,6 +381,7 @@ onMounted(() => {
 });
 
 // Watch for changes to the product prop
+// Watch for changes to the product prop
 watch(() => props.product, (newVal) => {
   if (newVal) {
     try {
@@ -398,19 +399,32 @@ watch(() => props.product, (newVal) => {
         quantity: parseInt(newVal.quantity || 0),
         reorder_level: parseInt(newVal.reorder_level || 5),
         image_url: newVal.image_url || '',
-        category_id: newVal.category_id !== undefined ? newVal.category_id : ''  // Use empty string for category_id
+        // Convert category_id to string for proper comparison with select options
+        category_id: newVal.category_id !== undefined && newVal.category_id !== null 
+          ? newVal.category_id.toString() 
+          : ''
       };
       
       // Update the local product with the new values
       Object.assign(localProduct, productData);
       
       // Set the image preview correctly
-      if (newVal.image_url) {
+     // Set the image preview correctly
+     if (newVal.image_url) {
         // Release the previous blob URL if there was one
         if (imagePreview.value && imagePreview.value.startsWith('blob:')) {
           URL.revokeObjectURL(imagePreview.value);
         }
-        imagePreview.value = newVal.image_url;
+        
+        // Use the getImageUrl utility to ensure proper URL formatting
+        if (typeof getImageUrl === 'function') {
+          imagePreview.value = getImageUrl(newVal.image_url, true);
+        } else {
+          // Fallback if utility isn't available
+          imagePreview.value = newVal.image_url;
+        }
+        
+        console.log('Setting image preview URL:', imagePreview.value);
       } else {
         imagePreview.value = null;
       }

@@ -7,7 +7,7 @@ return [
     |--------------------------------------------------------------------------
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie', 'storage/*'], // Added storage/* to allow image access
 
     'allowed_methods' => ['*'],
 

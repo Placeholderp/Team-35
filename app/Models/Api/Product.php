@@ -39,25 +39,25 @@ class Product extends Model
     ];
 
     protected static function booted()
-    {
-        // Assign a default category when creating a product if none is specified
-        static::creating(function ($product) {
-            if (empty($product->category_id)) {
-                // Get the first category or create a default one if none exists
-                $defaultCategory = Category::first();
-                
-                if (!$defaultCategory) {
-                    $defaultCategory = Category::create([
-                        'name' => 'General Products',
-                        'slug' => 'general-products',
-                        'description' => 'Default category for all products'
-                    ]);
-                }
-                
-                $product->category_id = $defaultCategory->id;
+{
+    // Assign a default category when creating a product if none is specified
+    static::creating(function ($product) {
+        if (empty($product->category_id)) {
+            // Get the first category or create a default one if none exists
+            $defaultCategory = Category::first();
+            
+            if (!$defaultCategory) {
+                $defaultCategory = Category::create([
+                    'name' => 'General Products',
+                    'slug' => 'general-products',
+                    'description' => 'Default category for all products'
+                ]);
             }
-        });
-    }
+            
+            $product->category_id = $defaultCategory->id;
+        }
+    });
+}
 
     /**
      * Get the category that owns the product.

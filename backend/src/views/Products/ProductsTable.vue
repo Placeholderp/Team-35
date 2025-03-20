@@ -188,8 +188,9 @@
               >
                 <img
                   class="h-full w-full object-cover"
-                  :src="getImageUrl(product.image_url)"
+                  :src="getImageUrl(product.image_url, true)"
                   :alt="product.title"
+                  @error="handleImageError"
                 />
               </div>
               <div

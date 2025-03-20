@@ -149,41 +149,42 @@
     @endif
 
     <!-- Featured Products Section -->
-    <section id="featured" class="my-5 pb-5">
-        <div class="container text-center mt-5 py-5">
-            <h3>Our Featured Products</h3>
-            <hr class="mx-auto">
-            <p>Check out our best-selling products with fair prices.</p>
-        </div>
-        <div class="row mx-auto container-fluid">
-            @if(isset($products) && count($products) > 0)
-                @foreach($products as $product)
-                    <div class="product text-center col-lg-3 col-md-4 col-12">
-                        <img class="img-fluid mb-3" src="{{ asset($product->image) }}" alt="{{ $product->name }}">
-                        <div class="star">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                        </div>
-                        
-                        @if(isset($product->category))
-                            <span class="category-badge">{{ $product->category->name }}</span>
-                        @endif
-                        
-                        <h5 class="p-name">{{ $product->name }}</h5>
-                        <h4 class="p-price">${{ number_format($product->price, 2) }}</h4>
-                        <button class="buy-btn">Buy Now</button>
+   <!-- Featured Products Section -->
+<section id="featured" class="my-5 pb-5">
+    <div class="container text-center mt-5 py-5">
+        <h3>Our Featured Products</h3>
+        <hr class="mx-auto">
+        <p>Check out our best-selling products with fair prices.</p>
+    </div>
+    <div class="row mx-auto container-fluid">
+        @if(isset($products) && count($products) > 0)
+            @foreach($products as $product)
+                <div class="product text-center col-lg-3 col-md-4 col-12">
+                    <img class="img-fluid mb-3" src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}">
+                    <div class="star">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
                     </div>
-                @endforeach
-            @else
-                <div class="col-12 text-center">
-                    <p>No products available at the moment.</p>
+                    
+                    @if(isset($product->category))
+                        <span class="category-badge">{{ $product->category->name }}</span>
+                    @endif
+                    
+                    <h5 class="p-name">{{ $product->name }}</h5>
+                    <h4 class="p-price">${{ number_format($product->price, 2) }}</h4>
+                    <button class="buy-btn">Buy Now</button>
                 </div>
-            @endif
-        </div>
-    </section>
+            @endforeach
+        @else
+            <div class="col-12 text-center">
+                <p>No products available at the moment.</p>
+            </div>
+        @endif
+    </div>
+</section>
 
     <!-- Banner Section -->
     <section id="banner" class="my-5 py-5">
@@ -219,7 +220,7 @@
             @if(count($proteinProducts) > 0)
                 @foreach($proteinProducts as $product)
                     <div class="product text-center col-lg-3 col-md-4 col-12">
-                        <img class="img-fluid mb-3" src="{{ asset($product->image) }}" alt="{{ $product->name }}">
+                        <img class="img-fluid mb-3" src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}">
                         <div class="star">
                             <i class="fas fa-star"></i>
                             <i class="fas fa-star"></i>
@@ -264,7 +265,7 @@
             @if(count($powderProducts) > 0)
                 @foreach($powderProducts as $product)
                     <div class="product text-center col-lg-3 col-md-4 col-12">
-                        <img class="img-fluid mb-3" src="{{ asset($product->image) }}" alt="{{ $product->name }}">
+                        <img class="img-fluid mb-3" src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}">
                         <div class="star">
                             <i class="fas fa-star"></i>
                             <i class="fas fa-star"></i>

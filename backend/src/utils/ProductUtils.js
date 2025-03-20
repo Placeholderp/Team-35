@@ -128,20 +128,52 @@ export function getImageUrl(url, forceRefresh = false) {
   
   console.log('Original image URL:', url);
   
-  // If we have a URL with localhost:8000 but we're running on localhost:5173
-  if (url && url.includes('localhost:8000') && 
-      (window.location.port === '5173' || window.location.hostname.includes('localhost:5173'))) {
-    try {
-      // Extract just the path portion (e.g., /storage/products/filename)
-      const urlObj = new URL(url);
-      url = urlObj.pathname;
-      console.log('Using path portion for proxy:', url);
-    } catch (error) {
-      console.error('Invalid URL:', url);
+  // Define the backend API URL - adjust this to match your Laravel backend
+  const backendBaseUrl = 'http://localhost:8000';
+  
+  // Handle different development environments
+  if (url) {
+    // Case 1: If we have a full URL with localhost:8000 but we're running on localhost:5173 (Vite dev)
+    if (url.includes('localhost:8000') && 
+        (window.location.port === '5173' || window.location.hostname.includes('localhost:5173'))) {
+      try {
+        // Extract just the path portion (e.g., /storage/products/filename)
+        const urlObj = new URL(url);
+        url = urlObj.pathname;
+        
+        // Prepend backend base URL to the path
+        url = `${backendBaseUrl}${url}`;
+        console.log('Using full backend URL for image:', url);
+      } catch (error) {
+        console.error('Invalid URL:', url);
+      }
+    }
+    // Case 2: Handle relative paths that start with /storage but don't have the backend URL
+    else if (url.startsWith('/storage/') && 
+             (window.location.port === '5173' || window.location.hostname.includes('localhost:5173'))) {
+      url = `${backendBaseUrl}${url}`;
+      console.log('Adding backend base URL to storage path:', url);
+    }
+    // Case 3: Handle paths that don't include the full domain but should
+    else if (url.includes('products/') && !url.includes('http')) {
+      // Ensure path starts with a slash
+      if (!url.startsWith('/')) {
+        url = '/storage/' + url;
+      } else if (!url.startsWith('/storage/')) {
+        url = '/storage' + url;
+      }
+      
+      // Add backend base URL
+      url = `${backendBaseUrl}${url}`;
+      console.log('Fixed storage path with backend URL:', url);
     }
   }
   
-  return forceRefresh ? `${url}?t=${new Date().getTime()}` : url;
+  // Add cache-busting parameter if requested
+  const finalUrl = forceRefresh ? `${url}?t=${new Date().getTime()}` : url;
+  console.log('Final image URL:', finalUrl);
+  
+  return finalUrl;
 }
 /**
  * Validates a product object against required fields and constraints
@@ -204,6 +236,14 @@ export function validateProduct(product) {
  * @param {boolean} forUpdate - Whether this is for an update operation (vs. create)
  * @returns {FormData} FormData object ready for submission
  */
+/**
+ * Safely prepares a product object for form submission
+ * Handles data type conversion and validation
+ * 
+ * @param {Object} product - The product data to prepare
+ * @param {boolean} forUpdate - Whether this is for an update operation (vs. create)
+ * @returns {FormData} FormData object ready for submission
+ */
 export function prepareProductFormData(product, forUpdate = false) {
   // Ensure product is an object
   if (!product || typeof product !== 'object') {
@@ -257,8 +297,8 @@ export function prepareProductFormData(product, forUpdate = false) {
     const trackInventory = normalizeTrackInventory(product.track_inventory);
     formData.append('track_inventory', trackInventory ? '1' : '0');
     
-    // Category ID handling
-    if (product.category_id !== null && product.category_id !== undefined) {
+    // Category ID handling - convert to string and handle null/undefined
+    if (product.category_id !== null && product.category_id !== undefined && product.category_id !== '') {
       formData.append('category_id', product.category_id.toString());
     } else {
       // Send empty string for null category

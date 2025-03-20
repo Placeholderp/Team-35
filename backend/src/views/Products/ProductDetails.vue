@@ -13,9 +13,10 @@
       <div class="md:w-2/5 relative">
         <img 
           v-if="product.image_url" 
-          :src="getImageUrl(product.image_url)" 
+          :src="getImageUrl(product.image_url, true)" 
           :alt="product.title"
           class="w-full h-full object-cover object-center"
+          @error="handleImageError"
         />
         <div 
           v-else
