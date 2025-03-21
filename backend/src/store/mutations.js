@@ -176,3 +176,33 @@ export function updateProductInList(state, updatedProduct) {
     state.products.data = [...state.products.data, normalizedProduct];
   }
 }
+
+// Sync category product counts based on products in state
+export function syncCategoryCounts(state) { 
+  if (!Array.isArray(state.categories.data) || !Array.isArray(state.products.data)) { 
+    return; 
+  } 
+  
+  // Create category ID to count mapping 
+  const categoryCounts = {}; 
+  
+  // Count products for each category 
+  state.products.data.forEach(product => { 
+    if (!product || !product.category_id) return; 
+    const categoryId = product.category_id.toString(); 
+    if (!categoryCounts[categoryId]) { 
+      categoryCounts[categoryId] = 0; 
+    } 
+    categoryCounts[categoryId]++; 
+  }); 
+  
+  // Update each category with the correct count 
+  state.categories.data = state.categories.data.map(category => { 
+    if (!category || !category.id) return category; 
+    const categoryId = category.id.toString(); 
+    return { 
+      ...category, 
+      product_count: categoryCounts[categoryId] || 0 
+    }; 
+  }); 
+}

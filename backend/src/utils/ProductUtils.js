@@ -236,14 +236,8 @@ export function validateProduct(product) {
  * @param {boolean} forUpdate - Whether this is for an update operation (vs. create)
  * @returns {FormData} FormData object ready for submission
  */
-/**
- * Safely prepares a product object for form submission
- * Handles data type conversion and validation
- * 
- * @param {Object} product - The product data to prepare
- * @param {boolean} forUpdate - Whether this is for an update operation (vs. create)
- * @returns {FormData} FormData object ready for submission
- */
+
+
 export function prepareProductFormData(product, forUpdate = false) {
   // Ensure product is an object
   if (!product || typeof product !== 'object') {
@@ -303,6 +297,11 @@ export function prepareProductFormData(product, forUpdate = false) {
     } else {
       // Send empty string for null category
       formData.append('category_id', '');
+    }
+    
+    // Include original_category_id for comparison during updates
+    if (product.original_category_id !== undefined) {
+      formData.append('original_category_id', product.original_category_id || '');
     }
     
     // Inventory fields - only include if track_inventory is true

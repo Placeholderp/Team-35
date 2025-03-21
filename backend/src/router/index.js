@@ -92,7 +92,7 @@ const routes = [
       {
         path: 'inventory/bulk-adjustment',
         name: 'app.inventory.bulk',
-        component: () => import('../views/Inventory/BulkStockAdjustment.vue'),
+        component: () => import('../views/Inventory/EnhancedBulkSAdjustmentModal.vue'),
         meta: {
           requiresAuth: true
         }

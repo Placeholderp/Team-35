@@ -20,12 +20,27 @@ use App\Http\Controllers\CategoryController;
 |
 */
 
-Route::get('/inventory/movements', [InventoryController::class, 'getMovements']);
-Route::get('/inventory/low-stock', [InventoryController::class, 'getLowStockProducts']);
-Route::post('/inventory/adjust', [InventoryController::class, 'adjustInventory']);
+
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+        // Get inventory movements with pagination
+        Route::get('/inventory/movements', 'App\Http\Controllers\Api\InventoryController@getMovements');
+    
+        // Get inventory movements for a specific product
+        Route::get('/products/{productId}/inventory-movements', 'App\Http\Controllers\Api\InventoryController@getProductMovements');
+        
+        // Adjust inventory for a single product
+        Route::post('/inventory/adjust', 'App\Http\Controllers\Api\InventoryController@adjustInventory');
+        
+        // Bulk adjust inventory for multiple products
+        Route::post('/inventory/bulk-adjust', 'App\Http\Controllers\Api\InventoryController@bulkAdjustInventory');
+        
+        // Get inventory statistics
+        Route::get('/inventory/stats', 'App\Http\Controllers\Api\InventoryController@getStats');
+        
+        // Add endpoint for individual product inventory adjustment
+        Route::post('/products/{id}/adjust-inventory', 'App\Http\Controllers\Api\InventoryController@adjustProductInventory');
     Route::get('/categories/list', 'App\Http\Controllers\CategoryController@list');
     Route::resource('/categories', 'App\Http\Controllers\CategoryController');
     Route::get('/user', [AuthController::class, 'getUser']);

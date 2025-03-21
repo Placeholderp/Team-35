@@ -29,6 +29,38 @@
             margin-right: 5px;
             margin-bottom: 5px;
         }
+        
+        /* Inventory Status Alerts */
+        .btn-disabled {
+            opacity: 0.7;
+            pointer-events: none;
+            background-color: #999 !important;
+        }
+
+        .stock-alert {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-bottom: 10px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .stock-alert.low-stock {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+
+        .stock-alert.out-of-stock {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .stock-alert i {
+            margin-right: 4px;
+        }
     </style>
 @endsection
 
@@ -149,42 +181,58 @@
     @endif
 
     <!-- Featured Products Section -->
-   <!-- Featured Products Section -->
-<section id="featured" class="my-5 pb-5">
-    <div class="container text-center mt-5 py-5">
-        <h3>Our Featured Products</h3>
-        <hr class="mx-auto">
-        <p>Check out our best-selling products with fair prices.</p>
-    </div>
-    <div class="row mx-auto container-fluid">
-        @if(isset($products) && count($products) > 0)
-            @foreach($products as $product)
-                <div class="product text-center col-lg-3 col-md-4 col-12">
-                    <img class="img-fluid mb-3" src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}">
-                    <div class="star">
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
+    <section id="featured" class="my-5 pb-5">
+        <div class="container text-center mt-5 py-5">
+            <h3>Our Featured Products</h3>
+            <hr class="mx-auto">
+            <p>Check out our best-selling products with fair prices.</p>
+        </div>
+        <div class="row mx-auto container-fluid">
+            @if(isset($products) && count($products) > 0)
+                @foreach($products as $product)
+                    <div class="product text-center col-lg-3 col-md-4 col-12">
+                        <img class="img-fluid mb-3" src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}">
+                        <div class="star">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        
+                        @if(isset($product->category))
+                            <span class="category-badge">{{ $product->category->name }}</span>
+                        @endif
+                        
+                        <h5 class="p-name">{{ $product->name }}</h5>
+                        <h4 class="p-price">${{ number_format($product->price, 2) }}</h4>
+                        
+                        @if(isset($product->track_inventory) && $product->track_inventory)
+                            @if($product->quantity <= 0)
+                                <div class="stock-alert out-of-stock">
+                                    <i class="fas fa-exclamation-circle"></i> Out of Stock
+                                </div>
+                                <button class="buy-btn btn-disabled" disabled>Sold Out</button>
+                            @elseif($product->quantity <= $product->reorder_level)
+                                <div class="stock-alert low-stock">
+                                    <i class="fas fa-exclamation-triangle"></i> Only {{ $product->quantity }} left! Hurry up!
+                                </div>
+                                <button class="buy-btn">Buy Now</button>
+                            @else
+                                <button class="buy-btn">Buy Now</button>
+                            @endif
+                        @else
+                            <button class="buy-btn">Buy Now</button>
+                        @endif
                     </div>
-                    
-                    @if(isset($product->category))
-                        <span class="category-badge">{{ $product->category->name }}</span>
-                    @endif
-                    
-                    <h5 class="p-name">{{ $product->name }}</h5>
-                    <h4 class="p-price">${{ number_format($product->price, 2) }}</h4>
-                    <button class="buy-btn">Buy Now</button>
+                @endforeach
+            @else
+                <div class="col-12 text-center">
+                    <p>No products available at the moment.</p>
                 </div>
-            @endforeach
-        @else
-            <div class="col-12 text-center">
-                <p>No products available at the moment.</p>
-            </div>
-        @endif
-    </div>
-</section>
+            @endif
+        </div>
+    </section>
 
     <!-- Banner Section -->
     <section id="banner" class="my-5 py-5">
@@ -195,8 +243,6 @@
         </div>
     </section>
 
-    <!-- Specific Category Sections -->
-    
     <!-- Protein Category Section -->
     <section id="category-protein" class="my-5">
         <div class="container text-center mt-5 py-5">
@@ -231,7 +277,24 @@
                         
                         <h5 class="p-name">{{ $product->name }}</h5>
                         <h4 class="p-price">${{ number_format($product->price, 2) }}</h4>
-                        <button class="buy-btn">Buy Now</button>
+                        
+                        @if(isset($product->track_inventory) && $product->track_inventory)
+                            @if($product->quantity <= 0)
+                                <div class="stock-alert out-of-stock">
+                                    <i class="fas fa-exclamation-circle"></i> Out of Stock
+                                </div>
+                                <button class="buy-btn btn-disabled" disabled>Sold Out</button>
+                            @elseif($product->quantity <= $product->reorder_level)
+                                <div class="stock-alert low-stock">
+                                    <i class="fas fa-exclamation-triangle"></i> Only {{ $product->quantity }} left! Hurry up!
+                                </div>
+                                <button class="buy-btn">Buy Now</button>
+                            @else
+                                <button class="buy-btn">Buy Now</button>
+                            @endif
+                        @else
+                            <button class="buy-btn">Buy Now</button>
+                        @endif
                     </div>
                 @endforeach
             @else
@@ -276,7 +339,24 @@
                         
                         <h5 class="p-name">{{ $product->name }}</h5>
                         <h4 class="p-price">${{ number_format($product->price, 2) }}</h4>
-                        <button class="buy-btn">Buy Now</button>
+                        
+                        @if(isset($product->track_inventory) && $product->track_inventory)
+                            @if($product->quantity <= 0)
+                                <div class="stock-alert out-of-stock">
+                                    <i class="fas fa-exclamation-circle"></i> Out of Stock
+                                </div>
+                                <button class="buy-btn btn-disabled" disabled>Sold Out</button>
+                            @elseif($product->quantity <= $product->reorder_level)
+                                <div class="stock-alert low-stock">
+                                    <i class="fas fa-exclamation-triangle"></i> Only {{ $product->quantity }} left! Hurry up!
+                                </div>
+                                <button class="buy-btn">Buy Now</button>
+                            @else
+                                <button class="buy-btn">Buy Now</button>
+                            @endif
+                        @else
+                            <button class="buy-btn">Buy Now</button>
+                        @endif
                     </div>
                 @endforeach
             @else
@@ -304,6 +384,11 @@
       // For each "Buy Now" button, set up a click listener
       buyButtons.forEach((btn) => {
         btn.addEventListener("click", function (event) {
+          // Skip if button is disabled
+          if (this.disabled || this.classList.contains('btn-disabled')) {
+            return;
+          }
+          
           // Prevent default action (which would be navigation for anchor tags)
           event.preventDefault();
           

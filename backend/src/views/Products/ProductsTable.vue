@@ -30,7 +30,9 @@
         <div class="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-3 w-full md:w-auto">
           <!-- Category Filter -->
           <div class="w-full md:w-64">
+            <label for="category-filter" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
             <select
+              id="category-filter"
               v-model="categoryFilter"
               @change="getProducts(null)"
               class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm"
@@ -43,6 +45,22 @@
               >
                 {{ category.name }}
               </option>
+            </select>
+          </div>
+          
+          <!-- Stock Status Filter -->
+          <div class="w-full md:w-64">
+            <label for="stock-status-filter" class="block text-sm font-medium text-gray-700 mb-1">Stock Status</label>
+            <select
+              id="stock-status-filter"
+              v-model="stockStatusFilter"
+              @change="getProducts(null)"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm"
+            >
+              <option value="">All Stock Status</option>
+              <option value="in_stock">In Stock</option>
+              <option value="low_stock">Low Stock</option>
+              <option value="out_of_stock">Out of Stock</option>
             </select>
           </div>
           
@@ -174,7 +192,6 @@
             :key="product.id"
             class="hover:bg-gray-50 transition-colors"
           >
-            <!-- Rest of the template remains the same -->
             <!-- ID -->
             <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
               {{ product.id }}
@@ -188,9 +205,8 @@
               >
                 <img
                   class="h-full w-full object-cover"
-                  :src="getImageUrl(product.image_url, true)"
+                  :src="getImageUrl(product.image_url)"
                   :alt="product.title"
-                  @error="handleImageError"
                 />
               </div>
               <div
@@ -411,6 +427,8 @@ import store from "../../store";
 import axiosClient from "../../axios";
 import Spinner from "../../components/core/Spinner.vue";
 import { PRODUCTS_PER_PAGE } from "../../constants";
+import { inspectAxiosInstance } from '../../utils/DebugUtils';
+
 import TableHeaderCell from "../../components/core/Table/TableHeaderCell.vue";
 import { cleanId, normalizePublished, formatCurrency, formatDate, prepareProductFormData, getImageUrl } from "../../utils/ProductUtils";
 import { getStockStatusClass, getStockStatusText, getStockStatusBadgeClass } from "../../utils/InventoryUtils";
@@ -423,13 +441,23 @@ const props = defineProps({
   }
 });
 
+// Component refs
 const perPage = ref(PRODUCTS_PER_PAGE);
 const search = ref("");
-const categoryFilter = ref(""); // Add new ref for category filter
+const categoryFilter = ref("");
+const stockStatusFilter = ref("");
 const searchTimeout = ref(null);
 const products = computed(() => store.state.products);
 const sortField = ref("updated_at");
 const sortDirection = ref("desc");
+
+// Debug the current filter values
+watch([categoryFilter, stockStatusFilter], (newValues) => {
+  console.log('Filter values changed:', {
+    category: newValues[0],
+    stockStatus: newValues[1]
+  });
+});
 
 // Compute available categories from store and props
 const availableCategories = computed(() => {
@@ -447,7 +475,7 @@ onMounted(() => {
   // Get category_id from URL if present
   const urlParams = new URLSearchParams(window.location.search);
   const categoryId = urlParams.get('category_id');
-  
+  inspectAxiosInstance(axiosClient); 
   if (categoryId) {
     // Convert to string to ensure consistency
     categoryFilter.value = categoryId.toString();
@@ -473,40 +501,66 @@ function getProducts(url = null) {
   url = url || '/products';
   
   // Prepare query parameters
-  const params = {};
+  const params = new URLSearchParams();
   
   // Add standard parameters
-  params.search = search.value || '';
-  params.per_page = perPage.value;
-  params.sort_field = sortField.value;
-  params.sort_direction = sortDirection.value;
-  params.include = 'category'; // Always include category data
+  params.append('search', search.value || '');
+  params.append('per_page', perPage.value);
+  params.append('sort_field', sortField.value);
+  params.append('sort_direction', sortDirection.value);
+  params.append('include', 'category'); // Always include category data
   
-  // Add category filter
+  // Add category filter - properly handle it as a separate parameter
   if (categoryFilter.value) {
     // Convert to string to ensure consistent comparison
-    params.category_id = categoryFilter.value.toString();
-    console.log('Filtering by category_id:', params.category_id);
+    params.append('category_id', categoryFilter.value.toString());
+    console.log('Filtering by category_id:', categoryFilter.value.toString());
   }
   
-  // For debugging
-  console.log('Fetching products with params:', params);
-  console.log('Available categories:', availableCategories.value);
+  // Add stock status filter - properly handle it as a separate parameter
+  if (stockStatusFilter.value) {
+    params.append('stock_status', stockStatusFilter.value);
+    console.log('Filtering by stock status:', stockStatusFilter.value);
+  }
   
-  return axiosClient.get(url, { params })
+  // Convert URL if it already has query parameters
+  let finalUrl = url;
+  if (url && url.includes('?')) {
+    // Extract the base URL without query string
+    finalUrl = url.split('?')[0];
+    
+    // Get existing params from URL
+    const urlParams = new URLSearchParams(url.split('?')[1]);
+    
+    // Merge existing params with our params
+    for (const [key, value] of urlParams.entries()) {
+      if (!params.has(key)) {
+        params.append(key, value);
+      }
+    }
+  }
+  
+  // Create the final URL with all parameters
+  const queryString = params.toString();
+  const requestUrl = finalUrl + (queryString ? `?${queryString}` : '');
+  
+  // For debugging
+  console.log('Fetching products with URL:', requestUrl);
+  
+  return axiosClient.get(requestUrl)
     .then((response) => {
       console.log('API response:', response.data);
-      
-      // Check first product to see its structure
-      if (response.data && response.data.data && response.data.data.length > 0) {
-        console.log('First product in response:', response.data.data[0]);
-      }
-      
       store.commit('setProducts', [false, response.data]);
     })
     .catch((error) => {
       console.error('Error fetching products:', error);
       store.commit('setProducts', [false]);
+      // Show error toast
+      store.commit('showToast', {
+        type: 'error',
+        message: 'Failed to fetch products. Please try again.',
+        title: 'Error'
+      });
     });
 }
 
@@ -514,7 +568,8 @@ function getProducts(url = null) {
 function debounceSearch() {
   if (searchTimeout.value) clearTimeout(searchTimeout.value);
   searchTimeout.value = setTimeout(() => {
-    getProducts();
+    console.log('Applying search filter:', search.value);
+    getProducts(); // This calls the API with updated filters
   }, 300);
 }
 
@@ -563,6 +618,7 @@ function togglePublishStatus(product) {
         sort_field: sortField.value,
         sort_direction: sortDirection.value,
         category_id: categoryFilter.value, // Include category filter in refresh
+        stock_status: stockStatusFilter.value, // Include stock status filter in refresh
         include: 'category' // Always include category data
       });
     })
@@ -614,22 +670,36 @@ function editProduct(product) {
   emit("clickEdit", cleanedProduct);
 }
 
+// In ProductsTable.vue, update the deleteProduct function:
+
 function deleteProduct(product) {
   if (!confirm(`Are you sure you want to delete "${product.title}"?`)) return;
   const id = cleanId(product.id);
+  
+  // Remember the category ID to refresh categories later
+  const categoryId = product.category_id;
 
   store.commit('setProducts', [true]);
   axiosClient.delete(`/products/${id}`)
     .then(() => {
+      // Refresh products list
       store.dispatch("getProducts", {
         search: search.value,
         per_page: perPage.value,
         sort_field: sortField.value,
         sort_direction: sortDirection.value,
-        category_id: categoryFilter.value, // Include category filter in refresh
-        include: 'category', // Always include category data
+        category_id: categoryFilter.value,
+        stock_status: stockStatusFilter.value,
+        include: 'category',
         force: true
       });
+      
+      // Refresh categories to update product counts
+      if (categoryId) {
+        console.log('Product deleted from category', categoryId, '- refreshing categories data');
+        store.dispatch('getCategories', { force: true });
+      }
+      
       if (window.$notification) {
         window.$notification.success(`Product "${product.title}" was deleted successfully.`);
       } else {

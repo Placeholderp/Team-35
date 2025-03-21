@@ -146,8 +146,11 @@
 
 <script setup>
 import { ref, watch, reactive, computed, onMounted } from 'vue';
+import { useStore } from "vuex"; // Added proper store import
 import { Dialog, DialogPanel, DialogTitle, DialogOverlay, TransitionChild, TransitionRoot } from '@headlessui/vue';
 import axiosClient from "../../axios";
+
+const store = useStore(); // Initialize store
 
 const props = defineProps({
   modelValue: {
@@ -233,30 +236,8 @@ function showNotification(message, type = 'success') {
     }
   }
 }
-function selectCategory() {
-  // Check if there are any categories available
-  if (!props.categories || props.categories.length === 0) {
-    alert("No categories available.");
-    return;
-  }
-  
-  // Build a string listing the available categories
-  const categoryOptions = props.categories
-    .map(category => `${category.id}: ${category.name}`)
-    .join('\n');
-  
-  // Use a prompt for demonstration; in a production app you might show a modal instead
-  const selected = prompt(`Select a category by entering its ID:\n${categoryOptions}`);
-  const selectedId = parseInt(selected);
-  
-  // Verify that the selected ID exists in the categories list
-  if (props.categories.some(cat => cat.id === selectedId)) {
-    localProduct.category_id = selectedId;
-  } else {
-    alert("Invalid category selection");
-  }
-}
 
+// Removed the incorrect selectCategory function that was referencing undefined localProduct
 
 // Close modal function
 function closeModal() {
@@ -294,31 +275,39 @@ function onSubmit() {
   }
   
   loading.value = true;
+  console.log('Submitting category via Vuex:', localCategory);
   
+  // Create category data object
   const categoryData = {
     name: localCategory.name.trim(),
     description: localCategory.description || '',
-    is_active: localCategory.is_active ? 1 : 0,  // Ensure boolean is converted to 1/0
-    sort_order: parseInt(localCategory.sort_order) || 0,  // Ensure it's a number
+    is_active: localCategory.is_active ? 1 : 0,
+    sort_order: parseInt(localCategory.sort_order) || 0,
   };
   
-  // For updating existing categories
+  // Use Vuex actions instead of direct axios calls
   if (localCategory.id) {
-    axiosClient.put(`/categories/${localCategory.id}`, categoryData)
+    // Update existing category
+    store.dispatch('updateCategory', {
+      id: localCategory.id,
+      categoryData: categoryData
+    })
       .then(() => {
         showNotification(`Category "${localCategory.name}" updated successfully`);
-        closeModal();
+        emit('close');
+        emit('update:modelValue', false);
       })
       .catch(handleApiError)
       .finally(() => {
         loading.value = false;
       });
   } else {
-    // For creating new categories
-    axiosClient.post('/categories', categoryData)
+    // Create new category
+    store.dispatch('createCategory', categoryData)
       .then(() => {
         showNotification(`Category "${localCategory.name}" created successfully`);
-        closeModal();
+        emit('close');
+        emit('update:modelValue', false);
       })
       .catch(handleApiError)
       .finally(() => {

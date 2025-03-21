@@ -24,9 +24,7 @@ class CategoryResource extends JsonResource
             'is_active' => (bool) $this->is_active,
             'parent_id' => $this->parent_id,
             'sort_order' => $this->sort_order,
-            'product_count' => $this->whenLoaded('products', function() {
-                return $this->products->count();
-            }),
+            'product_count' => $this->products()->count(), // Always count products
             'parent' => new CategoryResource($this->whenLoaded('parent')),
             'children' => CategoryResource::collection($this->whenLoaded('children')),
             'created_at' => $this->created_at,

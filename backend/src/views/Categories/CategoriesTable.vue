@@ -75,8 +75,6 @@
               Products
             </th>
 
-           
-
             <!-- Status (centered) -->
             <th
               class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -161,8 +159,6 @@
               {{ category.product_count || 0 }}
             </td>
             
-           
-
             <!-- Status (centered) -->
             <td class="px-6 py-4 text-center whitespace-nowrap">
               <button
@@ -320,8 +316,11 @@
 <script setup>
 import { ref, onMounted, defineEmits } from "vue";
 import { useRouter } from 'vue-router';
+import { useStore } from "vuex"; // Added proper store import
 import axiosClient from "../../axios";
+import { normalizeActiveStatus } from '../../utils/CategoryUtils';
 
+const store = useStore(); // Initialize store
 const router = useRouter();
 const emit = defineEmits(["clickEdit", "statusChanged"]);
 
@@ -350,10 +349,6 @@ function loadParentCategories() {
       console.error('Error loading parent categories:', error);
     });
 }
-
-
-
-
 
 // Cleaned up and explicit return:
 function debounceSearch() {
@@ -424,8 +419,6 @@ function getCategories(url = null) {
     });
 }
 
-
-
 function showError(message, title = 'Error') {
   if (window.$notification) {
     window.$notification.error(message, title);
@@ -439,37 +432,40 @@ function editCategory(category) {
 }
 
 function toggleStatus(category) {
+  console.log('Toggle status for category:', category.id);
+  
+  // Create updated category object
   const updatedCategory = { 
     ...category,
-    is_active: !category.is_active 
+    is_active: !normalizeActiveStatus(category.is_active)
   };
   
   loading.value = true;
   
-  axiosClient.put(`/categories/${category.id}`, updatedCategory)
+  // Use Vuex action to update category
+  store.dispatch('updateCategory', {
+    id: category.id,
+    categoryData: updatedCategory
+  })
     .then(() => {
-      // Success notification
       if (window.$notification) {
         window.$notification.success(
-          `Category "${category.name}" is now ${updatedCategory.is_active ? 'active' : 'inactive'}.`,
+          `Category "${category.name}" is now ${normalizeActiveStatus(updatedCategory.is_active) ? 'active' : 'inactive'}.`,
           'Status Updated'
         );
       }
       
-      // Refresh the categories
-      getCategories();
+      // Refresh data through parent component
       emit("statusChanged");
     })
     .catch(error => {
-      console.error('Error updating category status:', error);
+      console.error('Error updating category:', error);
       showError('Failed to update category status. Please try again.');
     })
     .finally(() => {
       loading.value = false;
     });
 }
-
-// Replace your current deleteCategory function with this:
 
 function deleteCategory(category) {
   // If category has products, prevent deletion with warning
@@ -557,7 +553,6 @@ function viewProducts(category) {
 
 onMounted(() => {
   getCategories();
-  
 });
 </script>
 

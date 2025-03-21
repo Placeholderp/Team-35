@@ -130,7 +130,7 @@ export function getCategories({commit, state}, {
   
   const params = {
     per_page: state.categories.limit || 10,
-    include: 'products_count' // Optional: include product count with categories
+    include: 'products' // Change to 'products' to ensure proper relationship loading
   };
   
   // Add cache-busting timestamp when force is true
@@ -144,8 +144,12 @@ export function getCategories({commit, state}, {
   if (sort_field) params.sort_field = sort_field;
   if (sort_direction) params.sort_direction = sort_direction;
   
+  console.log('Fetching categories with params:', params);
+  
   return axiosClient.get(url, { params })
     .then((response) => {
+      console.log('Categories API response:', response.data);
+      
       // Process and normalize category data
       const categories = response.data.data || response.data;
       
@@ -246,21 +250,53 @@ export function getProduct({commit}, id) {
     });
 }
 
-export function createProduct({commit}, product) {
+// Update the createProduct function in actions.js to refresh categories after adding a product:
+
+export function createProduct({commit, dispatch}, product) {
   if (product instanceof FormData) {
-    return axiosClient.post('/products', product);
+    const categoryId = product.get('category_id');
+    
+    return axiosClient.post('/products', product)
+      .then(response => {
+        // If the product has a category, refresh categories data
+        if (categoryId) {
+          console.log('New product added to category', categoryId, '- refreshing categories data');
+          dispatch('getCategories', { force: true });
+        }
+        
+        return response;
+      });
   }
   
   const formData = prepareProductFormData(product, false);
-  return axiosClient.post('/products', formData);
+  const categoryId = product.category_id;
+  
+  return axiosClient.post('/products', formData)
+    .then(response => {
+      // If the product has a category, refresh categories data
+      if (categoryId) {
+        console.log('New product added to category', categoryId, '- refreshing categories data');
+        dispatch('getCategories', { force: true });
+      }
+      
+      return response;
+    });
 }
 
-export function updateProduct({commit}, product) {
+// Replace the updateProduct function in actions.js with this improved version:
+
+export function updateProduct({commit, dispatch}, product) {
   let id;
+  let originalCategoryId = null;
+  let newCategoryId = null;
   
   if (product instanceof FormData) {
     id = product.get('id');
     id = cleanId(id);
+    
+    // Extract category IDs for comparison
+    originalCategoryId = product.get('original_category_id');
+    newCategoryId = product.get('category_id');
     
     // Debug the data being sent
     console.log('UPDATE PRODUCT REQUEST DATA:');
@@ -284,13 +320,42 @@ export function updateProduct({commit}, product) {
             
             // Update in store with the fresh data
             commit('updateProductInList', refreshResponse.data.data);
+            
+            // If the category has changed, refresh categories data
+            if (originalCategoryId !== newCategoryId) {
+              console.log('Category changed from', originalCategoryId, 'to', newCategoryId, '- refreshing categories data');
+              dispatch('getCategories', { force: true });
+            }
+            
             return response; // Return original response
           });
       });
   }
   
-  // Rest of the function...
-}
+  // Handle non-FormData product updates
+  // Extract category information
+  if (product.category_id !== undefined && product.original_category_id !== undefined) {
+    originalCategoryId = product.original_category_id;
+    newCategoryId = product.category_id;
+  }
+  
+  id = cleanId(product.id);
+  const formData = prepareProductFormData(product, false);
+  
+  return axiosClient.post(`/products/${id}`, formData)
+    .then(response => {
+      // Refresh product in store
+      commit('updateProductInList', response.data);
+      
+      // If the category has changed, refresh categories data
+      if (originalCategoryId !== newCategoryId) {
+        console.log('Category changed from', originalCategoryId, 'to', newCategoryId, '- refreshing categories data');
+        dispatch('getCategories', { force: true });
+      }
+      
+      return response;
+    });
+  }
 
 export function deleteProduct({commit}, id) {
   // Clean the ID to remove any colons

@@ -48,6 +48,17 @@ class Category extends Model
     {
         return $this->hasMany(Product::class);
     }
+    
+    /**
+     * Dynamically calculate the number of products in this category.
+     * This will override any static product_count value coming from the database.
+     *
+     * @return int
+     */
+    public function getProductCountAttribute()
+    {
+        return $this->products()->count();
+    }
 
     /**
      * Get the route key name.

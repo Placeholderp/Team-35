@@ -32,48 +32,78 @@ class ProductController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        $search = request('search', false);
-        $perPage = request('per_page', 10);
-        $sortField = request('sort_field', 'updated_at');
-        $sortDirection = request('sort_direction', 'desc');
-        $includeCategory = request('include', ''); 
+    /**
+ * Display a listing of the resource.
+ */
+public function index()
+{
+    $search = request('search', false);
+    $perPage = request('per_page', 10);
+    $sortField = request('sort_field', 'updated_at');
+    $sortDirection = request('sort_direction', 'desc');
+    $includeCategory = request('include', ''); 
 
-        $query = Product::query();
+    $query = Product::query();
 
-        if (strpos($includeCategory, 'category') !== false) {
-            $query->with('category');
-        }
-        // Apply search filter
-        if ($search) {
-            $query->where('title', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
-        }
-
-        // Apply sorting
-        $query->orderBy($sortField, $sortDirection);
-
-        // Get paginated results
-        $products = $query->paginate($perPage);
-
-        /** @var \Illuminate\Pagination\LengthAwarePaginator $products */
-        $products->getCollection()->transform(function ($product) {
-            // Ensure published is always set
-            if (!isset($product->published)) {
-                $product->published = false;
-            }
-
-            // Add image URL if image exists
-            if ($product->image) {
-                $product->image_url = $this->getImageUrl($product->image);
-            }
-
-            return $product;
-        });
-
-        return ProductResource::collection($products);
+    if (strpos($includeCategory, 'category') !== false) {
+        $query->with('category');
     }
+    
+    // Apply search filter
+    if ($search) {
+        $query->where('title', 'like', "%{$search}%")
+              ->orWhere('description', 'like', "%{$search}%");
+    }
+
+    // Apply category filter if provided
+    if (request()->has('category_id') && request('category_id') !== '') {
+        $query->where('category_id', request('category_id'));
+    }
+
+    // Apply stock status filter
+    if (request()->has('stock_status') && request('stock_status') !== '') {
+        $stockStatus = request('stock_status');
+        
+        if ($stockStatus === 'low_stock') {
+            $query->where('track_inventory', true)
+                  ->where('quantity', '>', 0)
+                  ->whereRaw('quantity <= reorder_level');
+        } else if ($stockStatus === 'out_of_stock') {
+            $query->where('track_inventory', true)
+                  ->where('quantity', 0);
+        } else if ($stockStatus === 'in_stock') {
+            $query->where('track_inventory', true)
+                  ->where('quantity', '>', 0)
+                  ->whereRaw('quantity > reorder_level');
+        }
+    }
+    
+    // Debug the SQL query
+    Log::info('Product query SQL', ['sql' => $query->toSql(), 'bindings' => $query->getBindings()]);
+
+    // Apply sorting
+    $query->orderBy($sortField, $sortDirection);
+
+    // Get paginated results
+    $products = $query->paginate($perPage);
+
+    /** @var \Illuminate\Pagination\LengthAwarePaginator $products */
+    $products->getCollection()->transform(function ($product) {
+        // Ensure published is always set
+        if (!isset($product->published)) {
+            $product->published = false;
+        }
+
+        // Add image URL if image exists
+        if ($product->image) {
+            $product->image_url = $this->getImageUrl($product->image);
+        }
+
+        return $product;
+    });
+
+    return ProductResource::collection($products);
+}
 
     /**
      * Store a newly created resource in storage.

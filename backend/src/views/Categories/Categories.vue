@@ -107,9 +107,12 @@
 
 <script setup>
 import { computed, ref, onMounted } from "vue";
+import { useStore } from "vuex"; // Added proper store import
 import CategoryModal from "./CategoryModal.vue";
 import CategoriesTable from "./CategoriesTable.vue";
 import axiosClient from "../../axios";
+
+const store = useStore(); // Initialize store
 
 const DEFAULT_CATEGORY = {
   id: '',
@@ -166,7 +169,9 @@ function fetchCategories() {
 }
 
 function refreshCategories() {
-  fetchCategories();
+  console.log('Refreshing categories from Vuex...');
+  // Use the Vuex action instead of direct axios call
+  store.dispatch('getCategories', { force: true });
 }
 
 function showAddNewModal() {
@@ -191,18 +196,15 @@ function editCategory(category) {
   }
 }
 
-
-
-// Fixed function:
 function onModalClose() {
-  // Refresh categories
-  refreshCategories();
+  console.log('Modal closed, refreshing categories from store');
   
-  // Reset the category model - need to delay this to avoid UI issues
-  setTimeout(() => {
-    categoryModel.value = { ...DEFAULT_CATEGORY };
-    showCategoryModal.value = false;
-  }, 100);
+  // Reset the category model
+  categoryModel.value = { ...DEFAULT_CATEGORY };
+  showCategoryModal.value = false;
+  
+  // Refresh categories using Vuex
+  refreshCategories();
 }
 
 onMounted(() => {

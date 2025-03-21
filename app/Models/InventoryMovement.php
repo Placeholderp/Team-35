@@ -9,6 +9,11 @@ class InventoryMovement extends Model
 {
     use HasFactory;
     
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
     protected $fillable = [
         'product_id',
         'quantity',
@@ -19,15 +24,31 @@ class InventoryMovement extends Model
         'notes',
         'created_by'
     ];
-    
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'quantity' => 'integer',
+        'previous_quantity' => 'integer',
+        'new_quantity' => 'integer',
+    ];
+
+    /**
+     * Get the product that the movement belongs to.
+     */
     public function product()
     {
         return $this->belongsTo(Product::class);
     }
-    
+
+    /**
+     * Get the user who created the movement.
+     */
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 }
-
