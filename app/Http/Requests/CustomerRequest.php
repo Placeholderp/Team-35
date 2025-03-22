@@ -19,31 +19,38 @@ class CustomerRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      */
-    public function rules()
-    {
-        return [
-            'first_name' => ['required'],
-            'last_name' => ['required'],
-            'phone' => ['required', 'min:7'],
-            'email' => ['required', 'email'],
-            'status' => ['required', 'boolean'],
-
-            'shippingAddress.address1' => ['required'],
-            'shippingAddress.address2' => ['required'],
-            'shippingAddress.city' => ['required'],
-            'shippingAddress.state' => ['required'],
-            'shippingAddress.zipcode' => ['required'],
-            'shippingAddress.country_code' => ['required', 'exists:countries,code'],
-
-            'billingAddress.address1' => ['required'],
-            'billingAddress.address2' => ['required'],
-            'billingAddress.city' => ['required'],
-            'billingAddress.state' => ['required'],
-            'billingAddress.zipcode' => ['required'],
-            'billingAddress.country_code' => ['required', 'exists:countries,code'],
-
-        ];
+   // In app/Http/Requests/CustomerRequest.php
+public function rules()
+{
+    $rules = [
+        'first_name' => ['required'],
+        'last_name' => ['required'],
+        'email' => ['required', 'email'],
+        'status' => ['nullable'], // Changed from 'required|boolean' to 'nullable'
+    ];
+    
+    // Only apply address validation when creating a new customer
+    // or when specifically updating addresses
+    if ($this->isMethod('post') || $this->has('shippingAddress')) {
+        $rules['shippingAddress.address1'] = ['nullable'];
+        $rules['shippingAddress.address2'] = ['nullable'];
+        $rules['shippingAddress.city'] = ['nullable'];
+        $rules['shippingAddress.state'] = ['nullable'];
+        $rules['shippingAddress.zipcode'] = ['nullable'];
+        $rules['shippingAddress.country_code'] = ['nullable', 'exists:countries,code'];
     }
+    
+    if ($this->isMethod('post') || $this->has('billingAddress')) {
+        $rules['billingAddress.address1'] = ['nullable'];
+        $rules['billingAddress.address2'] = ['nullable'];
+        $rules['billingAddress.city'] = ['nullable'];
+        $rules['billingAddress.state'] = ['nullable'];
+        $rules['billingAddress.zipcode'] = ['nullable'];
+        $rules['billingAddress.country_code'] = ['nullable', 'exists:countries,code'];
+    }
+    
+    return $rules;
+}
 
     public function attributes()
     {

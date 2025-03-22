@@ -17,6 +17,33 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class CheckoutController extends Controller
 {
+    public function index(Request $request)
+{
+    // Display the checkout page
+    return view('checkout');
+}
+
+public function process(Request $request)
+{
+    // Process the checkout form submission
+    // This should be similar to your existing checkout method
+    
+    // Validate input
+    $request->validate([
+        'full_name' => 'required|string|max:255',
+        'email' => 'required|email',
+        'address' => 'required|string|max:255',
+        'city' => 'required|string|max:255',
+        'postcode' => 'required|string|max:20',
+        'card_name' => 'required|string|max:255',
+        'card_number' => 'required|string',
+        'expiry_date' => 'required',
+        'cvv' => 'required|numeric',
+    ]);
+    
+    // Proceed with checkout logic (reuse your existing checkout method)
+    return $this->checkout($request);
+}
     public function checkout(Request $request)
     {
         /** @var \App\Models\User $user */
@@ -39,7 +66,7 @@ class CheckoutController extends Controller
         // Create Order
         $orderData = [
             'total_price' => $totalPrice,
-            'status'      => OrderStatus::Unpaid,
+            'status'      => OrderStatus::Pending->value,
             'created_by'  => $user->id,
             'updated_by'  => $user->id,
         ];
@@ -67,17 +94,14 @@ class CheckoutController extends Controller
         CartItem::where(['user_id' => $user->id])->delete();
 
         // Redirect to a success page (adjust as necessary for your flow)
-        return redirect()->route('checkout.success');
+        return redirect()->route('success');
     }
 
     public function success(Request $request)
     {
         // Optionally, update payment/order statuses if needed.
-        return view('checkout.success');
+        return view('success');
     }
 
-    public function failure(Request $request)
-    {
-        return view('checkout.failure', ['message' => "Payment failed."]);
-    }
+    
 }

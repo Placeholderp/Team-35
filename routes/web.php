@@ -102,10 +102,10 @@ Route::middleware(['auth', 'verified'])->group(function() {
     Route::post('/profile/password-update', [ProfileController::class, 'passwordUpdate'])->name('profile_password.update');
     
     // Checkout and orders
-    Route::post('/checkout', [CheckoutController::class, 'checkout'])->name('cart.checkout');
-    Route::post('/checkout/{order}', [CheckoutController::class, 'checkoutOrder'])->name('cart.checkout-order');
-    Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
-    Route::get('/checkout/failure', [CheckoutController::class, 'failure'])->name('checkout.failure');
+// Add these routes to fix the checkout flow
+Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
+Route::get('checkout/success', [CheckoutController::class, 'success'])->name('success');
     Route::get('/orders', [OrderController::class, 'index'])->name('order.index');
     Route::get('/orders/{order}', [OrderController::class, 'view'])->name('order.view');
 });

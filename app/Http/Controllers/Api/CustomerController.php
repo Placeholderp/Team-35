@@ -56,32 +56,37 @@ class CustomerController extends Controller
      * Update the specified resource in storage.
      */
     public function update(CustomerRequest $request, Customer $customer)
-    {
-        $customerData = $request->validated();
-        $customerData['updated_by'] = $request->user()->id;
-        $customerData['status'] = $customerData['status'] ? CustomerStatus::Active->value : CustomerStatus::Disabled->value;
-        $shippingData = $customerData['shippingAddress'];
-        $billingData = $customerData['billingAddress'];
+{
+    $customerData = $request->validated();
+    $customerData['updated_by'] = $request->user()->id;
+    $customerData['status'] = $customerData['status'] ? CustomerStatus::Active->value : CustomerStatus::Disabled->value;
+    
+    // Use null coalescing operator to handle missing address data
+    $shippingData = $customerData['shippingAddress'] ?? null;
+    $billingData = $customerData['billingAddress'] ?? null;
 
-        $customer->update($customerData);
+    $customer->update($customerData);
 
-        if ($customer->shippingAddress) {
-            $customer->shippingAddress->update($shippingData);
-        } else {
-            $shippingData['customer_id'] = $customer->user_id;
-            $shippingData['type'] = AddressType::Shipping->value;
-            CustomerAddress::create($shippingData);
-        }
-        if ($customer->billingAddress) {
-            $customer->billingAddress->update($billingData);
-        } else {
-            $billingData['customer_id'] = $customer->user_id;
-            $billingData['type'] = AddressType::Billing->value;
-            CustomerAddress::create($billingData);
-        }
-
-        return new CustomerResource($customer);
+    // Only process shipping address if it exists
+    if ($shippingData && $customer->shippingAddress) {
+        $customer->shippingAddress->update($shippingData);
+    } else if ($shippingData) {
+        $shippingData['customer_id'] = $customer->user_id;
+        $shippingData['type'] = AddressType::Shipping->value;
+        CustomerAddress::create($shippingData);
     }
+    
+    // Only process billing address if it exists
+    if ($billingData && $customer->billingAddress) {
+        $customer->billingAddress->update($billingData);
+    } else if ($billingData) {
+        $billingData['customer_id'] = $customer->user_id;
+        $billingData['type'] = AddressType::Billing->value;
+        CustomerAddress::create($billingData);
+    }
+
+    return new CustomerResource($customer);
+}
 
     /**
      * Remove the specified resource from storage.

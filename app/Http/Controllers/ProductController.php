@@ -60,18 +60,7 @@ class ProductController extends Controller
         return $id;
     }
 
-    /**
-     * Generate the correct image URL for a product
-     * 
-     * @param string $path
-     * @return string|null
-     */
-    /**
- * Function to generate correct image URL
- * 
- * @param string $path
- * @return string|null
- */
+  
 /**
  * Function to generate correct image URL
  * 
@@ -244,16 +233,41 @@ private function getImageUrl($path)
         return response()->noContent();
     }
 
-    /**
-     * Display the product view page
-     *
-     * @param  \App\Models\Product  $product
-     * @return \Illuminate\Http\Response
-     */
-    public function view(Product $product)
-    {
-        return view('product', compact('product'));
+  /**
+ * Display the product view page
+ *
+ * @param  \App\Models\Product  $product
+ * @return \Illuminate\Http\Response
+ */
+public function view(Product $product)
+{
+    // Get related products from the same category
+    $relatedProducts = [];
+    
+    if ($product->category_id) {
+        // Get up to 4 products from the same category (excluding the current product)
+        $relatedProducts = Product::where('category_id', $product->category_id)
+            ->where('id', '!=', $product->id)
+            ->where('published', true)
+            ->take(4)
+            ->get();
     }
+    
+    // If we couldn't find 4 related products from the same category, get some random products
+    if (count($relatedProducts) < 4) {
+        $additionalProducts = Product::where('id', '!=', $product->id)
+            ->where('published', true)
+            ->inRandomOrder()
+            ->take(4 - count($relatedProducts))
+            ->get();
+            
+        // Merge the two collections
+        $relatedProducts = $relatedProducts->concat($additionalProducts);
+    }
+    
+    // Return the view with product and related products
+    return view('sproduct', compact('product', 'relatedProducts'));
+}
 
     /**
      * Display the shop page with all published products

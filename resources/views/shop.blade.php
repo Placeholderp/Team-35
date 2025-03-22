@@ -564,11 +564,69 @@
         margin-bottom: 15px;
     }
     
+    /* Dual button layout styles */
+    .buy-now-btn {
+        flex: 1;
+        margin-right: 5px;
+    }
+    
+    .details-btn {
+        flex: 1;
+        margin-left: 5px;
+        background-color: white;
+        color: #333;
+        border: 1px solid #ddd;
+        transition: all 0.3s ease;
+    }
+    
+    .details-btn:hover {
+        background-color: #f8f9fa;
+        border-color: #999;
+    }
+    
+    /* Make sure the container has enough space for two buttons */
+    .product {
+        min-height: 430px;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+    }
     .search-input.active {
         position: relative;
         width: 100%;
         transform: none;
         margin-top: 15px;
+    }
+    .buy-btn.mr-1 {
+        flex: 1;
+        margin-right: 5px;
+    }
+    
+    .btn-outline-secondary.ml-1 {
+        flex: 1;
+        margin-left: 5px;
+        background-color: white;
+        color: #333;
+        border: 1px solid #ddd;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-outline-secondary.ml-1:hover {
+        background-color: #f8f9fa;
+        border-color: #999;
+    }
+    
+    /* Make sure product cards have enough space */
+    .product {
+        min-height: 430px;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+    }
+    
+    /* Fix flex container spacing */
+    .d-flex.justify-content-between.mt-2 {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 0.5rem;
     }
     
     .search-icon {
@@ -596,74 +654,6 @@
     }
 }
 </style>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Profile dropdown toggle
-    const profileIcon = document.getElementById('profile-icon');
-    const profileDropdown = document.getElementById('profile-dropdown');
-    
-    if (profileIcon && profileDropdown) {
-        profileIcon.addEventListener('click', function(e) {
-            e.stopPropagation();
-            profileDropdown.classList.toggle('active');
-        });
-        
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!profileDropdown.contains(e.target) && e.target !== profileIcon) {
-                profileDropdown.classList.remove('active');
-            }
-        });
-    }
-    
-    // Search functionality
-    const searchIcon = document.getElementById('search-icon');
-    const searchInput = document.getElementById('search-input');
-    
-    if (searchIcon && searchInput) {
-        searchIcon.addEventListener('click', function() {
-            searchInput.classList.toggle('active');
-            if (searchInput.classList.contains('active')) {
-                searchInput.focus();
-            }
-        });
-        
-        // Close search when clicking outside
-        document.addEventListener('click', function(e) {
-            if (e.target !== searchIcon && e.target !== searchInput) {
-                searchInput.classList.remove('active');
-            }
-        });
-    }
-    
-    // Update cart count
-    function updateCartCount() {
-        const cartCountElement = document.getElementById('cart-count');
-        if (cartCountElement) {
-            const cart = JSON.parse(localStorage.getItem('cart')) || [];
-            cartCountElement.textContent = cart.length;
-            
-            // Hide count if zero
-            if (cart.length === 0) {
-                cartCountElement.style.display = 'none';
-            } else {
-                cartCountElement.style.display = 'flex';
-            }
-        }
-    }
-    
-    // Initial cart count update
-    updateCartCount();
-    
-    // Listen for cart changes
-    window.addEventListener('storage', function(e) {
-        if (e.key === 'cart') {
-            updateCartCount();
-        }
-    });
-});
-</script>
 @endsection
 
 @section('content')
@@ -684,10 +674,7 @@ document.addEventListener('DOMContentLoaded', function() {
                            class="btn {{ request('category') == 'protein' ? 'btn-primary' : 'btn-outline-light' }} m-1">
                             Protein Products
                         </a>
-                        <a href="{{ route('shop', ['category' => 'powder']) }}" 
-                           class="btn {{ request('category') == 'powder' ? 'btn-primary' : 'btn-outline-light' }} m-1">
-                            Powder Products
-                        </a>
+                        
                         <a href="{{ route('shop', ['category' => 'vitamins']) }}" 
                            class="btn {{ request('category') == 'vitamins' ? 'btn-primary' : 'btn-outline-light' }} m-1">
                             Vitamins & Minerals
@@ -707,45 +694,44 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 
     @php
-        $selectedCategory = request('category');
+    $selectedCategory = request('category');
+    
+    // Define category mappings for more reliable filtering
+    $categoryMappings = [
+        'protein' => ['protein', 'protein products'],
+        'powder' => ['powder', 'powder products'],
+        'vitamins' => ['vitamins', 'vitamins & minerals'],
+        'workout' => ['workout', 'workouts', 'workout plans', 'workout-plans', 'workout_plans'],
+        'preworkout' => ['preworkout', 'pre-workout', 'pre_workout', 'pre workout', 'pre-workout supplements']
+    ];
+    
+    // Use an anonymous function to avoid redeclaration
+    $filterProductsByCategory = function($products, $categoryKey, $categoryMappings) {
+        $filteredProducts = collect();
         
-        // Define category mappings for more reliable filtering
-        $categoryMappings = [
-            'protein' => ['protein', 'protein products'],
-            'powder' => ['powder', 'powder products'],
-            'vitamins' => ['vitamins', 'vitamins & minerals'],
-            'workout' => ['workout', 'workouts', 'workout plans', 'workout-plans', 'workout_plans'],
-            'preworkout' => ['preworkout', 'pre-workout', 'pre_workout', 'pre workout', 'pre-workout supplements']
-        ];
-        
-        // Filter products by category if a category is selected
-        function filterProductsByCategory($products, $categoryKey, $categoryMappings) {
-            $filteredProducts = collect();
-            
-            if(!isset($products)) {
-                return $filteredProducts;
-            }
-            
-            foreach($products as $product) {
-                if(!isset($product->category)) {
-                    continue;
-                }
-                
-                $productSlug = strtolower($product->category->slug ?? '');
-                $productName = strtolower($product->category->name ?? '');
-                
-                // Check if product category matches any of the mappings for the selected category
-                if(in_array($productSlug, $categoryMappings[$categoryKey]) || 
-                   in_array($productName, $categoryMappings[$categoryKey]) ||
-                   strpos($productName, $categoryKey) !== false) {
-                    $filteredProducts->push($product);
-                }
-            }
-            
+        if(!isset($products)) {
             return $filteredProducts;
         }
-    @endphp
-
+        
+        foreach($products as $product) {
+            if(!isset($product->category)) {
+                continue;
+            }
+            
+            $productSlug = strtolower($product->category->slug ?? '');
+            $productName = strtolower($product->category->name ?? '');
+            
+            // Check if product category matches any of the mappings for the selected category
+            if(in_array($productSlug, $categoryMappings[$categoryKey]) || 
+               in_array($productName, $categoryMappings[$categoryKey]) ||
+               strpos($productName, $categoryKey) !== false) {
+                $filteredProducts->push($product);
+            }
+        }
+        
+        return $filteredProducts;
+    };
+@endphp
     <!-- Protein Category Section -->
     @if(!$selectedCategory || $selectedCategory == 'protein')
     <section id="category-protein" class="my-5">
@@ -756,10 +742,10 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         <div class="row mx-auto container-fluid">
             @php
-                $proteinProducts = !$selectedCategory ? 
-                    filterProductsByCategory($products, 'protein', $categoryMappings) : 
-                    $products;
-            @endphp
+    $proteinProducts = !$selectedCategory ? 
+        $filterProductsByCategory($products, 'protein', $categoryMappings) : 
+        $products;
+@endphp
             
             @if(count($proteinProducts) > 0)
                 @foreach($proteinProducts as $product)
@@ -777,23 +763,34 @@ document.addEventListener('DOMContentLoaded', function() {
                         <p class="p-description">{{ Str::limit($product->description, 100) }}</p>
                         <h4 class="p-price">${{ number_format($product->price, 2) }}</h4>
                         
+                        <!-- Replace the existing button section in the shop.blade.php product cards with this: -->
+
                         @if(isset($product->track_inventory) && $product->track_inventory)
-                            @if($product->quantity <= 0)
-                                <div class="stock-alert out-of-stock">
-                                    <i class="fas fa-exclamation-circle"></i> Out of Stock
-                                </div>
-                                <button class="buy-btn btn-disabled" disabled>Sold Out</button>
-                            @elseif($product->quantity <= $product->reorder_level)
-                                <div class="stock-alert low-stock">
-                                    <i class="fas fa-exclamation-triangle"></i> Only {{ $product->quantity }} left! Hurry up!
-                                </div>
-                                <button class="buy-btn">Buy Now</button>
-                            @else
-                                <button class="buy-btn">Buy Now</button>
-                            @endif
+                        @if($product->quantity <= 0)
+                            <div class="stock-alert out-of-stock">
+                                <i class="fas fa-exclamation-circle"></i> Out of Stock
+                            </div>
+                            <button class="buy-btn btn-disabled" disabled>Sold Out</button>
+                        @elseif($product->quantity <= $product->reorder_level)
+                            <div class="stock-alert low-stock">
+                                <i class="fas fa-exclamation-triangle"></i> Only {{ $product->quantity }} left! Hurry up!
+                            </div>
+                            <div class="d-flex justify-content-between mt-2">
+                                <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
+                                <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
+                            </div>
                         @else
-                            <button class="buy-btn">Buy Now</button>
+                            <div class="d-flex justify-content-between mt-2">
+                                <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
+                                <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
+                            </div>
                         @endif
+                    @else
+                        <div class="d-flex justify-content-between mt-2">
+                            <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
+                            <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
+                        </div>
+                    @endif
                     </div>
                 @endforeach
             @else
@@ -809,69 +806,7 @@ document.addEventListener('DOMContentLoaded', function() {
     @endif
     @endif
     
-    <!-- Powder Category Section -->
-    @if(!$selectedCategory || $selectedCategory == 'powder')
-    <section id="category-powder" class="my-5">
-        <div class="container text-center mt-5 py-5">
-            <h3>Powder Products</h3>
-            <hr class="mx-auto">
-            <p>Premium quality powder supplements to enhance your workout and daily nutrition.</p>
-        </div>
-        <div class="row mx-auto container-fluid">
-            @php
-                $powderProducts = !$selectedCategory ? 
-                    filterProductsByCategory($products, 'powder', $categoryMappings) : 
-                    $products;
-            @endphp
-            
-            @if(count($powderProducts) > 0)
-                @foreach($powderProducts as $product)
-                    <div class="product text-center col-lg-3 col-md-4 col-12">
-                        <img class="img-fluid mb-3" src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->title }}">
-                        <div class="star">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                        </div>
-                        
-                        <h5 class="p-name">{{ $product->title }}</h5>
-                        <p class="p-description">{{ Str::limit($product->description, 100) }}</p>
-                        <h4 class="p-price">${{ number_format($product->price, 2) }}</h4>
-                        
-                        @if(isset($product->track_inventory) && $product->track_inventory)
-                            @if($product->quantity <= 0)
-                                <div class="stock-alert out-of-stock">
-                                    <i class="fas fa-exclamation-circle"></i> Out of Stock
-                                </div>
-                                <button class="buy-btn btn-disabled" disabled>Sold Out</button>
-                            @elseif($product->quantity <= $product->reorder_level)
-                                <div class="stock-alert low-stock">
-                                    <i class="fas fa-exclamation-triangle"></i> Only {{ $product->quantity }} left! Hurry up!
-                                </div>
-                                <button class="buy-btn">Buy Now</button>
-                            @else
-                                <button class="buy-btn">Buy Now</button>
-                            @endif
-                        @else
-                            <button class="buy-btn">Buy Now</button>
-                        @endif
-                    </div>
-                @endforeach
-            @else
-                <div class="col-12 text-center">
-                    <p>No powder products available at the moment.</p>
-                </div>
-            @endif
-        </div>
-    </section>
-    
-    @if(!$selectedCategory)
-    <div class="section-divider container"></div>
-    @endif
-    @endif
-    
+   
     <!-- Vitamins Category Section -->
     @if(!$selectedCategory || $selectedCategory == 'vitamins')
     <section id="category-vitamins" class="my-5">
@@ -882,10 +817,10 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         <div class="row mx-auto container-fluid">
             @php
-                $vitaminProducts = !$selectedCategory ? 
-                    filterProductsByCategory($products, 'vitamins', $categoryMappings) : 
-                    $products;
-            @endphp
+            $vitaminProducts = !$selectedCategory ? 
+                $filterProductsByCategory($products, 'vitamins', $categoryMappings) : 
+                $products;
+        @endphp
             
             @if(count($vitaminProducts) > 0)
                 @foreach($vitaminProducts as $product)
@@ -904,22 +839,31 @@ document.addEventListener('DOMContentLoaded', function() {
                         <h4 class="p-price">${{ number_format($product->price, 2) }}</h4>
                         
                         @if(isset($product->track_inventory) && $product->track_inventory)
-                            @if($product->quantity <= 0)
-                                <div class="stock-alert out-of-stock">
-                                    <i class="fas fa-exclamation-circle"></i> Out of Stock
-                                </div>
-                                <button class="buy-btn btn-disabled" disabled>Sold Out</button>
-                            @elseif($product->quantity <= $product->reorder_level)
-                                <div class="stock-alert low-stock">
-                                    <i class="fas fa-exclamation-triangle"></i> Only {{ $product->quantity }} left! Hurry up!
-                                </div>
-                                <button class="buy-btn">Buy Now</button>
-                            @else
-                                <button class="buy-btn">Buy Now</button>
-                            @endif
-                        @else
-                            <button class="buy-btn">Buy Now</button>
-                        @endif
+    @if($product->quantity <= 0)
+        <div class="stock-alert out-of-stock">
+            <i class="fas fa-exclamation-circle"></i> Out of Stock
+        </div>
+        <button class="buy-btn btn-disabled" disabled>Sold Out</button>
+    @elseif($product->quantity <= $product->reorder_level)
+        <div class="stock-alert low-stock">
+            <i class="fas fa-exclamation-triangle"></i> Only {{ $product->quantity }} left! Hurry up!
+        </div>
+        <div class="d-flex justify-content-between mt-2">
+            <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
+            <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
+        </div>
+    @else
+        <div class="d-flex justify-content-between mt-2">
+            <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
+            <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
+        </div>
+    @endif
+@else
+    <div class="d-flex justify-content-between mt-2">
+        <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
+        <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
+    </div>
+@endif
                     </div>
                 @endforeach
             @else
@@ -945,10 +889,10 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         <div class="row mx-auto container-fluid">
             @php
-                $workoutProducts = !$selectedCategory ? 
-                    filterProductsByCategory($products, 'workout', $categoryMappings) : 
-                    $products;
-            @endphp
+    $workoutProducts = !$selectedCategory ? 
+        $filterProductsByCategory($products, 'workout', $categoryMappings) : 
+        $products;
+@endphp
             
             @if(count($workoutProducts) > 0)
                 @foreach($workoutProducts as $product)
@@ -967,22 +911,31 @@ document.addEventListener('DOMContentLoaded', function() {
                         <h4 class="p-price">${{ number_format($product->price, 2) }}</h4>
                         
                         @if(isset($product->track_inventory) && $product->track_inventory)
-                            @if($product->quantity <= 0)
-                                <div class="stock-alert out-of-stock">
-                                    <i class="fas fa-exclamation-circle"></i> Out of Stock
-                                </div>
-                                <button class="buy-btn btn-disabled" disabled>Sold Out</button>
-                            @elseif($product->quantity <= $product->reorder_level)
-                                <div class="stock-alert low-stock">
-                                    <i class="fas fa-exclamation-triangle"></i> Only {{ $product->quantity }} left! Hurry up!
-                                </div>
-                                <button class="buy-btn">Buy Now</button>
-                            @else
-                                <button class="buy-btn">Buy Now</button>
-                            @endif
+                        @if($product->quantity <= 0)
+                            <div class="stock-alert out-of-stock">
+                                <i class="fas fa-exclamation-circle"></i> Out of Stock
+                            </div>
+                            <button class="buy-btn btn-disabled" disabled>Sold Out</button>
+                        @elseif($product->quantity <= $product->reorder_level)
+                            <div class="stock-alert low-stock">
+                                <i class="fas fa-exclamation-triangle"></i> Only {{ $product->quantity }} left! Hurry up!
+                            </div>
+                            <div class="d-flex justify-content-between mt-2">
+                                <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
+                                <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
+                            </div>
                         @else
-                            <button class="buy-btn">Buy Now</button>
+                            <div class="d-flex justify-content-between mt-2">
+                                <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
+                                <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
+                            </div>
                         @endif
+                    @else
+                        <div class="d-flex justify-content-between mt-2">
+                            <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
+                            <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
+                        </div>
+                    @endif
                     </div>
                 @endforeach
             @else
@@ -1008,10 +961,10 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         <div class="row mx-auto container-fluid">
             @php
-                $preworkoutProducts = !$selectedCategory ? 
-                    filterProductsByCategory($products, 'preworkout', $categoryMappings) : 
-                    $products;
-            @endphp
+            $preworkoutProducts = !$selectedCategory ? 
+                $filterProductsByCategory($products, 'preworkout', $categoryMappings) : 
+                $products;
+        @endphp
             
             @if(count($preworkoutProducts) > 0)
                 @foreach($preworkoutProducts as $product)
@@ -1030,22 +983,31 @@ document.addEventListener('DOMContentLoaded', function() {
                         <h4 class="p-price">${{ number_format($product->price, 2) }}</h4>
                         
                         @if(isset($product->track_inventory) && $product->track_inventory)
-                            @if($product->quantity <= 0)
-                                <div class="stock-alert out-of-stock">
-                                    <i class="fas fa-exclamation-circle"></i> Out of Stock
-                                </div>
-                                <button class="buy-btn btn-disabled" disabled>Sold Out</button>
-                            @elseif($product->quantity <= $product->reorder_level)
-                                <div class="stock-alert low-stock">
-                                    <i class="fas fa-exclamation-triangle"></i> Only {{ $product->quantity }} left! Hurry up!
-                                </div>
-                                <button class="buy-btn">Buy Now</button>
-                            @else
-                                <button class="buy-btn">Buy Now</button>
-                            @endif
-                        @else
-                            <button class="buy-btn">Buy Now</button>
-                        @endif
+    @if($product->quantity <= 0)
+        <div class="stock-alert out-of-stock">
+            <i class="fas fa-exclamation-circle"></i> Out of Stock
+        </div>
+        <button class="buy-btn btn-disabled" disabled>Sold Out</button>
+    @elseif($product->quantity <= $product->reorder_level)
+        <div class="stock-alert low-stock">
+            <i class="fas fa-exclamation-triangle"></i> Only {{ $product->quantity }} left! Hurry up!
+        </div>
+        <div class="d-flex justify-content-between mt-2">
+            <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
+            <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
+        </div>
+    @else
+        <div class="d-flex justify-content-between mt-2">
+            <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
+            <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
+        </div>
+    @endif
+@else
+    <div class="d-flex justify-content-between mt-2">
+        <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
+        <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
+    </div>
+@endif
                     </div>
                 @endforeach
             @else
@@ -1098,64 +1060,127 @@ document.addEventListener('DOMContentLoaded', function() {
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js" integrity="sha384-SR1sx49pcuLnqZUnnPwx6FCym0wLsk5JZuNx2bPPENzswTNFaQU1RDvt3wT4gWFG" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.min.js" integrity="sha384-j0CNLUeiqtyaRmlzUHCPZ+Gy5fQu0dQ6eZ/xAww941Ai1SxSY+0EQqNXNE6DZiVc" crossorigin="anonymous"></script>
     
-    <!-- Add-to-cart Script -->
+    <!-- Unified JavaScript for UI interactions and cart functionality -->
     <script>
-      // Grab all buttons with class "buy-btn"
-      const buyButtons = document.querySelectorAll(".buy-btn");
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize cart count from localStorage
+        const updateCartCount = () => {
+            const cart = JSON.parse(localStorage.getItem("cart")) || [];
+            const cartCountElement = document.getElementById('cart-count');
+            if (cartCountElement) {
+                cartCountElement.textContent = cart.length;
+                cartCountElement.style.display = cart.length > 0 ? 'flex' : 'none';
+            }
+        };
+        
+        // Update cart count on page load
+        updateCartCount();
+        
+        // Profile dropdown toggle
+        const profileIcon = document.getElementById('profile-icon');
+        const profileDropdown = document.getElementById('profile-dropdown');
+        
+        if (profileIcon && profileDropdown) {
+            profileIcon.addEventListener('click', function(e) {
+                e.stopPropagation();
+                profileDropdown.classList.toggle('active');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!profileDropdown.contains(e.target) && e.target !== profileIcon) {
+                    profileDropdown.classList.remove('active');
+                }
+            });
+        }
+        
+        // Search functionality
+        const searchIcon = document.getElementById('search-icon');
+        const searchInput = document.getElementById('search-input');
+        
+        if (searchIcon && searchInput) {
+            searchIcon.addEventListener('click', function() {
+                searchInput.classList.toggle('active');
+                if (searchInput.classList.contains('active')) {
+                    searchInput.focus();
+                }
+            });
+            
+            // Close search when clicking outside
+            document.addEventListener('click', function(e) {
+                if (e.target !== searchIcon && e.target !== searchInput) {
+                    searchInput.classList.remove('active');
+                }
+            });
+        }
+        
+        // Buy button functionality
+        const buyButtons = document.querySelectorAll(".buy-btn.buy-now-btn:not(.btn-disabled)");
+        
+        buyButtons.forEach((btn) => {
+            btn.addEventListener("click", function(event) {
+                // Skip if button is disabled
+                if (this.disabled || this.classList.contains('btn-disabled')) {
+                    return;
+                }
+                
+                // Prevent default action
+                event.preventDefault();
+                
+                // The parent product card has .product
+                const productCard = this.closest(".product");
+                if (!productCard) return;
 
-      // For each "Buy Now" button, set up a click listener
-      buyButtons.forEach((btn) => {
-        btn.addEventListener("click", function (event) {
-          // Skip if button is disabled
-          if (this.disabled || this.classList.contains('btn-disabled')) {
-            return;
-          }
-          
-          // Prevent default action (which would be navigation for anchor tags)
-          event.preventDefault();
-          
-          // The parent product card has .product
-          const productCard = this.closest(".product");
-          if (!productCard) return;
+                // 1) Get product image (from <img> inside .product)
+                const imgTag = productCard.querySelector("img");
+                const image = imgTag ? imgTag.src : "";
 
-          // 1) Get product image (from <img> inside .product)
-          const imgTag = productCard.querySelector("img");
-          const image = imgTag ? imgTag.src : "";
+                // 2) Get product name (from .p-name)
+                const nameTag = productCard.querySelector(".p-name");
+                const name = nameTag ? nameTag.textContent.trim() : "Untitled";
 
-          // 2) Get product name (from .p-name)
-          const nameTag = productCard.querySelector(".p-name");
-          const name = nameTag ? nameTag.textContent.trim() : "Untitled";
+                // 3) Get product price (from .p-price) & parse out $
+                const priceTag = productCard.querySelector(".p-price");
+                let price = 0;
+                if (priceTag) {
+                    price = parseFloat(priceTag.textContent.replace("$", "")) || 0;
+                }
 
-          // 3) Get product price (from .p-price) & parse out $
-          const priceTag = productCard.querySelector(".p-price");
-          let price = 0;
-          if (priceTag) {
-            price = parseFloat(priceTag.textContent.replace("$", "")) || 0;
-          }
+                // 4) Get product ID 
+                const productId = this.getAttribute('data-product');
+                if (!productId) {
+                    console.error("Product ID not found on button");
+                    return;
+                }
 
-          // Default quantity is 1 since there's no quantity input here
-          const quantity = 1;
+                // Default quantity is 1
+                const quantity = 1;
 
-          // 4) Load existing cart from localStorage
-          let cart = JSON.parse(localStorage.getItem("cart")) || [];
+                // 5) Load existing cart from localStorage
+                let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-          // 5) Create a product object
-          const product = {
-            name: name,
-            price: price,
-            quantity: quantity,
-            image: image
-          };
+                // 6) Create a product object
+                const product = {
+                    id: productId,
+                    name: name,
+                    price: price,
+                    quantity: quantity,
+                    image: image
+                };
 
-          // 6) Add product to cart array
-          cart.push(product);
+                // 7) Add product to cart array
+                cart.push(product);
 
-          // 7) Save updated cart back to localStorage
-          localStorage.setItem("cart", JSON.stringify(cart));
+                // 8) Save updated cart back to localStorage
+                localStorage.setItem("cart", JSON.stringify(cart));
 
-          // 8) Alert user that product was added
-          alert(name + " added to cart!");
+                // 9) Update cart icon count
+                updateCartCount();
+
+                // 10) Alert user that product was added
+                alert(name + " added to cart!");
+            });
         });
-      });
+    });
     </script>
 @endsection

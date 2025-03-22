@@ -373,6 +373,38 @@
     margin-right: 8px;
 }
 
+/* Checkout Button Styling */
+.checkout-btn {
+    display: block;
+    width: 100%;
+    text-align: center;
+    background-color: var(--primary-color, #e65c00);
+    color: white !important;
+    font-weight: 600;
+    padding: 12px 20px;
+    border-radius: 4px;
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.checkout-btn:hover {
+    background-color: #d45400;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    text-decoration: none;
+}
+
+.checkout-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+
 /* Mobile responsive */
 @media (max-width: 991px) {
     .navbar-collapse {
@@ -584,7 +616,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         <h6>Total</h6>
                         <p id="grandtotal-amount">$40.00</p>
                     </div>
-                    <button class="ml-auto">PROCEED TO CHECKOUT</button>
+                    
+                    <!-- Styled checkout button that matches theme -->
+                    <a href="/checkout" class="checkout-btn">
+                        <i class="fas fa-shopping-cart mr-2"></i>PROCEED TO CHECKOUT
+                    </a>
                 </div>
             </div>
         </div>
@@ -677,6 +713,14 @@ document.addEventListener('DOMContentLoaded', function() {
             subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
             const grandTotal = subtotal + shippingCost;
             grandTotalEl.textContent = `$${grandTotal.toFixed(2)}`;
+            
+            // Store order summary for checkout page
+            const orderSummary = {
+                subtotal: subtotal.toFixed(2),
+                shipping: shippingCost.toFixed(2),
+                total: grandTotal.toFixed(2)
+            };
+            localStorage.setItem('orderSummary', JSON.stringify(orderSummary));
         }
 
         // 4) Setup event listeners for quantity changes & remove

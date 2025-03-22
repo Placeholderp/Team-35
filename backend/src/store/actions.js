@@ -449,8 +449,8 @@ export function getCustomers({commit, state}, {url = null, search = '', per_page
 
 }
 
-export function getCustomer({commit}, id) {
-  return axiosClient.get(`/customers/${id}`)
+export function getCustomer({commit}, user_id) {
+  return axiosClient.get(`/customers/${user_id}`)
 }
 
 export function createCustomer({commit}, customer) {
@@ -458,9 +458,10 @@ export function createCustomer({commit}, customer) {
 }
 
 export function updateCustomer({commit}, customer) {
-  return axiosClient.put(`/customers/${customer.id}`, customer)
+  // Make sure we're using user_id instead of id
+  return axiosClient.put(`/customers/${customer.user_id}`, customer);
 }
 
 export function deleteCustomer({commit}, customer) {
-  return axiosClient.delete(`/customers/${customer.id}`)
+  return axiosClient.delete(`/customers/${customer.user_id}`)
 }

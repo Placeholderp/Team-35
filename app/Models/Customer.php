@@ -10,12 +10,14 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Customer extends Model
 {
     use HasFactory;
-
-    // Specify that the primary key for this model is the 'user_id' column.
     protected $primaryKey = 'user_id';
 
     // Define the attributes that are mass assignable.
-    protected $fillable = ['first_name', 'last_name', 'phone', 'status'];
+   // In app/Models/Customer.php
+protected $fillable = ['first_name', 'last_name', 'email', 'status'];
+
+// Fix the primary key to match your database
+ // This should match what's in your database
 
     /**
      * Define a relationship to the User model.
