@@ -105,6 +105,27 @@ public function index()
     return ProductResource::collection($products);
 }
 
+/**
+ * Search for products
+ *
+ * @param  \Illuminate\Http\Request  $request
+ * @return \Illuminate\View\View
+ */
+public function search(Request $request)
+{
+    $query = $request->input('query');
+    
+    $products = Product::where('published', true)
+        ->where(function($q) use ($query) {
+            $q->where('name', 'like', "%{$query}%")
+              ->orWhere('description', 'like', "%{$query}%");
+        })
+        ->orderBy('created_at', 'desc')
+        ->get();
+    
+    return view('shop', compact('products', 'query'));
+}
+
     /**
      * Store a newly created resource in storage.
      */

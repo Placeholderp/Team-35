@@ -278,6 +278,7 @@ private function getImageUrl($path)
     {
         return view('cart.index');
     }
+    
 
     /**
      * Display the blog page

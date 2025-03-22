@@ -14,6 +14,57 @@ Function: This page is to display items and purchase it.
     <link rel="stylesheet" href="{{ asset('css/Checkout.css') }}">
 @endsection
 
+@section('navigation')
+    <nav class="navbar navbar-expand-lg navbar-light bg-white py-3 fixed-top">
+        <div class="container">
+            <img src="{{ asset('/images/team_logo.png') }}" alt="">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span><i id="bar" class="fas fa-bars"></i></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ route('home') }}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('shop') }}">Shop</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('blog') }}">Blog</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('about') }}">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('calorie.calculator') }}">Calorie Calculator</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('contact') }}">Contact Us</a>
+                    </li>
+                    <li class="nav-item">
+                <i class="fal fa-search"></i>
+                <i onclick="window.location.href='{{ route('cart.index') }}';" class="fal fa-shopping-bag"></i>
+
+                    </li>
+
+                        <li class="nav-item">
+                        <div class="profile">
+                            <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Profile" id="profile-icon">
+                            <div class="profile-dropdown" id="profile-dropdown">
+                                <p class="profile-name">Name: John Doe</p>
+                                <button id="logout-btn">Logout</button>
+                            </div>
+                            
+                        </div>
+
+            </li>
+            
+                    
+                </ul>
+            </div>
+        </div>
+    </nav>
+@endsection
 @section('content')
     <!--Main container-->
     <div class="container">
@@ -96,4 +147,5 @@ Function: This page is to display items and purchase it.
 
 @section('scripts')
     <script src="{{ asset('js/paymentjs.js') }}"></script>
+    <script src="{{ asset('js/profile.js') }}"></script>
 @endsection

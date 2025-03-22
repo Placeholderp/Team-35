@@ -9,12 +9,18 @@ class RegistrationCode extends Model
 {
     use HasFactory;
 
+    /**
+     * The attributes that are mass assignable.
+     */
     protected $fillable = [
         'code',
         'type',
         'active'
     ];
 
+    /**
+     * The attributes that should be cast.
+     */
     protected $casts = [
         'active' => 'boolean',
     ];

@@ -11,21 +11,49 @@
 @section('navigation')
     <nav class="navbar navbar-expand-lg navbar-light bg-white py-3 fixed-top">
         <div class="container">
-            <img src="{{ asset('img/logo1.png') }}" alt="">
+            <img src="{{ asset('/images/team_logo.png') }}" alt="">
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span><i id="bar" class="fas fa-bars"></i></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav ml-auto">
-                    <li class="nav-item"><a class="nav-link" href="{{ route('home') }}">Home</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ route('shop') }}">Shop</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ route('blog') }}">Blog</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ route('about') }}">About</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ route('calorie.calculator') }}">Calorie Calculator</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ route('contact') }}">Contact Us</a></li>
                     <li class="nav-item">
-                        <i onclick="window.location.href='{{ route('cart.index') }}';" class="fal fa-shopping-bag"></i>
+                        <a class="nav-link active" href="{{ route('home') }}">Home</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('shop') }}">Shop</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('blog') }}">Blog</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('about') }}">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('calorie.calculator') }}">Calorie Calculator</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('contact') }}">Contact Us</a>
+                    </li>
+                    <li class="nav-item">
+                <i class="fal fa-search"></i>
+                <i onclick="window.location.href='{{ route('cart.index') }}';" class="fal fa-shopping-bag"></i>
+
+                    </li>
+
+                        <li class="nav-item">
+                        <div class="profile">
+                            <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Profile" id="profile-icon">
+                            <div class="profile-dropdown" id="profile-dropdown">
+                                <p class="profile-name">Name: John Doe</p>
+                                <button id="logout-btn">Logout</button>
+                            </div>
+                            
+                        </div>
+
+            </li>
+            
+                    
                 </ul>
             </div>
         </div>
@@ -84,4 +112,5 @@
 @section('scripts')
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js" integrity="sha384-SR1sx49pcuLnqZUnnPwx6FCym0wLsk5JZuNx2bPPENzswTNFaQU1RDvt3wT4gWFG" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.min.js" integrity="sha384-j0CNLUeiqtyaRmlzUHCPZ+Gy5fQu0dQ6eZ/xAww941Ai1SxSY+0EQqNXNE6DZiVc" crossorigin="anonymous"></script>
+    <script src="{{ asset('js/profile.js') }}"></script>
 @endsection

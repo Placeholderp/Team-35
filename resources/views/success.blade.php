@@ -75,5 +75,6 @@
                 }
             });
         </script>
+        <script src="{{ asset('js/profile.js') }}"></script>
         @endif
     @endsection

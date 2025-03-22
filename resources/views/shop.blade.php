@@ -3,146 +3,1077 @@
 @section('title', 'Shop')
 
 @section('styles')
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
-          integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
-          crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
     <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" />
-    <link rel="stylesheet" href="{{ asset('css/style.css') }}" />
-
+    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
     <style>
-        .product img {
-            width: 100%;
-            height: auto;
-            box-sizing: border-box;
-            object-fit: cover;
+        /* Category section styles */
+        .category-header {
+            position: relative;
+            display: inline-block;
+            font-weight: 700;
+            margin-bottom: 15px;
         }
 
-        #featured > div.row.mx-auto.container > nav > ul > li.page-item.active > a {
-            background-color: black;
+        .category-header:after {
+            content: '';
+            position: absolute;
+            width: 50%;
+            height: 3px;
+            background-color: var(--primary-color);
+            bottom: -8px;
+            left: 25%;
+        }
+        
+        .category-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            margin-bottom: 10px;
+            background-color: #7272ff;
+            color: white;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .category-filter {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        
+        .category-filter .btn {
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+        
+        /* Inventory Status Alerts */
+        .btn-disabled {
+            opacity: 0.7;
+            pointer-events: none;
+            background-color: #999 !important;
         }
 
-        #featured > div.row.mx-auto.container > nav > ul > li:nth-child(n):hover > a {
-            background-color: coral;
-            color: #fff;
+        .stock-alert {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-bottom: 10px;
+            font-weight: 500;
+            display: inline-block;
         }
 
-        .pagination a {
-            color: #000;
+        .stock-alert.low-stock {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+
+        .stock-alert.out-of-stock {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .stock-alert i {
+            margin-right: 4px;
+        }
+
+        .section-divider {
+            height: 1px;
+            background-color: #e9e9e9;
+            margin: 50px auto;
+        }
+
+        .benefits-list {
+            text-align: left;
+            margin: 20px auto;
+            max-width: 500px;
+            padding-left: 20px;
+        }
+
+        .benefits-list li {
+            margin-bottom: 10px;
+            position: relative;
+            padding-left: 25px;
+        }
+
+        .benefits-list li:before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+        
+        /* Hero section */
+        .shop-hero {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.35)), url('{{ asset("/Images/shop-hero.jpg") }}');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            padding: 120px 0 80px;
+            margin-top: 30px;
+            border-radius: 8px;
+            position: relative;
+        }
+        
+        .shop-hero h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+        
+        .shop-hero p {
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto 30px;
+            color: rgba(255, 255, 255, 0.9);
         }
     </style>
 @endsection
 
 @section('navigation')
-    <nav class="navbar navbar-expand-lg navbar-light bg-white py-3 fixed-top">
-        <div class="container">
-            <img src="{{ asset('img/logo1.png') }}" alt="" />
-            <button
-                class="navbar-toggler"
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#navbarSupportedContent"
-                aria-controls="navbarSupportedContent"
-                aria-expanded="false"
-                aria-label="Toggle navigation"
-            >
-                <span><i id="bar" class="fas fa-bars"></i></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav ml-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="{{ route('home') }}">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('shop') }}">Shop</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('blog') }}">Blog</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('about') }}">About</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('calorie.calculator') }}">Calorie Calculator</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('contact') }}">Contact Us</a>
-                    </li>
-                    <li class="nav-item">
-                        <i class="fal fa-search"></i>
-                        <i onclick="window.location.href='{{ route('cart.index') }}';" class="fal fa-shopping-bag"></i>
-                    </li>
-                </ul>
-            </div>
+<nav class="navbar navbar-expand-lg navbar-light bg-white py-3 fixed-top">
+    <div class="container">
+        <!-- Logo -->
+        <a class="navbar-brand d-flex align-items-center" href="{{ route('home') }}">
+            <img src="{{ asset('/images/team_logo.png') }}" alt="Aston35Fitness" class="img-fluid" style="max-height: 45px;">
+        </a>
+        
+        <!-- Mobile Toggle Button -->
+        <button class="navbar-toggler shadow-none border-0" type="button" data-bs-toggle="collapse" 
+                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" 
+                aria-expanded="false" aria-label="Toggle navigation">
+            <span><i id="bar" class="fas fa-bars"></i></span>
+        </button>
+        
+        <!-- Navbar Menu Items -->
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mx-auto">
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">
+                        <span>Home</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('shop') ? 'active' : '' }}" href="{{ route('shop') }}">
+                        <span>Shop</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('blog') ? 'active' : '' }}" href="{{ route('blog') }}">
+                        <span>Blog</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('about') ? 'active' : '' }}" href="{{ route('about') }}">
+                        <span>About</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('calorie.calculator') ? 'active' : '' }}" href="{{ route('calorie.calculator') }}">
+                        <span>Calorie Calculator</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('contact') ? 'active' : '' }}" href="{{ route('contact') }}">
+                        <span>Contact Us</span>
+                    </a>
+                </li>
+            </ul>
+            
+            <!-- Right Action Icons -->
+            <ul class="navbar-nav ml-auto">
+                <!-- Search Icon -->
+                <li class="nav-item d-flex align-items-center">
+                    <div class="search-container">
+                        <input type="text" class="search-input" placeholder="Search products..." id="search-input">
+                        <i class="fal fa-search search-icon" id="search-icon"></i>
+                    </div>
+                </li>
+                
+                <!-- Cart Icon -->
+                <li class="nav-item d-flex align-items-center cart-icon-container">
+                    <a href="{{ route('cart.index') }}" class="cart-icon">
+                        <i class="fal fa-shopping-bag"></i>
+                        <span class="cart-count" id="cart-count">0</span>
+                    </a>
+                </li>
+                
+                <!-- Profile Dropdown -->
+                <li class="nav-item d-flex align-items-center ml-3">
+                    <div class="profile">
+                        <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Profile" id="profile-icon">
+                        <div class="profile-dropdown" id="profile-dropdown">
+                            <div class="profile-dropdown-header">
+                                <p class="profile-name">John Doe</p>
+                                <p class="profile-email">john.doe@example.com</p>
+                            </div>
+                            <div class="profile-dropdown-body">
+                                <a href="#" class="profile-dropdown-item">
+                                    <i class="fas fa-user"></i> My Profile
+                                </a>
+                                <a href="#" class="profile-dropdown-item">
+                                    <i class="fas fa-shopping-bag"></i> My Orders
+                                </a>
+                                <a href="#" class="profile-dropdown-item">
+                                    <i class="fas fa-cog"></i> Settings
+                                </a>
+                            </div>
+                            <div class="profile-dropdown-footer">
+                                <form id="logout-form" action="{{ route('logout') }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="logout-button">
+                                        <i class="fas fa-sign-out-alt"></i> Logout
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
         </div>
-    </nav>
+    </div>
+</nav>
+
+<style>
+/* Enhanced Navbar Styling */
+.navbar {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    padding: 12px 0;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.navbar-nav .nav-item {
+    margin: 0 5px;
+    position: relative;
+}
+
+.navbar-nav .nav-link {
+    color: #333 !important;
+    font-weight: 500;
+    font-size: 15px;
+    padding: 10px 15px !important;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.navbar-nav .nav-link span {
+    position: relative;
+    display: inline-block;
+}
+
+.navbar-nav .nav-link span:after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -4px;
+    left: 0;
+    background-color: var(--primary-color);
+    transition: width 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover span:after,
+.navbar-nav .nav-link.active span:after {
+    width: 100%;
+}
+
+.navbar-nav .nav-link:hover,
+.navbar-nav .nav-link.active {
+    color: var(--primary-color) !important;
+}
+
+/* Search Styling */
+.search-container {
+    position: relative;
+    margin-right: 15px;
+}
+
+.search-input {
+    width: 0;
+    padding: 8px 12px 8px 30px;
+    border: none;
+    border-radius: 50px;
+    font-size: 14px;
+    background-color: transparent;
+    transition: all 0.3s ease;
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    visibility: hidden;
+}
+
+.search-input.active {
+    width: 200px;
+    border: 1px solid #eee;
+    opacity: 1;
+    visibility: visible;
+    background-color: #f9f9f9;
+}
+
+.search-icon {
+    cursor: pointer;
+    font-size: 16px;
+    color: #555;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 2;
+}
+
+.search-icon:hover {
+    color: var(--primary-color);
+}
+
+/* Cart Icon Styling */
+.cart-icon-container {
+    margin-right: 15px;
+    position: relative;
+}
+
+.cart-icon {
+    position: relative;
+    display: inline-block;
+}
+
+.cart-icon i {
+    font-size: 18px;
+    color: #555;
+    transition: all 0.3s ease;
+}
+
+.cart-icon:hover i {
+    color: var(--primary-color);
+}
+
+.cart-count {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: var(--primary-color);
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+/* Enhanced Profile Dropdown */
+.profile {
+    position: relative;
+    cursor: pointer;
+}
+
+.profile img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.profile img:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.profile-dropdown {
+    position: absolute;
+    top: 45px;
+    right: 0;
+    width: 240px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    z-index: 1000;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.profile-dropdown.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.profile-dropdown-header {
+    padding: 15px;
+    border-bottom: 1px solid #f1f1f1;
+    background-color: #f9f9f9;
+}
+
+.profile-dropdown-header .profile-name {
+    margin: 0;
+    font-weight: 600;
+    font-size: 15px;
+    color: #333;
+}
+
+.profile-dropdown-header .profile-email {
+    margin: 5px 0 0 0;
+    font-size: 12px;
+    color: #777;
+}
+
+.profile-dropdown-body {
+    padding: 10px 0;
+}
+
+.profile-dropdown-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    color: #444;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.profile-dropdown-item:hover {
+    background-color: rgba(230, 92, 0, 0.05);
+    color: var(--primary-color);
+}
+
+.profile-dropdown-item i {
+    margin-right: 10px;
+    font-size: 16px;
+    width: 20px;
+    text-align: center;
+}
+
+.profile-dropdown-footer {
+    padding: 10px 15px;
+    border-top: 1px solid #f1f1f1;
+}
+
+.profile-dropdown-footer button {
+    width: 100%;
+    padding: 8px 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f9f9f9;
+    color: #555;
+    border: 1px solid #eee;
+    border-radius: 5px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.profile-dropdown-footer button:hover {
+    background-color: #f1f1f1;
+    color: #e74c3c;
+}
+
+.profile-dropdown-footer button i {
+    margin-right: 8px;
+}
+
+/* Mobile responsive */
+@media (max-width: 991px) {
+    .navbar-collapse {
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        position: absolute;
+        top: 70px;
+        left: 10px;
+        right: 10px;
+        z-index: 1000;
+    }
+    
+    .navbar-nav {
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+    
+    .navbar-nav .nav-link {
+        padding: 12px 0 !important;
+        border-bottom: 1px solid #f1f1f1;
+    }
+    
+    .navbar-nav .nav-item:last-child .nav-link {
+        border-bottom: none;
+    }
+    
+    .navbar .navbar-toggler {
+        padding: 5px;
+        outline: none;
+    }
+    
+    .navbar .navbar-toggler:focus {
+        box-shadow: none;
+    }
+    
+    #bar {
+        font-size: 22px;
+        padding: 7px;
+        border-radius: 4px;
+        color: var(--primary-color);
+    }
+    
+    .search-container {
+        margin-right: 0;
+        margin-bottom: 15px;
+    }
+    
+    .search-input.active {
+        position: relative;
+        width: 100%;
+        transform: none;
+        margin-top: 15px;
+    }
+    
+    .search-icon {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+    
+    .cart-icon-container {
+        margin-right: 0;
+        margin-bottom: 15px;
+    }
+    
+    .profile {
+        margin-bottom: 15px;
+    }
+    
+    .profile-dropdown {
+        position: static;
+        width: 100%;
+        margin-top: 15px;
+        box-shadow: none;
+        border: 1px solid #eee;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Profile dropdown toggle
+    const profileIcon = document.getElementById('profile-icon');
+    const profileDropdown = document.getElementById('profile-dropdown');
+    
+    if (profileIcon && profileDropdown) {
+        profileIcon.addEventListener('click', function(e) {
+            e.stopPropagation();
+            profileDropdown.classList.toggle('active');
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!profileDropdown.contains(e.target) && e.target !== profileIcon) {
+                profileDropdown.classList.remove('active');
+            }
+        });
+    }
+    
+    // Search functionality
+    const searchIcon = document.getElementById('search-icon');
+    const searchInput = document.getElementById('search-input');
+    
+    if (searchIcon && searchInput) {
+        searchIcon.addEventListener('click', function() {
+            searchInput.classList.toggle('active');
+            if (searchInput.classList.contains('active')) {
+                searchInput.focus();
+            }
+        });
+        
+        // Close search when clicking outside
+        document.addEventListener('click', function(e) {
+            if (e.target !== searchIcon && e.target !== searchInput) {
+                searchInput.classList.remove('active');
+            }
+        });
+    }
+    
+    // Update cart count
+    function updateCartCount() {
+        const cartCountElement = document.getElementById('cart-count');
+        if (cartCountElement) {
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            cartCountElement.textContent = cart.length;
+            
+            // Hide count if zero
+            if (cart.length === 0) {
+                cartCountElement.style.display = 'none';
+            } else {
+                cartCountElement.style.display = 'flex';
+            }
+        }
+    }
+    
+    // Initial cart count update
+    updateCartCount();
+    
+    // Listen for cart changes
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'cart') {
+            updateCartCount();
+        }
+    });
+});
+</script>
 @endsection
 
 @section('content')
-    <section id="featured" class="my-5 py-5">
-        <div class="container mt-5 py-5">
-            <h2 class="font-weight-bold">Our Featured</h2>
-            <hr />
-            <p>
-                Here you can check out our new products with fair price on
-                rymo.
-            </p>
+    <!-- Shop Hero Section -->
+    <div class="container mt-5 pt-5">
+        <div class="shop-hero text-center">
+            <div class="container">
+                <h1>Premium Fitness Supplements</h1>
+                <p>Discover our comprehensive range of high-quality supplements designed to support every aspect of your fitness journey</p>
+                
+                <!-- Filter Buttons -->
+                <div class="mt-4">
+                    <div class="d-flex flex-wrap justify-content-center">
+                        <a href="{{ route('shop') }}" class="btn {{ !request('category') ? 'btn-primary' : 'btn-outline-light' }} m-1">
+                            All Categories
+                        </a>
+                        <a href="{{ route('shop', ['category' => 'protein']) }}" 
+                           class="btn {{ request('category') == 'protein' ? 'btn-primary' : 'btn-outline-light' }} m-1">
+                            Protein Products
+                        </a>
+                        <a href="{{ route('shop', ['category' => 'powder']) }}" 
+                           class="btn {{ request('category') == 'powder' ? 'btn-primary' : 'btn-outline-light' }} m-1">
+                            Powder Products
+                        </a>
+                        <a href="{{ route('shop', ['category' => 'vitamins']) }}" 
+                           class="btn {{ request('category') == 'vitamins' ? 'btn-primary' : 'btn-outline-light' }} m-1">
+                            Vitamins & Minerals
+                        </a>
+                        <a href="{{ route('shop', ['category' => 'workout']) }}" 
+                           class="btn {{ request('category') == 'workout' ? 'btn-primary' : 'btn-outline-light' }} m-1">
+                            Workout Plans
+                        </a>
+                        <a href="{{ route('shop', ['category' => 'preworkout']) }}" 
+                           class="btn {{ request('category') == 'preworkout' ? 'btn-primary' : 'btn-outline-light' }} m-1">
+                            Pre-Workout Supplements
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="row mx-auto container">
-            @foreach($products as $product)
-            <div
-                onclick="window.location.href='{{ route('product.view', ['product' => $product->slug]) }}';"
-                class="product col-lg-3 col-md-4 col-12 text-center"
-            >
-                <img class="mb-3 img-fluid" src="{{ asset($product->image) }}" alt="{{ $product->name }}" />
-                <div class="star">
-                    <i class="fas fa-star"></i>
-                    <i class="fas fa-star"></i>
-                    <i class="fas fa-star"></i>
-                    <i class="fas fa-star"></i>
-                    <i class="fas fa-star"></i>
-                </div>
-                <h5 class="p-name">{{ $product->name }}</h5>
-                <h4 class="p-price">${{ number_format($product->price, 2) }}</h4>
-                <button class="buy-btn">Buy Now</button>
-            </div>
-            @endforeach
+    </div>
 
-            @if(count($products) < 1)
-            <!-- Fallback product if no products found in database -->
-            <div class="product col-lg-3 col-md-4 col-12 text-center">
-                <img class="mb-3 img-fluid" src="{{ asset('img/shop/1.jpg') }}" alt="" />
-                <div class="star">
-                    <i class="fas fa-star"></i>
-                    <i class="fas fa-star"></i>
-                    <i class="fas fa-star"></i>
-                    <i class="fas fa-star"></i>
-                    <i class="fas fa-star"></i>
-                </div>
-                <h5 class="p-name">Sport Boots</h5>
-                <h4 class="p-price">$92.00</h4>
-                <button class="buy-btn">Buy Now</button>
+    <!-- Category Filter Section -->
+    <section id="category-filter" class="container my-5">
+        <div class="category-filter">
+            <h4 class="mb-3">Browse By Category</h4>
+            <div class="d-flex flex-wrap">
+                <a href="{{ route('shop') }}" class="btn {{ !request('category') ? 'btn-primary' : 'btn-outline-primary' }}">
+                    All Products
+                </a>
+                <a href="{{ route('shop', ['category' => 'protein']) }}" 
+                   class="btn {{ request('category') == 'protein' ? 'btn-primary' : 'btn-outline-primary' }}">
+                    Protein Products
+                </a>
+                <a href="{{ route('shop', ['category' => 'powder']) }}" 
+                   class="btn {{ request('category') == 'powder' ? 'btn-primary' : 'btn-outline-primary' }}">
+                    Powder Products
+                </a>
+                <a href="{{ route('shop', ['category' => 'vitamins']) }}" 
+                   class="btn {{ request('category') == 'vitamins' ? 'btn-primary' : 'btn-outline-primary' }}">
+                    Vitamins & Minerals
+                </a>
+                <a href="{{ route('shop', ['category' => 'workout']) }}" 
+                   class="btn {{ request('category') == 'workout' ? 'btn-primary' : 'btn-outline-primary' }}">
+                    Workout Plans
+                </a>
+                <a href="{{ route('shop', ['category' => 'preworkout']) }}" 
+                   class="btn {{ request('category') == 'preworkout' ? 'btn-primary' : 'btn-outline-primary' }}">
+                    Pre-Workout Supplements
+                </a>
             </div>
+        </div>
+    </section>
+
+    <!-- Protein Category Section -->
+    <section id="category-protein" class="my-5">
+        <div class="container text-center mt-5 py-5">
+            <h3>Protein Products</h3>
+            <hr class="mx-auto">
+            <p>High-quality protein supplements to support your muscle growth and recovery.</p>
+        </div>
+        <div class="row mx-auto container-fluid">
+            @php
+                $proteinProducts = collect();
+                if(isset($products)) {
+                    foreach($products as $product) {
+                        if(isset($product->category) && 
+                           (strtolower($product->category->slug) == 'protein' || strtolower($product->category->name) == 'protein products')) {
+                            $proteinProducts->push($product);
+                        }
+                    }
+                }
+            @endphp
+            
+            @if(count($proteinProducts) > 0)
+                @foreach($proteinProducts as $product)
+                    <div class="product text-center col-lg-3 col-md-4 col-12">
+                        <img class="img-fluid mb-3" src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}">
+                        <div class="star">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        
+                        <h5 class="p-name">{{ $product->name }}</h5>
+                        <h4 class="p-price">${{ number_format($product->price, 2) }}</h4>
+                        
+                        @if(isset($product->track_inventory) && $product->track_inventory)
+                            @if($product->quantity <= 0)
+                                <div class="stock-alert out-of-stock">
+                                    <i class="fas fa-exclamation-circle"></i> Out of Stock
+                                </div>
+                                <button class="buy-btn btn-disabled" disabled>Sold Out</button>
+                            @elseif($product->quantity <= $product->reorder_level)
+                                <div class="stock-alert low-stock">
+                                    <i class="fas fa-exclamation-triangle"></i> Only {{ $product->quantity }} left! Hurry up!
+                                </div>
+                                <button class="buy-btn">Buy Now</button>
+                            @else
+                                <button class="buy-btn">Buy Now</button>
+                            @endif
+                        @else
+                            <button class="buy-btn">Buy Now</button>
+                        @endif
+                    </div>
+                @endforeach
+            @else
+                <div class="col-12 text-center">
+                    <p>No protein products available at the moment.</p>
+                </div>
             @endif
-
-            <nav aria-label="...">
-                <ul class="pagination mt-5">
-                    <li class="page-item disabled">
-                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
-                    </li>
-                    <li class="page-item active">
-                        <a class="page-link" href="#">1</a>
-                    </li>
-                    <li class="page-item" aria-current="page">
-                        <a class="page-link" href="#">2</a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="#">3</a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="#">Next</a>
-                    </li>
-                </ul>
-            </nav>
+        </div>
+    </section>
+    
+    <div class="section-divider container"></div>
+    
+    <!-- Powder Category Section -->
+    <section id="category-powder" class="my-5">
+        <div class="container text-center mt-5 py-5">
+            <h3>Powder Products</h3>
+            <hr class="mx-auto">
+            <p>Premium quality powder supplements to enhance your workout and daily nutrition.</p>
+        </div>
+        <div class="row mx-auto container-fluid">
+            @php
+                $powderProducts = collect();
+                if(isset($products)) {
+                    foreach($products as $product) {
+                        if(isset($product->category) && 
+                           (strtolower($product->category->slug) == 'powder' || strtolower($product->category->name) == 'powder products')) {
+                            $powderProducts->push($product);
+                        }
+                    }
+                }
+            @endphp
+            
+            @if(count($powderProducts) > 0)
+                @foreach($powderProducts as $product)
+                    <div class="product text-center col-lg-3 col-md-4 col-12">
+                        <img class="img-fluid mb-3" src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}">
+                        <div class="star">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        
+                        <h5 class="p-name">{{ $product->name }}</h5>
+                        <h4 class="p-price">${{ number_format($product->price, 2) }}</h4>
+                        
+                        @if(isset($product->track_inventory) && $product->track_inventory)
+                            @if($product->quantity <= 0)
+                                <div class="stock-alert out-of-stock">
+                                    <i class="fas fa-exclamation-circle"></i> Out of Stock
+                                </div>
+                                <button class="buy-btn btn-disabled" disabled>Sold Out</button>
+                            @elseif($product->quantity <= $product->reorder_level)
+                                <div class="stock-alert low-stock">
+                                    <i class="fas fa-exclamation-triangle"></i> Only {{ $product->quantity }} left! Hurry up!
+                                </div>
+                                <button class="buy-btn">Buy Now</button>
+                            @else
+                                <button class="buy-btn">Buy Now</button>
+                            @endif
+                        @else
+                            <button class="buy-btn">Buy Now</button>
+                        @endif
+                    </div>
+                @endforeach
+            @else
+                <div class="col-12 text-center">
+                    <p>No powder products available at the moment.</p>
+                </div>
+            @endif
+        </div>
+    </section>
+    
+    <div class="section-divider container"></div>
+    
+    <!-- Vitamins Category Section -->
+    <section id="category-vitamins" class="my-5">
+        <div class="container text-center mt-5 py-5">
+            <h3>Vitamins & Minerals</h3>
+            <hr class="mx-auto">
+            <p>Essential micronutrients to support overall health, immunity, and performance.</p>
+        </div>
+        <div class="row mx-auto container-fluid">
+            @php
+                $vitaminProducts = collect();
+                if(isset($products)) {
+                    foreach($products as $product) {
+                        if(isset($product->category) && 
+                           (strtolower($product->category->slug) == 'vitamins' || strtolower($product->category->name) == 'vitamins & minerals')) {
+                            $vitaminProducts->push($product);
+                        }
+                    }
+                }
+            @endphp
+            
+            @if(count($vitaminProducts) > 0)
+                @foreach($vitaminProducts as $product)
+                    <div class="product text-center col-lg-3 col-md-4 col-12">
+                        <img class="img-fluid mb-3" src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}">
+                        <div class="star">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        
+                        <h5 class="p-name">{{ $product->name }}</h5>
+                        <h4 class="p-price">${{ number_format($product->price, 2) }}</h4>
+                        
+                        @if(isset($product->track_inventory) && $product->track_inventory)
+                            @if($product->quantity <= 0)
+                                <div class="stock-alert out-of-stock">
+                                    <i class="fas fa-exclamation-circle"></i> Out of Stock
+                                </div>
+                                <button class="buy-btn btn-disabled" disabled>Sold Out</button>
+                            @elseif($product->quantity <= $product->reorder_level)
+                                <div class="stock-alert low-stock">
+                                    <i class="fas fa-exclamation-triangle"></i> Only {{ $product->quantity }} left! Hurry up!
+                                </div>
+                                <button class="buy-btn">Buy Now</button>
+                            @else
+                                <button class="buy-btn">Buy Now</button>
+                            @endif
+                        @else
+                            <button class="buy-btn">Buy Now</button>
+                        @endif
+                    </div>
+                @endforeach
+            @else
+                <div class="col-12 text-center">
+                    <p>No vitamin products available at the moment.</p>
+                </div>
+            @endif
+        </div>
+    </section>
+    
+    <div class="section-divider container"></div>
+    
+    <!-- Workout Plans Category Section -->
+    <section id="category-workout" class="my-5">
+        <div class="container text-center mt-5 py-5">
+            <h3>Workout Plans</h3>
+            <hr class="mx-auto">
+            <p>Professional training programs to help you achieve your fitness goals faster and more effectively.</p>
+        </div>
+        <div class="row mx-auto container-fluid">
+            @php
+                $workoutProducts = collect();
+                if(isset($products)) {
+                    foreach($products as $product) {
+                        if(isset($product->category)) {
+                            $slug = strtolower($product->category->slug);
+                            $name = strtolower($product->category->name);
+                            
+                            // Check for multiple possible variations of workout category
+                            if($slug == 'workout' || $slug == 'workouts' || $slug == 'workout-plans' || $slug == 'workout_plans' ||
+                               $name == 'workout' || $name == 'workouts' || $name == 'workout plans' || strpos($name, 'workout') !== false) {
+                                $workoutProducts->push($product);
+                            }
+                        }
+                    }
+                }
+            @endphp
+            
+            @if(count($workoutProducts) > 0)
+                @foreach($workoutProducts as $product)
+                    <div class="product text-center col-lg-3 col-md-4 col-12">
+                        <img class="img-fluid mb-3" src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}">
+                        <div class="star">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        
+                        <h5 class="p-name">{{ $product->name }}</h5>
+                        <h4 class="p-price">${{ number_format($product->price, 2) }}</h4>
+                        
+                        @if(isset($product->track_inventory) && $product->track_inventory)
+                            @if($product->quantity <= 0)
+                                <div class="stock-alert out-of-stock">
+                                    <i class="fas fa-exclamation-circle"></i> Out of Stock
+                                </div>
+                                <button class="buy-btn btn-disabled" disabled>Sold Out</button>
+                            @elseif($product->quantity <= $product->reorder_level)
+                                <div class="stock-alert low-stock">
+                                    <i class="fas fa-exclamation-triangle"></i> Only {{ $product->quantity }} left! Hurry up!
+                                </div>
+                                <button class="buy-btn">Buy Now</button>
+                            @else
+                                <button class="buy-btn">Buy Now</button>
+                            @endif
+                        @else
+                            <button class="buy-btn">Buy Now</button>
+                        @endif
+                    </div>
+                @endforeach
+            @else
+                <div class="col-12 text-center">
+                    <p>No workout plan products available at the moment.</p>
+                </div>
+            @endif
+        </div>
+    </section>
+    
+    <div class="section-divider container"></div>
+    
+    <!-- Pre-Workout Category Section -->
+    <section id="category-preworkout" class="my-5">
+        <div class="container text-center mt-5 py-5">
+            <h3>Pre-Workout Supplements</h3>
+            <hr class="mx-auto">
+            <p>Advanced formulas designed to maximize energy, focus, and performance during your workouts.</p>
+        </div>
+        <div class="row mx-auto container-fluid">
+            @php
+                $preworkoutProducts = collect();
+                if(isset($products)) {
+                    foreach($products as $product) {
+                        if(isset($product->category)) {
+                            $slug = strtolower($product->category->slug);
+                            $name = strtolower($product->category->name);
+                            
+                            // Check for multiple possible variations of pre-workout category
+                            if($slug == 'preworkout' || $slug == 'pre-workout' || $slug == 'pre_workout' || 
+                               $name == 'pre-workout supplements' || $name == 'preworkout' || $name == 'pre workout' || 
+                               strpos($name, 'pre-workout') !== false || strpos($name, 'preworkout') !== false) {
+                                $preworkoutProducts->push($product);
+                            }
+                        }
+                    }
+                }
+            @endphp
+            
+            @if(count($preworkoutProducts) > 0)
+                @foreach($preworkoutProducts as $product)
+                    <div class="product text-center col-lg-3 col-md-4 col-12">
+                        <img class="img-fluid mb-3" src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}">
+                        <div class="star">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        
+                        <h5 class="p-name">{{ $product->name }}</h5>
+                        <h4 class="p-price">${{ number_format($product->price, 2) }}</h4>
+                        
+                        @if(isset($product->track_inventory) && $product->track_inventory)
+                            @if($product->quantity <= 0)
+                                <div class="stock-alert out-of-stock">
+                                    <i class="fas fa-exclamation-circle"></i> Out of Stock
+                                </div>
+                                <button class="buy-btn btn-disabled" disabled>Sold Out</button>
+                            @elseif($product->quantity <= $product->reorder_level)
+                                <div class="stock-alert low-stock">
+                                    <i class="fas fa-exclamation-triangle"></i> Only {{ $product->quantity }} left! Hurry up!
+                                </div>
+                                <button class="buy-btn">Buy Now</button>
+                            @else
+                                <button class="buy-btn">Buy Now</button>
+                            @endif
+                        @else
+                            <button class="buy-btn">Buy Now</button>
+                        @endif
+                    </div>
+                @endforeach
+            @else
+                <div class="col-12 text-center">
+                    <p>No pre-workout products available at the moment.</p>
+                </div>
+            @endif
+        </div>
+    </section>
+    
+    <!-- Newsletter Section -->
+    <section id="newsletter" class="py-5 my-5" style="background-color: var(--secondary-color);">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6 text-white">
+                    <h3 class="mb-3" style="font-weight: 700;">Join Our Community</h3>
+                    <p class="mb-4">Subscribe to our newsletter for exclusive deals, fitness tips, and new product announcements.</p>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><i class="fas fa-check-circle mr-2"></i> Exclusive discounts and offers</li>
+                        <li class="mb-2"><i class="fas fa-check-circle mr-2"></i> Expert fitness and nutrition advice</li>
+                        <li class="mb-2"><i class="fas fa-check-circle mr-2"></i> Early access to new products</li>
+                    </ul>
+                </div>
+                <div class="col-lg-6 mt-4 mt-lg-0">
+                    <div class="newsletter-form p-4 bg-white rounded shadow">
+                        <h4 class="mb-3 text-center">Sign Up Now</h4>
+                        <form>
+                            <div class="form-group">
+                                <input type="text" class="form-control mb-3" placeholder="Your Name">
+                            </div>
+                            <div class="form-group">
+                                <input type="email" class="form-control mb-3" placeholder="Your Email">
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Subscribe</button>
+                            <p class="mt-3 text-center small text-muted">We respect your privacy. Unsubscribe at any time.</p>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 @endsection
@@ -152,26 +1083,25 @@
 @endsection
 
 @section('scripts')
-    <!-- Popper & Bootstrap JS -->
-    <script
-        src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js"
-        integrity="sha384-SR1sx49pcuLnqZUnnPwx6FCym0wLsk5JZuNx2bPPENzswTNFaQU1RDvt3wT4gWFG"
-        crossorigin="anonymous"
-    ></script>
-    <script
-        src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.min.js"
-        integrity="sha384-j0CNLUeiqtyaRmlzUHCPZ+Gy5fQu0dQ6eZ/xAww941Ai1SxSY+0EQqNXNE6DZiVc"
-        crossorigin="anonymous"
-    ></script>
-
-    <!-- *** Add-to-cart SCRIPT *** -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js" integrity="sha384-SR1sx49pcuLnqZUnnPwx6FCym0wLsk5JZuNx2bPPENzswTNFaQU1RDvt3wT4gWFG" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.min.js" integrity="sha384-j0CNLUeiqtyaRmlzUHCPZ+Gy5fQu0dQ6eZ/xAww941Ai1SxSY+0EQqNXNE6DZiVc" crossorigin="anonymous"></script>
+    
+    <!-- Add-to-cart Script -->
     <script>
       // Grab all buttons with class "buy-btn"
       const buyButtons = document.querySelectorAll(".buy-btn");
 
       // For each "Buy Now" button, set up a click listener
       buyButtons.forEach((btn) => {
-        btn.addEventListener("click", function () {
+        btn.addEventListener("click", function (event) {
+          // Skip if button is disabled
+          if (this.disabled || this.classList.contains('btn-disabled')) {
+            return;
+          }
+          
+          // Prevent default action (which would be navigation for anchor tags)
+          event.preventDefault();
+          
           // The parent product card has .product
           const productCard = this.closest(".product");
           if (!productCard) return;
@@ -211,10 +1141,8 @@
           // 7) Save updated cart back to localStorage
           localStorage.setItem("cart", JSON.stringify(cart));
 
-          // 8) (Optionally redirect) or just alert:
+          // 8) Alert user that product was added
           alert(name + " added to cart!");
-          // If you want immediate cart page redirect, uncomment:
-          // window.location.href = "cart.html";
         });
       });
     </script>

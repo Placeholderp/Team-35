@@ -1,20 +1,7 @@
-@extends('layouts.app')
-
-@section('title', 'Contact Us')
-
-@section('styles')
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
-          integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
-          crossorigin="anonymous" />
-    <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" />
-    <link rel="stylesheet" href="{{ asset('css/style.css') }}" />
-@endsection
-
-@section('navigation')
 <nav class="navbar navbar-expand-lg navbar-light bg-white py-3 fixed-top">
     <div class="container">
         <!-- Logo -->
-        <a class="navbar-brand d-flex align-items-center" href="{{ route('home') }}">
+        <a class="navbar-brand d-flex align-items-center" href="{{ route('dashboard') }}">
             <img src="{{ asset('/images/team_logo.png') }}" alt="Aston35Fitness" class="img-fluid" style="max-height: 45px;">
         </a>
         
@@ -29,7 +16,7 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav mx-auto">
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">
+                    <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
                         <span>Home</span>
                     </a>
                 </li>
@@ -65,8 +52,10 @@
                 <!-- Search Icon -->
                 <li class="nav-item d-flex align-items-center">
                     <div class="search-container">
-                        <input type="text" class="search-input" placeholder="Search products..." id="search-input">
-                        <i class="fal fa-search search-icon" id="search-icon"></i>
+                        <form action="{{ route('shop') }}" method="GET" id="search-form">
+                            <input type="text" class="search-input" name="query" placeholder="Search products..." id="search-input">
+                            <i class="fal fa-search search-icon" id="search-icon"></i>
+                        </form>
                     </div>
                 </li>
                 
@@ -78,27 +67,31 @@
                     </a>
                 </li>
                 
-                <!-- Profile Dropdown -->
+                <!-- Profile Dropdown - Real Authentication -->
                 <li class="nav-item d-flex align-items-center ml-3">
-                    <div class="profile">
-                        <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Profile" id="profile-icon">
-                        <div class="profile-dropdown" id="profile-dropdown">
-                            <div class="profile-dropdown-header">
-                                <p class="profile-name">John Doe</p>
-                                <p class="profile-email">john.doe@example.com</p>
+                    @auth
+                    <div class="profile-container">
+                        <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Profile" id="profile-icon" onclick="toggleProfileMenu()">
+                        
+                        <div id="profile-menu" class="profile-menu">
+                            <div class="profile-menu-header">
+                                <p class="profile-menu-name">{{ Auth::user()->name }}</p>
+                                <p class="profile-menu-email">{{ Auth::user()->email }}</p>
                             </div>
-                            <div class="profile-dropdown-body">
-                                <a href="#" class="profile-dropdown-item">
+                            
+                            <div class="profile-menu-body">
+                                <a href="{{ route('profile.show') }}" class="profile-menu-link">
                                     <i class="fas fa-user"></i> My Profile
                                 </a>
-                                <a href="#" class="profile-dropdown-item">
+                                <a href="{{ route('orders.index') }}" class="profile-menu-link">
                                     <i class="fas fa-shopping-bag"></i> My Orders
                                 </a>
-                                <a href="#" class="profile-dropdown-item">
+                                <a href="{{ route('profile.settings') }}" class="profile-menu-link">
                                     <i class="fas fa-cog"></i> Settings
                                 </a>
                             </div>
-                            <div class="profile-dropdown-footer">
+                            
+                            <div class="profile-menu-footer">
                                 <form id="logout-form" action="{{ route('logout') }}" method="POST">
                                     @csrf
                                     <button type="submit" class="logout-button">
@@ -108,6 +101,12 @@
                             </div>
                         </div>
                     </div>
+                    @else
+                    <div class="auth-buttons">
+                        <a href="{{ route('login') }}" class="btn btn-sm btn-outline-primary">Login</a>
+                        <a href="{{ route('register') }}" class="btn btn-sm btn-primary ml-2">Register</a>
+                    </div>
+                    @endauth
                 </li>
             </ul>
         </div>
@@ -172,6 +171,11 @@
 .search-container {
     position: relative;
     margin-right: 15px;
+}
+
+.search-container form {
+    margin: 0;
+    padding: 0;
 }
 
 .search-input {
@@ -249,122 +253,140 @@
     transition: all 0.3s ease;
 }
 
-/* Enhanced Profile Dropdown */
-.profile {
+/* NEW PROFILE DROPDOWN STYLES */
+.profile-container {
     position: relative;
-    cursor: pointer;
+    display: inline-block;
 }
 
-.profile img {
+#profile-icon {
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    object-fit: cover;
+    cursor: pointer !important;
     border: 2px solid white;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
 }
 
-.profile img:hover {
+#profile-icon:hover {
     transform: scale(1.05);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
-.profile-dropdown {
+.profile-menu {
+    display: none;
     position: absolute;
     top: 45px;
     right: 0;
     width: 240px;
     background: white;
     border-radius: 8px;
-    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(10px);
-    transition: all 0.3s ease;
-    z-index: 1000;
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    overflow: hidden;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+    z-index: 9999 !important;
+    border: 1px solid #eaeaea;
 }
 
-.profile-dropdown.active {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-}
-
-.profile-dropdown-header {
+.profile-menu-header {
     padding: 15px;
-    border-bottom: 1px solid #f1f1f1;
+    border-bottom: 1px solid #f0f0f0;
     background-color: #f9f9f9;
 }
 
-.profile-dropdown-header .profile-name {
+.profile-menu-name {
     margin: 0;
     font-weight: 600;
     font-size: 15px;
     color: #333;
 }
 
-.profile-dropdown-header .profile-email {
-    margin: 5px 0 0 0;
+.profile-menu-email {
+    margin: 5px 0 0;
     font-size: 12px;
     color: #777;
 }
 
-.profile-dropdown-body {
+.profile-menu-body {
     padding: 10px 0;
 }
 
-.profile-dropdown-item {
+.profile-menu-link {
     display: flex;
     align-items: center;
     padding: 10px 15px;
     color: #444;
-    font-size: 14px;
-    transition: all 0.2s ease;
     text-decoration: none;
+    transition: background-color 0.2s;
 }
 
-.profile-dropdown-item:hover {
-    background-color: rgba(230, 92, 0, 0.05);
+.profile-menu-link:hover {
+    background-color: #f5f5f5;
     color: var(--primary-color);
 }
 
-.profile-dropdown-item i {
+.profile-menu-link i {
     margin-right: 10px;
-    font-size: 16px;
     width: 20px;
     text-align: center;
 }
 
-.profile-dropdown-footer {
+.profile-menu-footer {
     padding: 10px 15px;
-    border-top: 1px solid #f1f1f1;
+    border-top: 1px solid #f0f0f0;
 }
 
-.profile-dropdown-footer button {
+.logout-button {
     width: 100%;
-    padding: 8px 15px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #f9f9f9;
-    color: #555;
-    border: 1px solid #eee;
-    border-radius: 5px;
-    font-size: 14px;
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-
-.profile-dropdown-footer button:hover {
-    background-color: #f1f1f1;
+    padding: 8px 12px;
+    background-color: #f5f5f5;
     color: #e74c3c;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer !important;
+    font-size: 14px;
+    transition: background-color 0.2s;
 }
 
-.profile-dropdown-footer button i {
+.logout-button:hover {
+    background-color: #fee2e2;
+}
+
+.logout-button i {
     margin-right: 8px;
+}
+
+/* Auth buttons styling */
+.auth-buttons {
+    display: flex;
+    align-items: center;
+}
+
+.auth-buttons .btn {
+    font-size: 13px;
+    padding: 6px 12px;
+    border-radius: 4px;
+}
+
+.auth-buttons .btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.auth-buttons .btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.auth-buttons .btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.auth-buttons .ml-2 {
+    margin-left: 8px;
 }
 
 /* Mobile responsive */
@@ -435,72 +457,105 @@
         margin-bottom: 15px;
     }
     
-    .profile {
+    .profile-container {
         margin-bottom: 15px;
     }
     
-    .profile-dropdown {
+    .profile-menu {
         position: static;
         width: 100%;
         margin-top: 15px;
         box-shadow: none;
         border: 1px solid #eee;
     }
+    
+    .auth-buttons {
+        width: 100%;
+        justify-content: center;
+    }
 }
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Profile dropdown toggle
-    const profileIcon = document.getElementById('profile-icon');
-    const profileDropdown = document.getElementById('profile-dropdown');
-    
-    if (profileIcon && profileDropdown) {
-        profileIcon.addEventListener('click', function(e) {
-            e.stopPropagation();
-            profileDropdown.classList.toggle('active');
-        });
-        
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!profileDropdown.contains(e.target) && e.target !== profileIcon) {
-                profileDropdown.classList.remove('active');
-            }
-        });
-    }
-    
     // Search functionality
     const searchIcon = document.getElementById('search-icon');
     const searchInput = document.getElementById('search-input');
+    const searchForm = document.getElementById('search-form');
     
-    if (searchIcon && searchInput) {
-        searchIcon.addEventListener('click', function() {
+    if (searchIcon && searchInput && searchForm) {
+        // Toggle search input visibility
+        searchIcon.addEventListener('click', function(e) {
+            e.preventDefault();
             searchInput.classList.toggle('active');
+            
             if (searchInput.classList.contains('active')) {
                 searchInput.focus();
+            } else {
+                searchInput.value = '';
             }
         });
         
-        // Close search when clicking outside
-        document.addEventListener('click', function(e) {
-            if (e.target !== searchIcon && e.target !== searchInput) {
-                searchInput.classList.remove('active');
+        // Submit search on Enter key
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && searchInput.value.trim() !== '') {
+                searchForm.submit();
+            }
+        });
+        
+        // Submit search when clicking the icon while input is visible and has text
+        searchIcon.addEventListener('click', function(e) {
+            if (searchInput.classList.contains('active') && searchInput.value.trim() !== '') {
+                searchForm.submit();
             }
         });
     }
-    
-    // Update cart count
+      
+    // Update cart count function
     function updateCartCount() {
         const cartCountElement = document.getElementById('cart-count');
         if (cartCountElement) {
-            const cart = JSON.parse(localStorage.getItem('cart')) || [];
-            cartCountElement.textContent = cart.length;
-            
-            // Hide count if zero
-            if (cart.length === 0) {
+            try {
+                // Try to get the cart from localStorage
+                const cartData = localStorage.getItem('cart');
+                let cartItems = [];
+                
+                if (cartData) {
+                    cartItems = JSON.parse(cartData);
+                    
+                    // Check if cart is an array (handling different cart storage formats)
+                    if (!Array.isArray(cartItems) && cartItems.items && Array.isArray(cartItems.items)) {
+                        cartItems = cartItems.items;
+                    } else if (!Array.isArray(cartItems) && typeof cartItems === 'object') {
+                        // If it's an object with product entries
+                        cartItems = Object.values(cartItems);
+                    }
+                }
+                
+                // Calculate total quantity (some carts store quantities separately)
+                let totalItems = 0;
+                if (Array.isArray(cartItems)) {
+                    totalItems = cartItems.reduce((total, item) => {
+                        // Check if item has a quantity property or is a simple item
+                        const itemQuantity = item.quantity || 1;
+                        return total + itemQuantity;
+                    }, 0);
+                }
+                
+                // Update the cart count display
+                cartCountElement.textContent = totalItems;
+                
+                // Show/hide the count badge
+                if (totalItems === 0) {
+                    cartCountElement.style.display = 'none';
+                } else {
+                    cartCountElement.style.display = 'flex';
+                }
+                
+            } catch (error) {
+                console.error('Error updating cart count:', error);
+                cartCountElement.textContent = '0';
                 cartCountElement.style.display = 'none';
-            } else {
-                cartCountElement.style.display = 'flex';
             }
         }
     }
@@ -508,124 +563,87 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initial cart count update
     updateCartCount();
     
-    // Listen for cart changes
+    // Listen for cart changes via localStorage event
     window.addEventListener('storage', function(e) {
         if (e.key === 'cart') {
             updateCartCount();
         }
     });
+    
+    // Create a custom event to update cart count from other scripts
+    window.addEventListener('cartUpdated', function() {
+        updateCartCount();
+    });
+    
+    // Check for cart changes every 2 seconds (as backup)
+    setInterval(updateCartCount, 2000);
+    
+    // Additional listeners for cart buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.matches('.add-to-cart, .add-to-cart *')) {
+            // Wait a moment for the cart to update in localStorage
+            setTimeout(updateCartCount, 100);
+        }
+    });
+});
+
+// Make updateCartCount available globally
+window.updateNavbarCart = function() {
+    const cartCountElement = document.getElementById('cart-count');
+    if (cartCountElement) {
+        try {
+            const cartData = localStorage.getItem('cart');
+            let totalItems = 0;
+            
+            if (cartData) {
+                const cartItems = JSON.parse(cartData);
+                
+                if (Array.isArray(cartItems)) {
+                    totalItems = cartItems.reduce((total, item) => total + (item.quantity || 1), 0);
+                } else if (cartItems.items && Array.isArray(cartItems.items)) {
+                    totalItems = cartItems.items.reduce((total, item) => total + (item.quantity || 1), 0);
+                } else if (typeof cartItems === 'object') {
+                    totalItems = Object.values(cartItems).reduce((total, item) => total + (item.quantity || 1), 0);
+                }
+            }
+            
+            cartCountElement.textContent = totalItems;
+            cartCountElement.style.display = totalItems === 0 ? 'none' : 'flex';
+            
+        } catch (error) {
+            console.error('Error updating cart count:', error);
+        }
+    }
+};
+
+// Profile dropdown toggle function
+function toggleProfileMenu() {
+    const menu = document.getElementById('profile-menu');
+    if (menu.style.display === 'block') {
+        menu.style.display = 'none';
+    } else {
+        menu.style.display = 'block';
+    }
+}
+
+// Close menu when clicking outside
+document.addEventListener('click', function(event) {
+    const menu = document.getElementById('profile-menu');
+    const icon = document.getElementById('profile-icon');
+    
+    if (menu && icon && event.target !== icon && !menu.contains(event.target)) {
+        menu.style.display = 'none';
+    }
+});
+document.addEventListener('DOMContentLoaded', function() {
+    const logoutForm = document.getElementById('logout-form');
+    const logoutButton = document.querySelector('.logout-button');
+    
+    if (logoutForm && logoutButton) {
+        logoutButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            logoutForm.submit();
+        });
+    }
 });
 </script>
-@endsection
-
-@section('content')
-    <!-- HERO / PAGE HEADER -->
-    <section id="contact-hero">
-        <!-- Add top padding to avoid navbar overlap -->
-        <div class="container pt-5 mt-5">
-            <h2 class="font-weight-bold pt-5">Contact Us</h2>
-            <hr />
-        </div>
-    </section>
-
-    <!-- CONTACT FORM SECTION -->
-    <section id="contact-form" class="container pt-5">
-        <div class="row">
-            <!-- Contact Form -->
-            <div class="col-lg-6 col-md-6 col-12 pb-5">
-                <h3 class="font-weight-normal mb-4">We'd Love to Hear From You</h3>
-
-                <form>
-                    @csrf
-                    <div class="form-group">
-                        <label for="contactName">Name</label>
-                        <input
-                            type="text"
-                            class="form-control"
-                            id="contactName"
-                            placeholder="Your Name"
-                            required
-                        />
-                    </div>
-
-                    <div class="form-group">
-                        <label for="contactEmail">Email</label>
-                        <input
-                            type="email"
-                            class="form-control"
-                            id="contactEmail"
-                            placeholder="Your Email"
-                            required
-                        />
-                    </div>
-
-                    <div class="form-group">
-                        <label for="contactSubject">Subject</label>
-                        <input
-                            type="text"
-                            class="form-control"
-                            id="contactSubject"
-                            placeholder="Subject"
-                        />
-                    </div>
-
-                    <div class="form-group">
-                        <label for="contactMessage">Message</label>
-                        <textarea
-                            class="form-control"
-                            id="contactMessage"
-                            rows="5"
-                            placeholder="Write your message here..."
-                            required
-                        ></textarea>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary mt-3">Send Message</button>
-                </form>
-            </div>
-
-            <!-- Contact Info or Map -->
-            <div class="col-lg-6 col-md-6 col-12 pb-5">
-                <h3 class="font-weight-normal mb-4">Our Office</h3>
-                <p>
-                    <strong>Address:</strong> Aston St, Birmingham B4 7ET
-                </p>
-                <p>
-                    <strong>Phone:</strong> 0121 204 3000
-                </p>
-                <p>
-                    <strong>Email:</strong> Aston35@info.com
-                </p>
-                <!-- Example: Embedded Google Map -->
-                <div style="height: 300px; width: 100%;">
-                    <iframe
-                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2422.529961233278!2d-1.8877646235055693!3d52.48624627218281!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4870bc87d87c9a5f%3A0xe0e166ace7378d5d!2sAston%20University!5e0!3m2!1sen!2suk!4v1710183600000!5m2!1sen!2suk" 
-                        width="100%"
-                        height="100%"
-                        style="border: 0;"
-                        allowfullscreen=""
-                        loading="lazy"
-                    ></iframe>
-                </div>
-            </div>
-        </div>
-    </section>
-@endsection
-
-@section('footer')
-    @include('partials.footer')
-@endsection
-
-@section('scripts')
-    <script
-        src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js"
-        integrity="sha384-SR1sx49pcuLnqZUnnPwx6FCym0wLsk5JZuNx2bPPENzswTNFaQU1RDvt3wT4gWFG"
-        crossorigin="anonymous"
-    ></script>
-    <script
-        src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.min.js"
-        integrity="sha384-j0CNLUeiqtyaRmlzUHCPZ+Gy5fQu0dQ6eZ/xAww941Ai1SxSY+0EQqNXNE6DZiVc"
-        crossorigin="anonymous"
-    ></script>
-    <script src="{{ asset('js/profile.js') }}"></script>
-@endsection

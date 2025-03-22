@@ -1,7 +1,7 @@
 <footer class="mt-5 py-5">
     <div class="row container mx-auto pt-5">
         <div class="footer-one col-lg-3 col-md-6 col-12">
-            <img src="{{ asset('img/team_logo2.png') }}" alt="">
+            <img src="{{ asset('Images/team_logo2.png') }}" alt="">
             <p class="pt-3">Transform your body, elevate your mind, and unlock your full potential—every step counts on your fitness journey!</p>
         </div>
         <div class="footer-one col-lg-3 col-md-6 col-12 mb-3">

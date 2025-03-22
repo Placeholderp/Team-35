@@ -1,59 +1,23 @@
 <?php
+// Add this to your web.php file 
+use Illuminate\Support\Facades\Route;
+// Comment out any routes from auth.php that might be loading in the background
+// At the bottom of web.php, replace:
+// require __DIR__ . '/auth.php';
 
-namespace App\Http\Controllers\Auth;
+// With this:
+// Custom auth routes are already defined above - don't load default ones
+// require __DIR__ . '/auth.php';
 
-use App\Helpers\Cart;
-use App\Http\Controllers\Controller;
-use App\Models\Customer;
-use App\Models\User;
-use App\Providers\RouteServiceProvider;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules;
-
-class RegisteredUserController extends Controller
-{
-    /**
-     * Display the registration view.
-     */
-    public function create()
-    {
-        return view('auth.register');
-    }
-
-    /**
-     * Handle an incoming registration request.
-     */
-    public function store(Request $request)
-    {
-        // Validate the incoming request data.
-        $request->validate([
-            'name'     => ['required', 'string', 'max:255'],
-            'email'    => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
-
-        // Create a new user record with the validated data.
-        $user = User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
-
-        // Create a corresponding customer record.
-        $names = explode(" ", $user->name);
-        $customer = new Customer();
-        $customer->user_id    = $user->id;
-        $customer->first_name = $names[0] ?? '';
-        $customer->last_name  = $names[1] ?? '';
-        $customer->save();
-
-        // Log in the newly registered user.
-        Auth::login($user);
-
-        Cart::moveCartItemsIntoDb();
-
-        return redirect(RouteServiceProvider::HOME);
+// OR create a register routes function at the top that overrides any potential conflicts
+// This ensures our routes take precedence
+if (!function_exists('registerAuthRoutes')) {
+    function registerAuthRoutes() {
+        // Registration route - ensure our routes take precedence
+        Route::post('register', [App\Http\Controllers\Auth\RegisterController::class, 'register'])
+            ->middleware('web')
+            ->name('register');
     }
 }
+
+registerAuthRoutes();
