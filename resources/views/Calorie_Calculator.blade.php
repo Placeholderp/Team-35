@@ -71,13 +71,7 @@
                     </div>
                 </li>
                 
-                <!-- Cart Icon -->
-                <li class="nav-item d-flex align-items-center cart-icon-container">
-                    <a href="{{ route('cart.index') }}" class="cart-icon">
-                        <i class="fal fa-shopping-bag"></i>
-                        <span class="cart-count" id="cart-count">0</span>
-                    </a>
-                </li>
+                
                 
                 <!-- Profile Dropdown -->
 <li class="nav-item d-flex align-items-center ml-3">

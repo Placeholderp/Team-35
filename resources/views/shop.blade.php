@@ -79,6 +79,18 @@
         .stock-alert i {
             margin-right: 4px;
         }
+        
+        .p-description {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 10px;
+            height: 60px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+        }
 
         .section-divider {
             height: 1px;
@@ -694,39 +706,48 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </div>
 
-    <!-- Category Filter Section -->
-    <section id="category-filter" class="container my-5">
-        <div class="category-filter">
-            <h4 class="mb-3">Browse By Category</h4>
-            <div class="d-flex flex-wrap">
-                <a href="{{ route('shop') }}" class="btn {{ !request('category') ? 'btn-primary' : 'btn-outline-primary' }}">
-                    All Products
-                </a>
-                <a href="{{ route('shop', ['category' => 'protein']) }}" 
-                   class="btn {{ request('category') == 'protein' ? 'btn-primary' : 'btn-outline-primary' }}">
-                    Protein Products
-                </a>
-                <a href="{{ route('shop', ['category' => 'powder']) }}" 
-                   class="btn {{ request('category') == 'powder' ? 'btn-primary' : 'btn-outline-primary' }}">
-                    Powder Products
-                </a>
-                <a href="{{ route('shop', ['category' => 'vitamins']) }}" 
-                   class="btn {{ request('category') == 'vitamins' ? 'btn-primary' : 'btn-outline-primary' }}">
-                    Vitamins & Minerals
-                </a>
-                <a href="{{ route('shop', ['category' => 'workout']) }}" 
-                   class="btn {{ request('category') == 'workout' ? 'btn-primary' : 'btn-outline-primary' }}">
-                    Workout Plans
-                </a>
-                <a href="{{ route('shop', ['category' => 'preworkout']) }}" 
-                   class="btn {{ request('category') == 'preworkout' ? 'btn-primary' : 'btn-outline-primary' }}">
-                    Pre-Workout Supplements
-                </a>
-            </div>
-        </div>
-    </section>
+    @php
+        $selectedCategory = request('category');
+        
+        // Define category mappings for more reliable filtering
+        $categoryMappings = [
+            'protein' => ['protein', 'protein products'],
+            'powder' => ['powder', 'powder products'],
+            'vitamins' => ['vitamins', 'vitamins & minerals'],
+            'workout' => ['workout', 'workouts', 'workout plans', 'workout-plans', 'workout_plans'],
+            'preworkout' => ['preworkout', 'pre-workout', 'pre_workout', 'pre workout', 'pre-workout supplements']
+        ];
+        
+        // Filter products by category if a category is selected
+        function filterProductsByCategory($products, $categoryKey, $categoryMappings) {
+            $filteredProducts = collect();
+            
+            if(!isset($products)) {
+                return $filteredProducts;
+            }
+            
+            foreach($products as $product) {
+                if(!isset($product->category)) {
+                    continue;
+                }
+                
+                $productSlug = strtolower($product->category->slug ?? '');
+                $productName = strtolower($product->category->name ?? '');
+                
+                // Check if product category matches any of the mappings for the selected category
+                if(in_array($productSlug, $categoryMappings[$categoryKey]) || 
+                   in_array($productName, $categoryMappings[$categoryKey]) ||
+                   strpos($productName, $categoryKey) !== false) {
+                    $filteredProducts->push($product);
+                }
+            }
+            
+            return $filteredProducts;
+        }
+    @endphp
 
     <!-- Protein Category Section -->
+    @if(!$selectedCategory || $selectedCategory == 'protein')
     <section id="category-protein" class="my-5">
         <div class="container text-center mt-5 py-5">
             <h3>Protein Products</h3>
@@ -735,21 +756,15 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         <div class="row mx-auto container-fluid">
             @php
-                $proteinProducts = collect();
-                if(isset($products)) {
-                    foreach($products as $product) {
-                        if(isset($product->category) && 
-                           (strtolower($product->category->slug) == 'protein' || strtolower($product->category->name) == 'protein products')) {
-                            $proteinProducts->push($product);
-                        }
-                    }
-                }
+                $proteinProducts = !$selectedCategory ? 
+                    filterProductsByCategory($products, 'protein', $categoryMappings) : 
+                    $products;
             @endphp
             
             @if(count($proteinProducts) > 0)
                 @foreach($proteinProducts as $product)
                     <div class="product text-center col-lg-3 col-md-4 col-12">
-                        <img class="img-fluid mb-3" src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}">
+                        <img class="img-fluid mb-3" src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->title }}">
                         <div class="star">
                             <i class="fas fa-star"></i>
                             <i class="fas fa-star"></i>
@@ -758,7 +773,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             <i class="fas fa-star"></i>
                         </div>
                         
-                        <h5 class="p-name">{{ $product->name }}</h5>
+                        <h5 class="p-name">{{ $product->title }}</h5>
+                        <p class="p-description">{{ Str::limit($product->description, 100) }}</p>
                         <h4 class="p-price">${{ number_format($product->price, 2) }}</h4>
                         
                         @if(isset($product->track_inventory) && $product->track_inventory)
@@ -788,9 +804,13 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </section>
     
+    @if(!$selectedCategory)
     <div class="section-divider container"></div>
+    @endif
+    @endif
     
     <!-- Powder Category Section -->
+    @if(!$selectedCategory || $selectedCategory == 'powder')
     <section id="category-powder" class="my-5">
         <div class="container text-center mt-5 py-5">
             <h3>Powder Products</h3>
@@ -799,21 +819,15 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         <div class="row mx-auto container-fluid">
             @php
-                $powderProducts = collect();
-                if(isset($products)) {
-                    foreach($products as $product) {
-                        if(isset($product->category) && 
-                           (strtolower($product->category->slug) == 'powder' || strtolower($product->category->name) == 'powder products')) {
-                            $powderProducts->push($product);
-                        }
-                    }
-                }
+                $powderProducts = !$selectedCategory ? 
+                    filterProductsByCategory($products, 'powder', $categoryMappings) : 
+                    $products;
             @endphp
             
             @if(count($powderProducts) > 0)
                 @foreach($powderProducts as $product)
                     <div class="product text-center col-lg-3 col-md-4 col-12">
-                        <img class="img-fluid mb-3" src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}">
+                        <img class="img-fluid mb-3" src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->title }}">
                         <div class="star">
                             <i class="fas fa-star"></i>
                             <i class="fas fa-star"></i>
@@ -822,7 +836,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             <i class="fas fa-star"></i>
                         </div>
                         
-                        <h5 class="p-name">{{ $product->name }}</h5>
+                        <h5 class="p-name">{{ $product->title }}</h5>
+                        <p class="p-description">{{ Str::limit($product->description, 100) }}</p>
                         <h4 class="p-price">${{ number_format($product->price, 2) }}</h4>
                         
                         @if(isset($product->track_inventory) && $product->track_inventory)
@@ -852,9 +867,13 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </section>
     
+    @if(!$selectedCategory)
     <div class="section-divider container"></div>
+    @endif
+    @endif
     
     <!-- Vitamins Category Section -->
+    @if(!$selectedCategory || $selectedCategory == 'vitamins')
     <section id="category-vitamins" class="my-5">
         <div class="container text-center mt-5 py-5">
             <h3>Vitamins & Minerals</h3>
@@ -863,21 +882,15 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         <div class="row mx-auto container-fluid">
             @php
-                $vitaminProducts = collect();
-                if(isset($products)) {
-                    foreach($products as $product) {
-                        if(isset($product->category) && 
-                           (strtolower($product->category->slug) == 'vitamins' || strtolower($product->category->name) == 'vitamins & minerals')) {
-                            $vitaminProducts->push($product);
-                        }
-                    }
-                }
+                $vitaminProducts = !$selectedCategory ? 
+                    filterProductsByCategory($products, 'vitamins', $categoryMappings) : 
+                    $products;
             @endphp
             
             @if(count($vitaminProducts) > 0)
                 @foreach($vitaminProducts as $product)
                     <div class="product text-center col-lg-3 col-md-4 col-12">
-                        <img class="img-fluid mb-3" src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}">
+                        <img class="img-fluid mb-3" src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->title }}">
                         <div class="star">
                             <i class="fas fa-star"></i>
                             <i class="fas fa-star"></i>
@@ -886,7 +899,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             <i class="fas fa-star"></i>
                         </div>
                         
-                        <h5 class="p-name">{{ $product->name }}</h5>
+                        <h5 class="p-name">{{ $product->title }}</h5>
+                        <p class="p-description">{{ Str::limit($product->description, 100) }}</p>
                         <h4 class="p-price">${{ number_format($product->price, 2) }}</h4>
                         
                         @if(isset($product->track_inventory) && $product->track_inventory)
@@ -916,9 +930,13 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </section>
     
+    @if(!$selectedCategory)
     <div class="section-divider container"></div>
+    @endif
+    @endif
     
     <!-- Workout Plans Category Section -->
+    @if(!$selectedCategory || $selectedCategory == 'workout')
     <section id="category-workout" class="my-5">
         <div class="container text-center mt-5 py-5">
             <h3>Workout Plans</h3>
@@ -927,27 +945,15 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         <div class="row mx-auto container-fluid">
             @php
-                $workoutProducts = collect();
-                if(isset($products)) {
-                    foreach($products as $product) {
-                        if(isset($product->category)) {
-                            $slug = strtolower($product->category->slug);
-                            $name = strtolower($product->category->name);
-                            
-                            // Check for multiple possible variations of workout category
-                            if($slug == 'workout' || $slug == 'workouts' || $slug == 'workout-plans' || $slug == 'workout_plans' ||
-                               $name == 'workout' || $name == 'workouts' || $name == 'workout plans' || strpos($name, 'workout') !== false) {
-                                $workoutProducts->push($product);
-                            }
-                        }
-                    }
-                }
+                $workoutProducts = !$selectedCategory ? 
+                    filterProductsByCategory($products, 'workout', $categoryMappings) : 
+                    $products;
             @endphp
             
             @if(count($workoutProducts) > 0)
                 @foreach($workoutProducts as $product)
                     <div class="product text-center col-lg-3 col-md-4 col-12">
-                        <img class="img-fluid mb-3" src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}">
+                        <img class="img-fluid mb-3" src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->title }}">
                         <div class="star">
                             <i class="fas fa-star"></i>
                             <i class="fas fa-star"></i>
@@ -956,7 +962,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             <i class="fas fa-star"></i>
                         </div>
                         
-                        <h5 class="p-name">{{ $product->name }}</h5>
+                        <h5 class="p-name">{{ $product->title }}</h5>
+                        <p class="p-description">{{ Str::limit($product->description, 100) }}</p>
                         <h4 class="p-price">${{ number_format($product->price, 2) }}</h4>
                         
                         @if(isset($product->track_inventory) && $product->track_inventory)
@@ -986,9 +993,13 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </section>
     
+    @if(!$selectedCategory)
     <div class="section-divider container"></div>
+    @endif
+    @endif
     
     <!-- Pre-Workout Category Section -->
+    @if(!$selectedCategory || $selectedCategory == 'preworkout')
     <section id="category-preworkout" class="my-5">
         <div class="container text-center mt-5 py-5">
             <h3>Pre-Workout Supplements</h3>
@@ -997,28 +1008,15 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         <div class="row mx-auto container-fluid">
             @php
-                $preworkoutProducts = collect();
-                if(isset($products)) {
-                    foreach($products as $product) {
-                        if(isset($product->category)) {
-                            $slug = strtolower($product->category->slug);
-                            $name = strtolower($product->category->name);
-                            
-                            // Check for multiple possible variations of pre-workout category
-                            if($slug == 'preworkout' || $slug == 'pre-workout' || $slug == 'pre_workout' || 
-                               $name == 'pre-workout supplements' || $name == 'preworkout' || $name == 'pre workout' || 
-                               strpos($name, 'pre-workout') !== false || strpos($name, 'preworkout') !== false) {
-                                $preworkoutProducts->push($product);
-                            }
-                        }
-                    }
-                }
+                $preworkoutProducts = !$selectedCategory ? 
+                    filterProductsByCategory($products, 'preworkout', $categoryMappings) : 
+                    $products;
             @endphp
             
             @if(count($preworkoutProducts) > 0)
                 @foreach($preworkoutProducts as $product)
                     <div class="product text-center col-lg-3 col-md-4 col-12">
-                        <img class="img-fluid mb-3" src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}">
+                        <img class="img-fluid mb-3" src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->title }}">
                         <div class="star">
                             <i class="fas fa-star"></i>
                             <i class="fas fa-star"></i>
@@ -1027,7 +1025,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             <i class="fas fa-star"></i>
                         </div>
                         
-                        <h5 class="p-name">{{ $product->name }}</h5>
+                        <h5 class="p-name">{{ $product->title }}</h5>
+                        <p class="p-description">{{ Str::limit($product->description, 100) }}</p>
                         <h4 class="p-price">${{ number_format($product->price, 2) }}</h4>
                         
                         @if(isset($product->track_inventory) && $product->track_inventory)
@@ -1056,6 +1055,7 @@ document.addEventListener('DOMContentLoaded', function() {
             @endif
         </div>
     </section>
+    @endif
     
     <!-- Newsletter Section -->
     <section id="newsletter" class="py-5 my-5" style="background-color: var(--secondary-color);">
