@@ -79,36 +79,48 @@
                 </li>
                 
                 <!-- Profile Dropdown -->
-                <li class="nav-item d-flex align-items-center ml-3">
-                    <div class="profile">
-                        <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Profile" id="profile-icon">
-                        <div class="profile-dropdown" id="profile-dropdown">
-                            <div class="profile-dropdown-header">
-                                <p class="profile-name">John Doe</p>
-                                <p class="profile-email">john.doe@example.com</p>
-                            </div>
-                            <div class="profile-dropdown-body">
-                                <a href="#" class="profile-dropdown-item">
-                                    <i class="fas fa-user"></i> My Profile
-                                </a>
-                                <a href="#" class="profile-dropdown-item">
-                                    <i class="fas fa-shopping-bag"></i> My Orders
-                                </a>
-                                <a href="#" class="profile-dropdown-item">
-                                    <i class="fas fa-cog"></i> Settings
-                                </a>
-                            </div>
-                            <div class="profile-dropdown-footer">
-                                <form id="logout-form" action="{{ route('logout') }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="logout-button">
-                                        <i class="fas fa-sign-out-alt"></i> Logout
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </li>
+<li class="nav-item d-flex align-items-center ml-3">
+    @auth
+    <div class="profile">
+        @if(Auth::user()->profile_picture)
+            <img src="{{ asset('storage/' . Auth::user()->profile_picture) }}" alt="Profile" id="profile-icon">
+        @elseif(Auth::user()->avatar)
+            <img src="{{ asset('storage/' . Auth::user()->avatar) }}" alt="Profile" id="profile-icon">
+        @else
+            <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Profile" id="profile-icon">
+        @endif
+        <div class="profile-dropdown" id="profile-dropdown">
+            <div class="profile-dropdown-header">
+                <p class="profile-name">{{ Auth::user()->name }}</p>
+                <p class="profile-email">{{ Auth::user()->email }}</p>
+            </div>
+            <div class="profile-dropdown-body">
+                <!-- Using dashboard route instead of profile.show -->
+                <a href="{{ route('home') }}" class="profile-dropdown-item">
+                    <i class="fas fa-user"></i> My Account
+                </a>
+                <!-- Using shop route instead of profile.settings -->
+                <a href="{{ route('shop') }}" class="profile-dropdown-item">
+                    <i class="fas fa-shopping-bag"></i> Shop
+                </a>
+            </div>
+            <div class="profile-dropdown-footer">
+                <form id="logout-form" action="{{ route('logout') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="logout-button">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    @else
+    <div class="auth-buttons">
+        <a href="{{ route('login') }}" class="btn btn-sm btn-outline-primary">Login</a>
+        <a href="{{ route('register') }}" class="btn btn-sm btn-primary ml-2">Register</a>
+    </div>
+    @endauth
+</li>
             </ul>
         </div>
     </div>

@@ -16,20 +16,19 @@ class LogoutController extends Controller
      * @return \Illuminate\Http\RedirectResponse
      */
     public function __invoke(Request $request)
-    {
-        // Log the logout attempt (optional)
-        Log::info('Logout attempt for user: ' . (Auth::check() ? Auth::user()->email : 'Unknown'));
-        
-        // Get intended destination before logout
-        $redirectTo = '/login';
-        
-        // Perform logout
-        Auth::logout();
-        
-        // Regenerate session (but don't invalidate yet)
-        $request->session()->regenerate();
-        
-        // Redirect to login
-        return redirect($redirectTo);
-    }
+{
+    Log::info('Logout attempt for user: ' . (Auth::check() ? Auth::user()->email : 'Unknown'));
+    
+    // Remember redirect URL
+    $redirectTo = '/login';
+    
+    // Logout
+    Auth::logout();
+    
+    // BOTH invalidate session AND regenerate token
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+    
+    return redirect($redirectTo);
+}
 }

@@ -19,6 +19,7 @@
     </style>
 </head>
 <body>
+    @include('csrf_refresh')
     @section('navigation')
         @include('layouts.navigation')
     @show

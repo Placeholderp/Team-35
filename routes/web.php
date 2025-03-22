@@ -39,8 +39,8 @@ Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('login', [LoginController::class, 'login']);
 
 // Logout routes - using __invoke method so no need to specify a method
-Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-Route::get('/logout', [LoginController::class, 'logout']);
+Route::post('/logout', LogoutController::class)->name('logout');
+Route::get('/logout', LogoutController::class);
 
 // Registration Routes
 Route::get('register', [RegisterController::class, 'showRegistrationForm'])->name('register');
@@ -73,7 +73,9 @@ Route::middleware(['guestOrVerified'])->group(function () {
     Route::get('/privacy-policy', function () {
         return view('privacypolicy');
     })->name('privacy-policy');
-    
+    Route::get('/csrf-refresh', function () {
+        return response()->json(['token' => csrf_token()]);
+    });
     Route::get('/terms-of-service', function () {
         return view('termsofservice');
     })->name('terms-of-service');
@@ -82,6 +84,7 @@ Route::middleware(['guestOrVerified'])->group(function () {
         return view('moderndayslaverystatement');
     })->name('modern-day-slavery-statement');
 });
+
 
 // Routes only for authenticated users
 Route::middleware(['auth', 'verified'])->group(function() {

@@ -67,47 +67,51 @@
                     </a>
                 </li>
                 
-                <!-- Profile Dropdown - Real Authentication -->
-                <li class="nav-item d-flex align-items-center ml-3">
-                    @auth
-                    <div class="profile-container">
-                        <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Profile" id="profile-icon" onclick="toggleProfileMenu()">
-                        
-                        <div id="profile-menu" class="profile-menu">
-                            <div class="profile-menu-header">
-                                <p class="profile-menu-name">{{ Auth::user()->name }}</p>
-                                <p class="profile-menu-email">{{ Auth::user()->email }}</p>
-                            </div>
-                            
-                            <div class="profile-menu-body">
-                                <a href="{{ route('profile.show') }}" class="profile-menu-link">
-                                    <i class="fas fa-user"></i> My Profile
-                                </a>
-                                <a href="{{ route('orders.index') }}" class="profile-menu-link">
-                                    <i class="fas fa-shopping-bag"></i> My Orders
-                                </a>
-                                <a href="{{ route('profile.settings') }}" class="profile-menu-link">
-                                    <i class="fas fa-cog"></i> Settings
-                                </a>
-                            </div>
-                            
-                            <div class="profile-menu-footer">
-                                <form id="logout-form" action="{{ route('logout') }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="logout-button">
-                                        <i class="fas fa-sign-out-alt"></i> Logout
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                    @else
-                    <div class="auth-buttons">
-                        <a href="{{ route('login') }}" class="btn btn-sm btn-outline-primary">Login</a>
-                        <a href="{{ route('register') }}" class="btn btn-sm btn-primary ml-2">Register</a>
-                    </div>
-                    @endauth
-                </li>
+                <!-- Profile Dropdown - With Dynamic Profile Picture -->
+<li class="nav-item d-flex align-items-center ml-3">
+    @auth
+    <div class="profile-container">
+        @if(Auth::user()->profile_picture)
+            <img src="{{ asset('storage/' . Auth::user()->profile_picture) }}" alt="Profile" id="profile-icon" onclick="toggleProfileMenu()">
+        @else
+            <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Profile" id="profile-icon" onclick="toggleProfileMenu()">
+        @endif
+        
+        <div id="profile-menu" class="profile-menu">
+            <div class="profile-menu-header">
+                <p class="profile-menu-name">{{ Auth::user()->name }}</p>
+                <p class="profile-menu-email">{{ Auth::user()->email }}</p>
+            </div>
+            
+            <div class="profile-menu-body">
+                <a href="{{ route('profile.show') }}" class="profile-menu-link">
+                    <i class="fas fa-user"></i> My Profile
+                </a>
+                <a href="{{ route('orders.index') }}" class="profile-menu-link">
+                    <i class="fas fa-shopping-bag"></i> My Orders
+                </a>
+                <a href="{{ route('profile.settings') }}" class="profile-menu-link">
+                    <i class="fas fa-cog"></i> Settings
+                </a>
+            </div>
+            
+            <div class="profile-menu-footer">
+                <form id="logout-form" action="{{ route('logout') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="logout-button">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    @else
+    <div class="auth-buttons">
+        <a href="{{ route('login') }}" class="btn btn-sm btn-outline-primary">Login</a>
+        <a href="{{ route('register') }}" class="btn btn-sm btn-primary ml-2">Register</a>
+    </div>
+    @endauth
+</li>
             </ul>
         </div>
     </div>
