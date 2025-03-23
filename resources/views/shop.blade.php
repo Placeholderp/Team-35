@@ -687,6 +687,10 @@
                            class="btn {{ request('category') == 'preworkout' ? 'btn-primary' : 'btn-outline-light' }} m-1">
                             Pre-Workout Supplements
                         </a>
+                        <a href="{{ route('shop', ['category' => 'supplement']) }}" 
+                           class="btn {{ request('category') == 'supplement' ? 'btn-primary' : 'btn-outline-light' }} m-1">
+                            Supplements
+                        </a>
                     </div>
                 </div>
             </div>
@@ -702,35 +706,45 @@
         'powder' => ['powder', 'powder products'],
         'vitamins' => ['vitamins', 'vitamins & minerals'],
         'workout' => ['workout', 'workouts', 'workout plans', 'workout-plans', 'workout_plans'],
-        'preworkout' => ['preworkout', 'pre-workout', 'pre_workout', 'pre workout', 'pre-workout supplements']
+        'preworkout' => ['preworkout', 'pre-workout', 'pre_workout', 'pre workout', 'pre-workout supplements'],
+        'supplement' => ['supplement', 'supplements', 'general supplements', 'dietary supplements']
     ];
     
     // Use an anonymous function to avoid redeclaration
     $filterProductsByCategory = function($products, $categoryKey, $categoryMappings) {
-        $filteredProducts = collect();
-        
-        if(!isset($products)) {
-            return $filteredProducts;
-        }
-        
-        foreach($products as $product) {
-            if(!isset($product->category)) {
-                continue;
-            }
-            
-            $productSlug = strtolower($product->category->slug ?? '');
-            $productName = strtolower($product->category->name ?? '');
-            
-            // Check if product category matches any of the mappings for the selected category
-            if(in_array($productSlug, $categoryMappings[$categoryKey]) || 
-               in_array($productName, $categoryMappings[$categoryKey]) ||
-               strpos($productName, $categoryKey) !== false) {
-                $filteredProducts->push($product);
-            }
-        }
-        
+    $filteredProducts = collect();
+    
+    if(!isset($products)) {
         return $filteredProducts;
-    };
+    }
+    
+    foreach($products as $product) {
+        // Skip products with no category
+        if(!isset($product->category)) {
+            continue;
+        }
+        
+        // Get category data
+        $categoryId = $product->category->id ?? null;
+        $categorySlug = strtolower($product->category->slug ?? '');
+        $categoryName = strtolower($product->category->name ?? '');
+        
+        // Check for direct match first (most reliable)
+        if($categorySlug === $categoryKey || $categoryName === $categoryKey) {
+            $filteredProducts->push($product);
+            continue;
+        }
+        
+        // Then check mapped variations
+        if(isset($categoryMappings[$categoryKey]) && (
+           in_array($categorySlug, $categoryMappings[$categoryKey]) || 
+           in_array($categoryName, $categoryMappings[$categoryKey]))) {
+            $filteredProducts->push($product);
+        }
+    }
+    
+    return $filteredProducts;
+};
 @endphp
     <!-- Protein Category Section -->
     @if(!$selectedCategory || $selectedCategory == 'protein')
@@ -1017,6 +1031,82 @@
             @endif
         </div>
     </section>
+    
+    @if(!$selectedCategory)
+    <div class="section-divider container"></div>
+    @endif
+    @endif
+    
+    <!-- Supplements Category Section -->
+    @if(!$selectedCategory || $selectedCategory == 'supplement')
+    <section id="category-supplement" class="my-5">
+        <div class="container text-center mt-5 py-5">
+            <h3>Supplements</h3>
+            <hr class="mx-auto">
+            <p>General supplements to support your overall fitness and wellness goals.</p>
+        </div>
+        <div class="row mx-auto container-fluid">
+            @php
+            $supplementProducts = !$selectedCategory ? 
+                $filterProductsByCategory($products, 'supplement', $categoryMappings) : 
+                $products;
+            @endphp
+            
+            @if(count($supplementProducts) > 0)
+                @foreach($supplementProducts as $product)
+                    <div class="product text-center col-lg-3 col-md-4 col-12">
+                        <img class="img-fluid mb-3" src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->title }}">
+                        <div class="star">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        
+                        <h5 class="p-name">{{ $product->title }}</h5>
+                        <p class="p-description">{{ Str::limit($product->description, 100) }}</p>
+                        <h4 class="p-price">${{ number_format($product->price, 2) }}</h4>
+                        
+                        @if(isset($product->track_inventory) && $product->track_inventory)
+                            @if($product->quantity <= 0)
+                                <div class="stock-alert out-of-stock">
+                                    <i class="fas fa-exclamation-circle"></i> Out of Stock
+                                </div>
+                                <button class="buy-btn btn-disabled" disabled>Sold Out</button>
+                            @elseif($product->quantity <= $product->reorder_level)
+                                <div class="stock-alert low-stock">
+                                    <i class="fas fa-exclamation-triangle"></i> Only {{ $product->quantity }} left! Hurry up!
+                                </div>
+                                <div class="d-flex justify-content-between mt-2">
+                                    <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
+                                    <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
+                                </div>
+                            @else
+                                <div class="d-flex justify-content-between mt-2">
+                                    <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
+                                    <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
+                                </div>
+                            @endif
+                        @else
+                            <div class="d-flex justify-content-between mt-2">
+                                <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
+                                <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
+                            </div>
+                        @endif
+                    </div>
+                @endforeach
+            @else
+                <div class="col-12 text-center">
+                    <p>No supplement products available at the moment.</p>
+                </div>
+            @endif
+        </div>
+    </section>
+    
+    @if(!$selectedCategory)
+    <div class="section-divider container"></div>
+    @endif
     @endif
     
     <!-- Newsletter Section -->

@@ -55,8 +55,13 @@ class User extends Authenticatable
         return (bool) $value;
     }
 
+   
+
+    /**
+     * Get the customer profile associated with the user.
+     */
     public function customer()
     {
-        return $this->hasOne(Customer::class);
+        return $this->hasOne(Customer::class, 'user_id', 'id');
     }
 }

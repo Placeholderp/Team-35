@@ -22,12 +22,15 @@ class CustomerResource extends JsonResource
         $billing = $this->billingAddress;
 
         $result = [
-            'id' => $this->user_id,                   
+            // Return both id and user_id fields for API consistency
+            'id' => $this->user_id,
+            'user_id' => $this->user_id,
             'first_name' => $this->first_name,         
             'last_name' => $this->last_name,           
-            'email' => $this->user->email ?? null,  // Safely handle null user    
-            'phone' => $this->phone,                   
-            'status' => $this->status === CustomerStatus::Active->value,
+            'email' => $this->user->email ?? null,
+            'phone' => $this->phone,
+            // Convert integer status to boolean for frontend consistency                   
+            'status' => (bool)$this->status, // Will convert 1 to true, 0 to false
             'created_at' => $this->created_at ? (new \DateTime($this->created_at))->format('Y-m-d H:i:s') : null,
             'updated_at' => $this->updated_at ? (new \DateTime($this->updated_at))->format('Y-m-d H:i:s') : null,
         ];
@@ -36,6 +39,7 @@ class CustomerResource extends JsonResource
         if ($shipping) {
             $result['shippingAddress'] = [
                 'id' => $shipping->id,
+                'user_id' => $shipping->user_id,
                 'address1' => $shipping->address1,
                 'address2' => $shipping->address2,
                 'city' => $shipping->city,
@@ -58,6 +62,7 @@ class CustomerResource extends JsonResource
         if ($billing) {
             $result['billingAddress'] = [
                 'id' => $billing->id,
+                'user_id' => $billing->user_id,
                 'address1' => $billing->address1,
                 'address2' => $billing->address2,
                 'city' => $billing->city,

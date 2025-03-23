@@ -125,7 +125,7 @@
         <tbody v-else class="bg-white divide-y divide-gray-200">
           <tr v-for="(customer, index) of customers.data" :key="index" class="hover:bg-gray-50 transition-colors">
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-              #{{ customer.id }}
+              #{{ getCustomerId(customer) }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center">
@@ -156,7 +156,7 @@
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
               <div class="flex justify-end space-x-2">
                 <router-link
-                  :to="{ name: 'app.customers.view', params: { id: customer.id } }"
+                  :to="{ name: 'app.customers.view', params: { id: getCustomerId(customer) } }"
                   class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 p-2 rounded-md transition-colors"
                   title="Edit Customer"
                 >
@@ -297,10 +297,20 @@ function formatDate(dateString) {
   return new Date(dateString).toLocaleDateString(undefined, options);
 }
 
+/**
+ * Helper function to get a consistent customer ID
+ * Prioritizes user_id for standardization
+ */
+function getCustomerId(customer) {
+  return customer.user_id || customer.id;
+}
+
 function deleteCustomer(customer) {
+  const customerId = getCustomerId(customer);
+  
   if (!confirm(`Are you sure you want to delete customer "${customer.first_name} ${customer.last_name}"?`)) return;
   
-  store.dispatch('deleteCustomer', customer.id)
+  store.dispatch('deleteCustomer', customerId)
     .then(() => {
       store.commit('showToast', 'Customer deleted successfully');
       getCustomers();

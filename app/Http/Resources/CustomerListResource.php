@@ -22,13 +22,13 @@ class CustomerListResource extends JsonResource
     {
         return [
             'id' => $this->user_id,
+            'user_id' => $this->user_id, // Include both id and user_id for consistency
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
-            'email' => $this->user->email,
-            'phone' => $this->phone,
+            'email' => $this->user->email ?? null,
             'status' => $this->status,
-            'created_at' => (new \DateTime($this->created_at))->format('Y-m-d H:i:s'),
-            'updated_at' => (new \DateTime($this->updated_at))->format('Y-m-d H:i:s'),
+            'created_at' => $this->created_at ? (new \DateTime($this->created_at))->format('Y-m-d H:i:s') : null,
+            'updated_at' => $this->updated_at ? (new \DateTime($this->updated_at))->format('Y-m-d H:i:s') : null,
         ];
     }
 }

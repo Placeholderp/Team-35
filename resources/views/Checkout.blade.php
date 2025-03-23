@@ -8,6 +8,35 @@
           crossorigin="anonymous">
     <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css">
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+
+    <style>
+        /* Orange Checkout Button Styling */
+        .checkout-btn {
+            display: block;
+            width: 100%;
+            padding: 12px 20px;
+            background-color: #FF7700; /* Bright orange color */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .checkout-btn:hover {
+            background-color: #E65C00; /* Darker orange on hover */
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .checkout-btn:active {
+            transform: translateY(0);
+        }
+    </style>
 @endsection
 
 @section('navigation')
@@ -460,55 +489,79 @@ document.addEventListener('DOMContentLoaded', function() {
         <!-- Left Column - Customer Details -->
         <div class="col-lg-7">
             <h3>Billing Details</h3>
+            @if ($errors->any())
+    <div class="alert alert-danger">
+        <ul>
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
             <form action="{{ route('checkout.process') }}" method="POST" id="checkout-form">
                 @csrf
                 <div class="row">
                     <!-- First Name -->
                     <div class="col-md-6 mb-3">
                         <label for="firstName">First name</label>
-                        <input type="text" class="form-control" id="firstName" name="first_name" required>
+                        <input type="text" class="form-control" id="firstName" name="first_name" 
+                               value="{{ $customer->first_name ?? Auth::user()->first_name ?? '' }}" required>
                     </div>
-                    
-                    <!-- Last Name -->
+
+                    <!-- Last Name Field -->
                     <div class="col-md-6 mb-3">
                         <label for="lastName">Last name</label>
-                        <input type="text" class="form-control" id="lastName" name="last_name" required>
+                        <input type="text" class="form-control" id="lastName" name="last_name" 
+                               value="{{ $customer->last_name ?? Auth::user()->last_name ?? '' }}" required>
                     </div>
-                    
-                    <!-- Email -->
+
+                    <!-- Email Field -->
                     <div class="col-md-12 mb-3">
                         <label for="email">Email</label>
                         <input type="email" class="form-control" id="email" name="email" 
-                            value="{{ Auth::user()->email ?? '' }}" required>
+                               value="{{ Auth::user()->email ?? '' }}" required>
                     </div>
-                    
-                    <!-- Address -->
+
+                    <!-- Address Line 1 Field -->
                     <div class="col-md-12 mb-3">
-                        <label for="address">Address</label>
-                        <input type="text" class="form-control" id="address" name="address" required>
+                        <label for="address">Address Line 1</label>
+                        <input type="text" class="form-control" id="address" name="address" 
+                               value="{{ $billingAddress->address1 ?? '' }}" required>
                     </div>
-                    
-                    <!-- City -->
+
+                    <!-- Address Line 2 Field -->
+                    <div class="col-md-12 mb-3">
+                        <label for="address2">Address Line 2 (Optional)</label>
+                        <input type="text" class="form-control" id="address2" name="address2" 
+                               value="{{ $billingAddress->address2 ?? '' }}">
+                    </div>
+
+                    <!-- City Field -->
                     <div class="col-md-6 mb-3">
                         <label for="city">City</label>
-                        <input type="text" class="form-control" id="city" name="city" required>
+                        <input type="text" class="form-control" id="city" name="city" 
+                               value="{{ $billingAddress->city ?? '' }}" required>
                     </div>
-                    
-                    <!-- ZIP -->
+
+                    <!-- ZIP/Postal Code Field -->
                     <div class="col-md-6 mb-3">
                         <label for="zip">Postal Code</label>
-                        <input type="text" class="form-control" id="zip" name="zip" required>
+                        <input type="text" class="form-control" id="zip" name="zip" 
+                               value="{{ $billingAddress->zipcode ?? '' }}" required>
                     </div>
-                    
-                    <!-- Country -->
-                    <div class="col-md-12 mb-3">
+
+                    <!-- State/Province Field -->
+                    <div class="col-md-6 mb-3">
+                        <label for="state">State/Province</label>
+                        <input type="text" class="form-control" id="state" name="state" 
+                               value="{{ $billingAddress->state ?? '' }}">
+                    </div>
+
+                    <!-- Country Field -->
+                    <div class="col-md-6 mb-3">
                         <label for="country">Country</label>
                         <select class="form-select form-control" id="country" name="country" required>
-                            <option value="">Choose...</option>
-                            <option value="UK">United Kingdom</option>
-                            <option value="US">United States</option>
-                            <option value="CA">Canada</option>
-                            <option value="AU">Australia</option>
+                            <option value="UK" {{ isset($billingAddress) && $billingAddress->country_code == 'GB' ? 'selected' : '' }}>United Kingdom</option>
                             <!-- Add more countries as needed -->
                         </select>
                     </div>
@@ -791,15 +844,25 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
                 
-             
-// If form is valid, simulate payment processing
-if (checkoutForm.checkValidity()) {
-    // Redirect to success page using the checkout.success route
-    window.location.href = "{{ route('success') }}";
-} else {
-    // Trigger HTML5 validation
-    checkoutForm.reportValidity();
-}
+                // If form is valid, add localStorage cart items to hidden fields
+                if (checkoutForm.checkValidity()) {
+                    // Get cart from localStorage
+                    const cart = JSON.parse(localStorage.getItem('cart')) || [];
+                    
+                    // Create a hidden input to send the cart data to the server
+                    const cartInput = document.createElement('input');
+                    cartInput.type = 'hidden';
+                    cartInput.name = 'cart_data';
+                    cartInput.value = JSON.stringify(cart);
+                    
+                    // Add this hidden input to the form
+                    checkoutForm.appendChild(cartInput);
+                    
+                    // Now submit the form
+                    checkoutForm.submit();
+                } else {
+                    checkoutForm.reportValidity();
+                }
             });
         });
     </script>

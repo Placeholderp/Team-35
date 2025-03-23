@@ -282,75 +282,57 @@ const shippingStateOptions = computed(() => {
 function onSubmit() {
   saving.value = true;
   
-  // Ensure we're using the correct ID field
+  // Always use user_id for API interactions
   const customerData = {
-    // The key fix is here - use user_id for API interactions
-    user_id: customer.value.user_id || customer.value.id,
+    user_id: customer.value.user_id,
     first_name: customer.value.first_name,
     last_name: customer.value.last_name,
     email: customer.value.email,
-
-    status: customer.value.status ? 'active' : 'disabled' // Use string enum values
+    phone: customer.value.phone || '',
+    status: customer.value.status
   };
   
   // Include address data if it exists
   if (customer.value.billingAddress) {
-    customerData.billingAddress = customer.value.billingAddress;
+    customerData.billingAddress = {
+      ...customer.value.billingAddress,
+      user_id: customer.value.user_id
+    };
   }
   
   if (customer.value.shippingAddress) {
-    customerData.shippingAddress = customer.value.shippingAddress;
+    customerData.shippingAddress = {
+      ...customer.value.shippingAddress,
+      user_id: customer.value.user_id
+    };
   }
   
   console.log("Sending data to API:", customerData);
   
   // Always use user_id for the API endpoint
-  if (customerData.user_id) {
-    store.dispatch('updateCustomer', customerData)
-      .then(response => {
-        saving.value = false;
-        store.commit('showToast', 'Customer updated successfully');
-        store.dispatch('getCustomers');
-        router.push({name: 'app.customers'});
-      })
-      .catch(error => {
-        saving.value = false;
-        console.error('Error updating customer:', error);
-        
-        // Simple error message handling
-        let errorMsg = 'Error updating customer';
-        if (error.response?.data?.message) {
-          errorMsg = error.response.data.message;
-        } else if (error.response?.data?.errors) {
-          errorMsg = Object.values(error.response.data.errors).flat().join(', ');
-        }
-        
-        store.commit('showToast', errorMsg, 'error');
-      });
-  } else {
-    // Handle create customer (similar logic)
-    store.dispatch('createCustomer', customerData)
-      .then(response => {
-        saving.value = false;
-        store.commit('showToast', 'Customer created successfully');
-        store.dispatch('getCustomers');
-        router.push({name: 'app.customers'});
-      })
-      .catch(error => {
-        saving.value = false;
-        console.error('Error creating customer:', error);
-        
-        let errorMsg = 'Error creating customer';
-        if (error.response?.data?.message) {
-          errorMsg = error.response.data.message;
-        } else if (error.response?.data?.errors) {
-          errorMsg = Object.values(error.response.data.errors).flat().join(', ');
-        }
-        
-        store.commit('showToast', errorMsg, 'error');
-      });
-  }
+  store.dispatch('updateCustomer', customerData)
+    .then(response => {
+      saving.value = false;
+      store.commit('showToast', 'Customer updated successfully');
+      store.dispatch('getCustomers');
+      router.push({name: 'app.customers'});
+    })
+    .catch(error => {
+      saving.value = false;
+      console.error('Error updating customer:', error);
+      
+      // Simple error message handling
+      let errorMsg = 'Error updating customer';
+      if (error.response?.data?.message) {
+        errorMsg = error.response.data.message;
+      } else if (error.response?.data?.errors) {
+        errorMsg = Object.values(error.response.data.errors).flat().join(', ');
+      }
+      
+      store.commit('showToast', errorMsg, 'error');
+    });
 }
+
 function copyBillingToShipping() {
   // Deep clone to ensure we don't have reference issues
   customer.value.shippingAddress = JSON.parse(JSON.stringify(customer.value.billingAddress));
@@ -363,7 +345,6 @@ function formatDate(dateString) {
 }
 
 // Initialize component
-
 onMounted(() => {
   loading.value = true;
   
@@ -376,14 +357,37 @@ onMounted(() => {
         // Log the API response to debug
         console.log("API response data:", data);
         
-        // Make sure to set both id and user_id for compatibility
-        if (data.user_id && !data.id) {
-          data.id = data.user_id;
-        } else if (data.id && !data.user_id) {
-          data.user_id = data.id;
+        // Ensure consistent ID handling
+        customer.value = {
+          ...data,
+          user_id: data.user_id || data.id
+        };
+        
+        // Ensure address data is properly initialized
+        if (!customer.value.shippingAddress) {
+          customer.value.shippingAddress = {
+            address1: '',
+            address2: '',
+            city: '',
+            state: '',
+            zipcode: '',
+            country_code: '',
+            user_id: customer.value.user_id
+          };
         }
         
-        customer.value = data;
+        if (!customer.value.billingAddress) {
+          customer.value.billingAddress = {
+            address1: '',
+            address2: '',
+            city: '',
+            state: '',
+            zipcode: '',
+            country_code: '',
+            user_id: customer.value.user_id
+          };
+        }
+        
         loading.value = false;
       })
       .catch(error => {
@@ -392,7 +396,30 @@ onMounted(() => {
         store.commit('showToast', 'Error loading customer data', 'error');
       });
   } else {
-    // Rest of your code remains the same
+    // Initialize with empty customer
+    customer.value = {
+      first_name: '',
+      last_name: '',
+      email: '',
+      status: true,
+      shippingAddress: {
+        address1: '',
+        address2: '',
+        city: '',
+        state: '',
+        zipcode: '',
+        country_code: ''
+      },
+      billingAddress: {
+        address1: '',
+        address2: '',
+        city: '',
+        state: '',
+        zipcode: '',
+        country_code: ''
+      }
+    };
+    loading.value = false;
   }
 });
 </script>

@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CustomerAddress extends Model
 {
-   
     use HasFactory;
 
     // Define the attributes that are mass assignable.
@@ -20,15 +19,16 @@ class CustomerAddress extends Model
         'state',         
         'zipcode',       
         'country_code',  
-        'customer_id',   
+        'user_id',   // Changed from customer_id to user_id
     ];
 
     /**
      * Define a relationship indicating that a CustomerAddress belongs to a Customer.
+     * Explicitly specify the foreign key in this table and the owner key in the Customer table.
      */
     public function customer(): BelongsTo
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(Customer::class, 'user_id', 'user_id');
     }
 
     /**

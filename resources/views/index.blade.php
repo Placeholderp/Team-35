@@ -449,284 +449,169 @@
 }
 </style>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Profile dropdown toggle
-    const profileIcon = document.getElementById('profile-icon');
-    const profileDropdown = document.getElementById('profile-dropdown');
+@section('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js" integrity="sha384-SR1sx49pcuLnqZUnnPwx6FCym0wLsk5JZuNx2bPPENzswTNFaQU1RDvt3wT4gWFG" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.min.js" integrity="sha384-j0CNLUeiqtyaRmlzUHCPZ+Gy5fQu0dQ6eZ/xAww941Ai1SxSY+0EQqNXNE6DZiVc" crossorigin="anonymous"></script>
     
-    if (profileIcon && profileDropdown) {
-        profileIcon.addEventListener('click', function(e) {
-            e.stopPropagation();
-            profileDropdown.classList.toggle('active');
-        });
-        
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!profileDropdown.contains(e.target) && e.target !== profileIcon) {
-                profileDropdown.classList.remove('active');
-            }
-        });
-    }
+    <script>
     document.addEventListener('DOMContentLoaded', function() {
-    // Profile dropdown toggle
-    const profileIcon = document.getElementById('profile-icon');
-    const profileDropdown = document.getElementById('profile-dropdown');
-    
-    if (profileIcon && profileDropdown) {
-        profileIcon.addEventListener('click', function(e) {
-            e.stopPropagation();
-            profileDropdown.classList.toggle('active');
+        // Profile dropdown toggle
+        const profileIcon = document.getElementById('profile-icon');
+        const profileDropdown = document.getElementById('profile-dropdown');
+        
+        if (profileIcon && profileDropdown) {
+            profileIcon.addEventListener('click', function(e) {
+                e.stopPropagation();
+                profileDropdown.classList.toggle('active');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!profileDropdown.contains(e.target) && e.target !== profileIcon) {
+                    profileDropdown.classList.remove('active');
+                }
+            });
+        }
+        
+        // Search functionality
+        const searchIcon = document.getElementById('search-icon');
+        const searchInput = document.getElementById('search-input');
+        
+        if (searchIcon && searchInput) {
+            searchIcon.addEventListener('click', function() {
+                searchInput.classList.toggle('active');
+                if (searchInput.classList.contains('active')) {
+                    searchInput.focus();
+                }
+            });
+            
+            // Close search when clicking outside
+            document.addEventListener('click', function(e) {
+                if (e.target !== searchIcon && e.target !== searchInput) {
+                    searchInput.classList.remove('active');
+                }
+            });
+        }
+        
+        // Update cart count function - More robust version
+        function updateCartCount() {
+            const cartCountElement = document.getElementById('cart-count');
+            if (cartCountElement) {
+                try {
+                    // Try to get the cart from localStorage
+                    const cartData = localStorage.getItem('cart');
+                    let cartItems = [];
+                    
+                    if (cartData) {
+                        cartItems = JSON.parse(cartData);
+                        
+                        // Check if cart is an array (handling different cart storage formats)
+                        if (!Array.isArray(cartItems) && cartItems.items && Array.isArray(cartItems.items)) {
+                            cartItems = cartItems.items;
+                        } else if (!Array.isArray(cartItems) && typeof cartItems === 'object') {
+                            // If it's an object with product entries
+                            cartItems = Object.values(cartItems);
+                        }
+                    }
+                    
+                    // Calculate total quantity
+                    let totalItems = 0;
+                    if (Array.isArray(cartItems)) {
+                        totalItems = cartItems.reduce((total, item) => {
+                            // Check if item has a quantity property or is a simple item
+                            const itemQuantity = item.quantity || 1;
+                            return total + itemQuantity;
+                        }, 0);
+                    }
+                    
+                    // Update the cart count display
+                    cartCountElement.textContent = totalItems;
+                    
+                    // Show/hide the count badge
+                    if (totalItems === 0) {
+                        cartCountElement.style.display = 'none';
+                    } else {
+                        cartCountElement.style.display = 'flex';
+                    }
+                    
+                } catch (error) {
+                    console.error('Error updating cart count:', error);
+                    cartCountElement.textContent = '0';
+                    cartCountElement.style.display = 'none';
+                }
+            }
+        }
+        
+        // Initial cart count update
+        updateCartCount();
+        
+        // Listen for cart changes via localStorage event
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'cart') {
+                updateCartCount();
+            }
         });
         
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!profileDropdown.contains(e.target) && e.target !== profileIcon) {
-                profileDropdown.classList.remove('active');
-            }
+        // Create a custom event to update cart count from other scripts
+        window.addEventListener('cartUpdated', function() {
+            updateCartCount();
         });
-    }
-    
-    // Search functionality
-    const searchIcon = document.getElementById('search-icon');
-    const searchInput = document.getElementById('search-input');
-    
-    if (searchIcon && searchInput) {
-        searchIcon.addEventListener('click', function() {
-            searchInput.classList.toggle('active');
-            if (searchInput.classList.contains('active')) {
-                searchInput.focus();
+        
+        // Additional listeners for cart buttons
+        document.addEventListener('click', function(e) {
+            if (e.target.matches('.add-to-cart, .add-to-cart *')) {
+                // Wait a moment for the cart to update in localStorage
+                setTimeout(updateCartCount, 100);
             }
         });
         
-        // Close search when clicking outside
-        document.addEventListener('click', function(e) {
-            if (e.target !== searchIcon && e.target !== searchInput) {
-                searchInput.classList.remove('active');
-            }
+        // Add hover effect to brand logos
+        const brandImages = document.querySelectorAll('#brand img');
+        brandImages.forEach(img => {
+            img.addEventListener('mouseenter', function() {
+                this.style.filter = 'grayscale(0%)';
+                this.style.opacity = '1';
+                this.style.transform = 'scale(1.05)';
+            });
+            img.addEventListener('mouseleave', function() {
+                this.style.filter = 'grayscale(100%)';
+                this.style.opacity = '0.7';
+                this.style.transform = 'scale(1)';
+            });
         });
-    }
-    
-    // Update cart count function - More robust version from navbar.blade.php
-    function updateCartCount() {
+    });
+
+    // Make updateCartCount available globally
+    window.updateNavbarCart = function() {
         const cartCountElement = document.getElementById('cart-count');
         if (cartCountElement) {
             try {
-                // Try to get the cart from localStorage
                 const cartData = localStorage.getItem('cart');
-                let cartItems = [];
+                let totalItems = 0;
                 
                 if (cartData) {
-                    cartItems = JSON.parse(cartData);
+                    const cartItems = JSON.parse(cartData);
                     
-                    // Check if cart is an array (handling different cart storage formats)
-                    if (!Array.isArray(cartItems) && cartItems.items && Array.isArray(cartItems.items)) {
-                        cartItems = cartItems.items;
-                    } else if (!Array.isArray(cartItems) && typeof cartItems === 'object') {
-                        // If it's an object with product entries
-                        cartItems = Object.values(cartItems);
+                    if (Array.isArray(cartItems)) {
+                        totalItems = cartItems.reduce((total, item) => total + (item.quantity || 1), 0);
+                    } else if (cartItems.items && Array.isArray(cartItems.items)) {
+                        totalItems = cartItems.items.reduce((total, item) => total + (item.quantity || 1), 0);
+                    } else if (typeof cartItems === 'object') {
+                        totalItems = Object.values(cartItems).reduce((total, item) => total + (item.quantity || 1), 0);
                     }
                 }
                 
-                // Calculate total quantity (some carts store quantities separately)
-                let totalItems = 0;
-                if (Array.isArray(cartItems)) {
-                    totalItems = cartItems.reduce((total, item) => {
-                        // Check if item has a quantity property or is a simple item
-                        const itemQuantity = item.quantity || 1;
-                        return total + itemQuantity;
-                    }, 0);
-                }
-                
-                // Update the cart count display
                 cartCountElement.textContent = totalItems;
-                
-                // Show/hide the count badge
-                if (totalItems === 0) {
-                    cartCountElement.style.display = 'none';
-                } else {
-                    cartCountElement.style.display = 'flex';
-                }
+                cartCountElement.style.display = totalItems === 0 ? 'none' : 'flex';
                 
             } catch (error) {
                 console.error('Error updating cart count:', error);
-                cartCountElement.textContent = '0';
-                cartCountElement.style.display = 'none';
             }
         }
-    }
-    
-    // Initial cart count update
-    updateCartCount();
-    
-    // Listen for cart changes via localStorage event
-    window.addEventListener('storage', function(e) {
-        if (e.key === 'cart') {
-            updateCartCount();
-        }
-    });
-    
-    // Create a custom event to update cart count from other scripts
-    window.addEventListener('cartUpdated', function() {
-        updateCartCount();
-    });
-    
-    // Check for cart changes every 2 seconds (as backup)
-    setInterval(updateCartCount, 2000);
-    
-    // Additional listeners for cart buttons
-    document.addEventListener('click', function(e) {
-        if (e.target.matches('.add-to-cart, .add-to-cart *')) {
-            // Wait a moment for the cart to update in localStorage
-            setTimeout(updateCartCount, 100);
-        }
-    });
-    
-    // Add hover effect to brand logos
-    const brandImages = document.querySelectorAll('#brand img');
-    brandImages.forEach(img => {
-        img.addEventListener('mouseenter', function() {
-            this.style.filter = 'grayscale(0%)';
-            this.style.opacity = '1';
-            this.style.transform = 'scale(1.05)';
-        });
-        img.addEventListener('mouseleave', function() {
-            this.style.filter = 'grayscale(100%)';
-            this.style.opacity = '0.7';
-            this.style.transform = 'scale(1)';
-        });
-    });
-});
-
-// Make updateCartCount available globally
-window.updateNavbarCart = function() {
-    const cartCountElement = document.getElementById('cart-count');
-    if (cartCountElement) {
-        try {
-            const cartData = localStorage.getItem('cart');
-            let totalItems = 0;
-            
-            if (cartData) {
-                const cartItems = JSON.parse(cartData);
-                
-                if (Array.isArray(cartItems)) {
-                    totalItems = cartItems.reduce((total, item) => total + (item.quantity || 1), 0);
-                } else if (cartItems.items && Array.isArray(cartItems.items)) {
-                    totalItems = cartItems.items.reduce((total, item) => total + (item.quantity || 1), 0);
-                } else if (typeof cartItems === 'object') {
-                    totalItems = Object.values(cartItems).reduce((total, item) => total + (item.quantity || 1), 0);
-                }
-            }
-            
-            cartCountElement.textContent = totalItems;
-            cartCountElement.style.display = totalItems === 0 ? 'none' : 'flex';
-            
-        } catch (error) {
-            console.error('Error updating cart count:', error);
-        }
-    }
-};
-    // Profile dropdown toggle
-    const profileIcon = document.getElementById('profile-icon');
-    const profileDropdown = document.getElementById('profile-dropdown');
-    
-    if (profileIcon && profileDropdown) {
-        profileIcon.addEventListener('click', function(e) {
-            e.stopPropagation();
-            profileDropdown.classList.toggle('active');
-        });
-        
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!profileDropdown.contains(e.target) && e.target !== profileIcon) {
-                profileDropdown.classList.remove('active');
-            }
-        });
-    }
-    
-    // Search functionality
-    const searchIcon = document.getElementById('search-icon');
-    const searchInput = document.getElementById('search-input');
-    
-    if (searchIcon && searchInput) {
-        searchIcon.addEventListener('click', function() {
-            searchInput.classList.toggle('active');
-            if (searchInput.classList.contains('active')) {
-                searchInput.focus();
-            }
-        });
-        
-        // Close search when clicking outside
-        document.addEventListener('click', function(e) {
-            if (e.target !== searchIcon && e.target !== searchInput) {
-                searchInput.classList.remove('active');
-            }
-        });
-    }
-    
-    // Update cart count
-    function updateCartCount() {
-        const cartCountElement = document.getElementById('cart-count');
-        if (cartCountElement) {
-            const cart = JSON.parse(localStorage.getItem('cart')) || [];
-            cartCountElement.textContent = cart.length;
-            
-            // Hide count if zero
-            if (cart.length === 0) {
-                cartCountElement.style.display = 'none';
-            } else {
-                cartCountElement.style.display = 'flex';
-            }
-        }
-    }
-    
-    // Initial cart count update
-    updateCartCount();
-    
-    // Listen for cart changes
-    window.addEventListener('storage', function(e) {
-        if (e.key === 'cart') {
-            updateCartCount();
-        }
-    });
-    
-    // Add hover effect to brand logos
-    const brandImages = document.querySelectorAll('#brand img');
-    brandImages.forEach(img => {
-        img.addEventListener('mouseenter', function() {
-            this.style.filter = 'grayscale(0%)';
-            this.style.opacity = '1';
-            this.style.transform = 'scale(1.05)';
-        });
-        img.addEventListener('mouseleave', function() {
-            this.style.filter = 'grayscale(100%)';
-            this.style.opacity = '0.7';
-            this.style.transform = 'scale(1)';
-        });
-    });
-});
-    
-    // Search functionality
-    const searchIcon = document.getElementById('search-icon');
-    const searchInput = document.getElementById('search-input');
-    
-    if (searchIcon && searchInput) {
-        searchIcon.addEventListener('click', function() {
-            searchInput.classList.toggle('active');
-            if (searchInput.classList.contains('active')) {
-                searchInput.focus();
-            }
-        });
-        
-        // Close search when clicking outside
-        document.addEventListener('click', function(e) {
-            if (e.target !== searchIcon && e.target !== searchInput) {
-                searchInput.classList.remove('active');
-            }
-        });
-    }
-});
-</script>
+    };
+    </script>
+    <script src="{{ asset('js/profile.js') }}"></script>
+@endsection
 @endsection
 
 @section('content')

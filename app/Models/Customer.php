@@ -6,33 +6,35 @@ use App\Enums\AddressType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Customer extends Model
 {
     use HasFactory;
+    
+    // Define primary key
     protected $primaryKey = 'user_id';
-
+    
+    // Ensure Laravel knows the primary key is not auto-incrementing
+    public $incrementing = false;
+    
     // Define the attributes that are mass assignable.
-   // In app/Models/Customer.php
-protected $fillable = ['first_name', 'last_name', 'email', 'status'];
-
-// Fix the primary key to match your database
- // This should match what's in your database
+    protected $fillable = ['first_name', 'last_name', 'email', 'status', 'user_id'];
 
     /**
      * Define a relationship to the User model.
      */
-    public function user()
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
     /**
-     * Private helper function to get the associated CustomerAddress.
+     * Get all addresses for this customer.
      */
-    private function _getAddresses(): HasOne
+    public function addresses()
     {
-        return $this->hasOne(CustomerAddress::class, 'customer_id', 'user_id');
+        return $this->hasMany(CustomerAddress::class, 'user_id', 'user_id');
     }
 
     /**
@@ -40,7 +42,8 @@ protected $fillable = ['first_name', 'last_name', 'email', 'status'];
      */
     public function shippingAddress(): HasOne
     {
-        return $this->_getAddresses()->where('type', '=', AddressType::Shipping->value);
+        return $this->hasOne(CustomerAddress::class, 'user_id', 'user_id')
+            ->where('type', '=', AddressType::Shipping->value);
     }
 
     /**
@@ -48,6 +51,7 @@ protected $fillable = ['first_name', 'last_name', 'email', 'status'];
      */
     public function billingAddress(): HasOne
     {
-        return $this->_getAddresses()->where('type', '=', AddressType::Billing->value);
+        return $this->hasOne(CustomerAddress::class, 'user_id', 'user_id')
+            ->where('type', '=', AddressType::Billing->value);
     }
 }

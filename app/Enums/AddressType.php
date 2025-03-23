@@ -1,14 +1,12 @@
 <?php
 
-
 namespace App\Enums;
 
-
 /**
- * Class AddressType
+ * Address Type Enum
  */
 enum AddressType: string
 {
-    case Shipping = 'shipping';
     case Billing = 'billing';
+    case Shipping = 'shipping';
 }

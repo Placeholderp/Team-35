@@ -92,16 +92,7 @@
                     </div>
 
                     <!-- Add this to login.blade.php -->
-<div style="background: #f5f5f5; padding: 10px; margin: 20px 0; border: 1px solid #ddd;">
-    <h4>Debug Info:</h4>
-    <ul>
-        <li>App URL: {{ config('app.url') }}</li>
-        <li>Session Driver: {{ config('session.driver') }}</li>
-        <li>Session Domain: {{ config('session.domain') }}</li>
-        <li>Session Secure: {{ config('session.secure') ? 'Yes' : 'No' }}</li>
-        <li>CSRF Token Present: {{ csrf_token() ? 'Yes' : 'No' }}</li>
-    </ul>
-</div>
+
                     
                     <div class="input-box">
                         <input type="email" name="email" placeholder="Email" value="{{ old('email') }}" required>

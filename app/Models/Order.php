@@ -11,7 +11,10 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Order extends Model
 {
     use HasFactory;
-
+    
+    // Either remove this line completely OR change to 'id'
+    protected $primaryKey = 'id';
+    
     // Define the attributes that are mass assignable.
     protected $fillable = ['status', 'total_price', 'created_by', 'updated_by'];
 
@@ -45,5 +48,13 @@ class Order extends Model
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+    
+    /**
+     * Get the order detail record associated with this order.
+     */
+    public function detail(): HasOne
+    {
+        return $this->hasOne(OrderDetail::class);
     }
 }
