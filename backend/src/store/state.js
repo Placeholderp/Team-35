@@ -48,7 +48,49 @@ export default {
     to: null,
     page: 1,
     limit: 10,
-    total: null
+    total: null,
+    selected: [], // Array of selected order IDs
+    bulkLoading: false // Loading state for bulk operations
+  },
+  // Add dashboard state
+  dashboard: {
+    loading: false,
+    period: 'month',
+    metrics: {
+      totalRevenue: 0,
+      revenueChange: 0,
+      revenueData: [],
+      totalOrders: 0,
+      ordersChange: 0,
+      ordersData: [],
+      averageOrderValue: 0,
+      aovChange: 0,
+      aovData: [],
+      conversionRate: 0,
+      conversionChange: 0,
+      conversionData: []
+    },
+    charts: {
+      revenue: {
+        labels: [],
+        datasets: []
+      },
+      orderStatus: {
+        labels: [],
+        datasets: []
+      },
+      topProducts: {
+        labels: [],
+        datasets: []
+      }
+    },
+    recentOrders: []
+  },
+  // Add order notes state
+  orderNotes: {
+    loading: false,
+    data: {}, // Object with order ID as key and array of notes as value
+    submitting: false
   },
   toast: {
     show: false,

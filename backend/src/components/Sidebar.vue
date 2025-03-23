@@ -96,29 +96,8 @@
           />
         </div>
         
-        <!-- Reports Section -->
-        <div class="pt-5">
-          <div v-if="!isCollapsed" class="px-3 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-            Reports
-          </div>
-          <div v-else class="border-t border-gray-700 my-2"></div>
-          
-          <!-- Customers Report -->
-          <SidebarNavItem 
-            :to="{ name: 'reports.customers', params: { date: 'all' } }" 
-            :is-collapsed="isCollapsed"
-            icon="UserGroupIcon"
-            label="Customer Reports"
-          />
-          
-          <!-- Orders Report -->
-          <SidebarNavItem 
-            :to="{ name: 'reports.orders', params: { date: 'all' } }" 
-            :is-collapsed="isCollapsed"
-            icon="ClipboardListIcon"
-            label="Order Reports"
-          />
-        </div>
+      
+        
       </div>
     </nav>
   </aside>

@@ -14,7 +14,7 @@
       <Spinner class="w-12 h-12 text-indigo-600" />
     </div>
 
-    <div v-else-if="customer.id" class="animate-fade-in-down">
+    <div v-else-if="customer.user_id" class="animate-fade-in-down">
       <form @submit.prevent="onSubmit">
         <!-- Customer Header Card -->
         <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
@@ -41,30 +41,33 @@
           <div class="p-6">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">First Name <span class="text-red-500">*</span></label>
                 <input
                   type="text"
                   v-model="customer.first_name"
+                  required
                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Last Name <span class="text-red-500">*</span></label>
                 <input
                   type="text"
                   v-model="customer.last_name"
+                  required
                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Email <span class="text-red-500">*</span></label>
                 <input
                   type="email"
                   v-model="customer.email"
+                  required
                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 />
               </div>
-             
+              
               <div class="flex items-center">
                 <input
                   type="checkbox"
@@ -84,6 +87,7 @@
           <div class="bg-white rounded-lg shadow-md overflow-hidden h-full">
             <div class="p-6 bg-gray-50 border-b border-gray-200">
               <h2 class="text-lg font-medium text-gray-900">Billing Address</h2>
+              <p class="text-sm text-gray-500 mt-1">Address Line 1 is required if you want to save the address</p>
             </div>
             <div class="p-6">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -125,6 +129,7 @@
                     v-model="customer.billingAddress.country_code"
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   >
+                    <option value="">Select a country</option>
                     <option v-for="country in countries" :key="country.key" :value="country.key">{{ country.text }}</option>
                   </select>
                 </div>
@@ -135,6 +140,7 @@
                     v-model="customer.billingAddress.state"
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   >
+                    <option value="">Select a state</option>
                     <option v-for="state in billingStateOptions" :key="state.key" :value="state.key">{{ state.text }}</option>
                   </select>
                   <input
@@ -151,7 +157,10 @@
           <!-- Shipping Address -->
           <div class="bg-white rounded-lg shadow-md overflow-hidden h-full">
             <div class="p-6 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
-              <h2 class="text-lg font-medium text-gray-900">Shipping Address</h2>
+              <div>
+                <h2 class="text-lg font-medium text-gray-900">Shipping Address</h2>
+                <p class="text-sm text-gray-500 mt-1">Address Line 1 is required if you want to save the address</p>
+              </div>
               <button 
                 type="button"
                 @click="copyBillingToShipping"
@@ -200,6 +209,7 @@
                     v-model="customer.shippingAddress.country_code"
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   >
+                    <option value="">Select a country</option>
                     <option v-for="country in countries" :key="country.key" :value="country.key">{{ country.text }}</option>
                   </select>
                 </div>
@@ -210,6 +220,7 @@
                     v-model="customer.shippingAddress.state"
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   >
+                    <option value="">Select a state</option>
                     <option v-for="state in shippingStateOptions" :key="state.key" :value="state.key">{{ state.text }}</option>
                   </select>
                   <input
@@ -235,9 +246,9 @@
           <button
             type="submit"
             class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            :disabled="loading"
+            :disabled="saving"
           >
-            <span v-if="loading">Saving...</span>
+            <span v-if="saving">Saving...</span>
             <span v-else>Save Customer</span>
           </button>
         </div>
@@ -282,30 +293,56 @@ const shippingStateOptions = computed(() => {
 function onSubmit() {
   saving.value = true;
   
+  // Verify address data is valid before submission
+  const hasValidShippingAddress = customer.value.shippingAddress && 
+                                customer.value.shippingAddress.address1 && 
+                                customer.value.shippingAddress.address1.trim() !== '';
+                                 
+  const hasValidBillingAddress = customer.value.billingAddress && 
+                              customer.value.billingAddress.address1 && 
+                              customer.value.billingAddress.address1.trim() !== '';
+  
   // Always use user_id for API interactions
   const customerData = {
     user_id: customer.value.user_id,
     first_name: customer.value.first_name,
     last_name: customer.value.last_name,
     email: customer.value.email,
-    phone: customer.value.phone || '',
     status: customer.value.status
   };
   
-  // Include address data if it exists
-  if (customer.value.billingAddress) {
-    customerData.billingAddress = {
-      ...customer.value.billingAddress,
-      user_id: customer.value.user_id
-    };
-  }
-  
-  if (customer.value.shippingAddress) {
-    customerData.shippingAddress = {
-      ...customer.value.shippingAddress,
-      user_id: customer.value.user_id
-    };
-  }
+  // Only include billing address if it has valid data
+  // Only include billing address if it has valid data
+if (hasValidBillingAddress) {
+  customerData.billingAddress = {
+    ...customer.value.billingAddress,
+    // Ensure all fields have at least empty string values
+    address1: customer.value.billingAddress.address1 || '',
+    address2: customer.value.billingAddress.address2 || '',
+    city: customer.value.billingAddress.city || '',
+    state: customer.value.billingAddress.state || '',
+    zipcode: customer.value.billingAddress.zipcode || '',
+    country_code: customer.value.billingAddress.country_code || '',
+    user_id: customer.value.user_id,
+    type: 'billing'  // Add this line
+  };
+}
+
+// Only include shipping address if it has valid data
+if (hasValidShippingAddress) {
+  customerData.shippingAddress = {
+    ...customer.value.shippingAddress,
+    // Ensure all fields have at least empty string values
+    address1: customer.value.shippingAddress.address1 || '',
+    address2: customer.value.shippingAddress.address2 || '',
+    city: customer.value.shippingAddress.city || '',
+    state: customer.value.shippingAddress.state || '',
+    zipcode: customer.value.shippingAddress.zipcode || '',
+    country_code: customer.value.shippingAddress.country_code || '',
+    user_id: customer.value.user_id,
+    type: 'shipping'  // Add this line
+  };
+}
   
   console.log("Sending data to API:", customerData);
   
@@ -347,6 +384,11 @@ function formatDate(dateString) {
 // Initialize component
 onMounted(() => {
   loading.value = true;
+  
+  // Fetch countries if they're not already loaded
+  if (!store.state.countries.length) {
+    store.dispatch('getCountries');
+  }
   
   // Fetch customer data if we have an ID
   if (route.params.id) {
@@ -396,11 +438,13 @@ onMounted(() => {
         store.commit('showToast', 'Error loading customer data', 'error');
       });
   } else {
-    // Initialize with empty customer
+    // Initialize with empty customer for new customer creation
+    title.value = 'Add New Customer';
     customer.value = {
       first_name: '',
       last_name: '',
       email: '',
+      
       status: true,
       shippingAddress: {
         address1: '',

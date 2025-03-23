@@ -1,4 +1,5 @@
 <?php
+// File: app/Models/OrderDetail.php
 
 namespace App\Models;
 
@@ -37,10 +38,11 @@ class OrderDetail extends Model
     
     /**
      * Get the order that owns the order detail.
+     * The order uses user_id as its primary key.
      */
     public function order(): BelongsTo
     {
-        return $this->belongsTo(Order::class);
+        return $this->belongsTo(Order::class, 'order_id', 'user_id');
     }
     
     /**
@@ -57,5 +59,31 @@ class OrderDetail extends Model
     public function country(): BelongsTo
     {
         return $this->belongsTo(Country::class, 'country_code', 'code');
+    }
+    
+    /**
+     * Get the formatted full address
+     */
+    public function getFullAddressAttribute()
+    {
+        $address = $this->address1;
+        
+        if (!empty($this->address2)) {
+            $address .= ', ' . $this->address2;
+        }
+        
+        $address .= ', ' . $this->city;
+        
+        if (!empty($this->state)) {
+            $address .= ', ' . $this->state;
+        }
+        
+        $address .= ' ' . $this->zipcode;
+        
+        if ($this->country) {
+            $address .= ', ' . $this->country->name;
+        }
+        
+        return $address;
     }
 }

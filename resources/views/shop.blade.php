@@ -3,10 +3,12 @@
 @section('title', 'Shop')
 
 @section('styles')
+    <!-- Styles section remains unchanged -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
     <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" />
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
     <style>
+        /* All existing styles remain unchanged */
         /* Category section styles */
         .category-header {
             position: relative;
@@ -147,7 +149,8 @@
 @endsection
 
 @section('navigation')
-<nav class="navbar navbar-expand-lg navbar-light bg-white py-3 fixed-top">
+    <!-- Navigation remains unchanged -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white py-3 fixed-top">
     <div class="container">
         <!-- Logo -->
         <a class="navbar-brand d-flex align-items-center" href="{{ route('home') }}">
@@ -685,7 +688,7 @@
                         </a>
                         <a href="{{ route('shop', ['category' => 'preworkout']) }}" 
                            class="btn {{ request('category') == 'preworkout' ? 'btn-primary' : 'btn-outline-light' }} m-1">
-                            Pre-Workout Supplements
+                            Gym Boost
                         </a>
                         <a href="{{ route('shop', ['category' => 'supplement']) }}" 
                            class="btn {{ request('category') == 'supplement' ? 'btn-primary' : 'btn-outline-light' }} m-1">
@@ -698,54 +701,55 @@
     </div>
 
     @php
+    // Get the selected category from the request
     $selectedCategory = request('category');
     
-    // Define category mappings for more reliable filtering
-    $categoryMappings = [
-        'protein' => ['protein', 'protein products'],
-        'powder' => ['powder', 'powder products'],
-        'vitamins' => ['vitamins', 'vitamins & minerals'],
-        'workout' => ['workout', 'workouts', 'workout plans', 'workout-plans', 'workout_plans'],
-        'preworkout' => ['preworkout', 'pre-workout', 'pre_workout', 'pre workout', 'pre-workout supplements'],
-        'supplement' => ['supplement', 'supplements', 'general supplements', 'dietary supplements']
-    ];
-    
-    // Use an anonymous function to avoid redeclaration
-    $filterProductsByCategory = function($products, $categoryKey, $categoryMappings) {
-    $filteredProducts = collect();
-    
-    if(!isset($products)) {
-        return $filteredProducts;
+    // If a category is selected, we'll filter products here
+    if ($selectedCategory) {
+        // Create a temporary array to hold filtered products
+        $filteredProducts = [];
+        
+        foreach ($products as $product) {
+            // Skip if product has no category
+            if (!isset($product->category) || !$product->category) {
+                continue;
+            }
+            
+            // Get category information
+            $categoryName = strtolower($product->category->name ?? '');
+            $categorySlug = strtolower($product->category->slug ?? '');
+            
+            // Special case for Gym Boost category (which uses preworkout as URL parameter)
+            if ($selectedCategory == 'preworkout') {
+                if (
+                    $categoryName == 'gym boost' || 
+                    $categorySlug == 'gym-boost' || 
+                    strpos($categoryName, 'gym boost') !== false || 
+                    strpos($categorySlug, 'gym-boost') !== false ||
+                    strpos($categoryName, 'gym supplement') !== false ||
+                    strpos($categorySlug, 'gym-supplement') !== false ||
+                    strpos($categoryName, 'preworkout') !== false ||
+                    strpos($categorySlug, 'preworkout') !== false ||
+                    strpos($categoryName, 'pre-workout') !== false ||
+                    strpos($categorySlug, 'pre-workout') !== false
+                ) {
+                    $filteredProducts[] = $product;
+                }
+            } 
+            // For all other categories, use standard matching
+            else if ($categoryName == strtolower($selectedCategory) || 
+                $categorySlug == strtolower($selectedCategory) ||
+                strpos($categoryName, strtolower($selectedCategory)) !== false ||
+                strpos($categorySlug, strtolower($selectedCategory)) !== false) {
+                $filteredProducts[] = $product;
+            }
+        }
+        
+        // Replace the original products with our filtered list
+        $products = $filteredProducts;
     }
+    @endphp
     
-    foreach($products as $product) {
-        // Skip products with no category
-        if(!isset($product->category)) {
-            continue;
-        }
-        
-        // Get category data
-        $categoryId = $product->category->id ?? null;
-        $categorySlug = strtolower($product->category->slug ?? '');
-        $categoryName = strtolower($product->category->name ?? '');
-        
-        // Check for direct match first (most reliable)
-        if($categorySlug === $categoryKey || $categoryName === $categoryKey) {
-            $filteredProducts->push($product);
-            continue;
-        }
-        
-        // Then check mapped variations
-        if(isset($categoryMappings[$categoryKey]) && (
-           in_array($categorySlug, $categoryMappings[$categoryKey]) || 
-           in_array($categoryName, $categoryMappings[$categoryKey]))) {
-            $filteredProducts->push($product);
-        }
-    }
-    
-    return $filteredProducts;
-};
-@endphp
     <!-- Protein Category Section -->
     @if(!$selectedCategory || $selectedCategory == 'protein')
     <section id="category-protein" class="my-5">
@@ -756,10 +760,31 @@
         </div>
         <div class="row mx-auto container-fluid">
             @php
-    $proteinProducts = !$selectedCategory ? 
-        $filterProductsByCategory($products, 'protein', $categoryMappings) : 
-        $products;
-@endphp
+            $proteinProducts = [];
+            
+            // If we're on the protein category page, use all products (already filtered)
+            if ($selectedCategory == 'protein') {
+                $proteinProducts = $products;
+            } 
+            // Otherwise, filter to show just protein products
+            else {
+                foreach ($products as $product) {
+                    if (!isset($product->category) || !$product->category) {
+                        continue;
+                    }
+                    
+                    $categoryName = strtolower($product->category->name ?? '');
+                    $categorySlug = strtolower($product->category->slug ?? '');
+                    
+                    if ($categoryName == 'protein' || 
+                        $categorySlug == 'protein' ||
+                        strpos($categoryName, 'protein') !== false ||
+                        strpos($categorySlug, 'protein') !== false) {
+                        $proteinProducts[] = $product;
+                    }
+                }
+            }
+            @endphp
             
             @if(count($proteinProducts) > 0)
                 @foreach($proteinProducts as $product)
@@ -777,34 +802,32 @@
                         <p class="p-description">{{ Str::limit($product->description, 100) }}</p>
                         <h4 class="p-price">${{ number_format($product->price, 2) }}</h4>
                         
-                        <!-- Replace the existing button section in the shop.blade.php product cards with this: -->
-
                         @if(isset($product->track_inventory) && $product->track_inventory)
-                        @if($product->quantity <= 0)
-                            <div class="stock-alert out-of-stock">
-                                <i class="fas fa-exclamation-circle"></i> Out of Stock
-                            </div>
-                            <button class="buy-btn btn-disabled" disabled>Sold Out</button>
-                        @elseif($product->quantity <= $product->reorder_level)
-                            <div class="stock-alert low-stock">
-                                <i class="fas fa-exclamation-triangle"></i> Only {{ $product->quantity }} left! Hurry up!
-                            </div>
-                            <div class="d-flex justify-content-between mt-2">
-                                <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
-                                <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
-                            </div>
+                            @if($product->quantity <= 0)
+                                <div class="stock-alert out-of-stock">
+                                    <i class="fas fa-exclamation-circle"></i> Out of Stock
+                                </div>
+                                <button class="buy-btn btn-disabled" disabled>Sold Out</button>
+                            @elseif($product->quantity <= $product->reorder_level)
+                                <div class="stock-alert low-stock">
+                                    <i class="fas fa-exclamation-triangle"></i> Only {{ $product->quantity }} left! Hurry up!
+                                </div>
+                                <div class="d-flex justify-content-between mt-2">
+                                    <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
+                                    <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
+                                </div>
+                            @else
+                                <div class="d-flex justify-content-between mt-2">
+                                    <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
+                                    <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
+                                </div>
+                            @endif
                         @else
                             <div class="d-flex justify-content-between mt-2">
                                 <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
                                 <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
                             </div>
                         @endif
-                    @else
-                        <div class="d-flex justify-content-between mt-2">
-                            <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
-                            <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
-                        </div>
-                    @endif
                     </div>
                 @endforeach
             @else
@@ -814,13 +837,12 @@
             @endif
         </div>
     </section>
-    
+
     @if(!$selectedCategory)
     <div class="section-divider container"></div>
     @endif
     @endif
-    
-   
+
     <!-- Vitamins Category Section -->
     @if(!$selectedCategory || $selectedCategory == 'vitamins')
     <section id="category-vitamins" class="my-5">
@@ -831,10 +853,33 @@
         </div>
         <div class="row mx-auto container-fluid">
             @php
-            $vitaminProducts = !$selectedCategory ? 
-                $filterProductsByCategory($products, 'vitamins', $categoryMappings) : 
-                $products;
-        @endphp
+            $vitaminProducts = [];
+            
+            // If we're on the vitamins category page, use all products (already filtered)
+            if ($selectedCategory == 'vitamins') {
+                $vitaminProducts = $products;
+            } 
+            // Otherwise, filter to show just vitamin products
+            else {
+                foreach ($products as $product) {
+                    if (!isset($product->category) || !$product->category) {
+                        continue;
+                    }
+                    
+                    $categoryName = strtolower($product->category->name ?? '');
+                    $categorySlug = strtolower($product->category->slug ?? '');
+                    
+                    if ($categoryName == 'vitamins' || 
+                        $categorySlug == 'vitamins' ||
+                        strpos($categoryName, 'vitamin') !== false ||
+                        strpos($categorySlug, 'vitamin') !== false ||
+                        strpos($categoryName, 'mineral') !== false ||
+                        strpos($categorySlug, 'mineral') !== false) {
+                        $vitaminProducts[] = $product;
+                    }
+                }
+            }
+            @endphp
             
             @if(count($vitaminProducts) > 0)
                 @foreach($vitaminProducts as $product)
@@ -853,31 +898,31 @@
                         <h4 class="p-price">${{ number_format($product->price, 2) }}</h4>
                         
                         @if(isset($product->track_inventory) && $product->track_inventory)
-    @if($product->quantity <= 0)
-        <div class="stock-alert out-of-stock">
-            <i class="fas fa-exclamation-circle"></i> Out of Stock
-        </div>
-        <button class="buy-btn btn-disabled" disabled>Sold Out</button>
-    @elseif($product->quantity <= $product->reorder_level)
-        <div class="stock-alert low-stock">
-            <i class="fas fa-exclamation-triangle"></i> Only {{ $product->quantity }} left! Hurry up!
-        </div>
-        <div class="d-flex justify-content-between mt-2">
-            <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
-            <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
-        </div>
-    @else
-        <div class="d-flex justify-content-between mt-2">
-            <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
-            <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
-        </div>
-    @endif
-@else
-    <div class="d-flex justify-content-between mt-2">
-        <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
-        <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
-    </div>
-@endif
+                            @if($product->quantity <= 0)
+                                <div class="stock-alert out-of-stock">
+                                    <i class="fas fa-exclamation-circle"></i> Out of Stock
+                                </div>
+                                <button class="buy-btn btn-disabled" disabled>Sold Out</button>
+                            @elseif($product->quantity <= $product->reorder_level)
+                                <div class="stock-alert low-stock">
+                                    <i class="fas fa-exclamation-triangle"></i> Only {{ $product->quantity }} left! Hurry up!
+                                </div>
+                                <div class="d-flex justify-content-between mt-2">
+                                    <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
+                                    <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
+                                </div>
+                            @else
+                                <div class="d-flex justify-content-between mt-2">
+                                    <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
+                                    <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
+                                </div>
+                            @endif
+                        @else
+                            <div class="d-flex justify-content-between mt-2">
+                                <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
+                                <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
+                            </div>
+                        @endif
                     </div>
                 @endforeach
             @else
@@ -887,12 +932,12 @@
             @endif
         </div>
     </section>
-    
+
     @if(!$selectedCategory)
     <div class="section-divider container"></div>
     @endif
     @endif
-    
+
     <!-- Workout Plans Category Section -->
     @if(!$selectedCategory || $selectedCategory == 'workout')
     <section id="category-workout" class="my-5">
@@ -903,10 +948,52 @@
         </div>
         <div class="row mx-auto container-fluid">
             @php
-    $workoutProducts = !$selectedCategory ? 
-        $filterProductsByCategory($products, 'workout', $categoryMappings) : 
-        $products;
-@endphp
+            $workoutProducts = [];
+            
+            // If we're on the workout category page, use all products (already filtered)
+            if ($selectedCategory == 'workout') {
+                $workoutProducts = $products;
+            } 
+            // Otherwise, filter to show just workout products
+            else {
+                foreach ($products as $product) {
+                    if (!isset($product->category) || !$product->category) {
+                        continue;
+                    }
+                    
+                    $categoryName = strtolower($product->category->name ?? '');
+                    $categorySlug = strtolower($product->category->slug ?? '');
+                    
+                    // Make sure to exclude pre-workout products
+                    if (strpos($categoryName, 'pre-workout') !== false || 
+                        strpos($categorySlug, 'pre-workout') !== false ||
+                        strpos($categoryName, 'pre workout') !== false ||
+                        strpos($categorySlug, 'pre workout') !== false ||
+                        strpos($categoryName, 'preworkout') !== false ||
+                        strpos($categorySlug, 'preworkout') !== false ||
+                        strpos($categoryName, 'gym supplement') !== false ||
+                        strpos($categorySlug, 'gym supplement') !== false ||
+                        strpos($categoryName, 'gym boost') !== false ||
+                        strpos($categorySlug, 'gym boost') !== false ||
+                        strpos($categoryName, 'gym') !== false ||
+                        strpos($categorySlug, 'gym') !== false) {
+                        continue;
+                    }
+                    
+                    // Now check for workout products
+                    if ($categoryName == 'workout' || 
+                        $categorySlug == 'workout' ||
+                        strpos($categoryName, 'workout') !== false ||
+                        strpos($categorySlug, 'workout') !== false ||
+                        strpos($categoryName, 'training') !== false ||
+                        strpos($categorySlug, 'training') !== false ||
+                        strpos($categoryName, 'plan') !== false ||
+                        strpos($categorySlug, 'plan') !== false) {
+                        $workoutProducts[] = $product;
+                    }
+                }
+            }
+            @endphp
             
             @if(count($workoutProducts) > 0)
                 @foreach($workoutProducts as $product)
@@ -925,31 +1012,31 @@
                         <h4 class="p-price">${{ number_format($product->price, 2) }}</h4>
                         
                         @if(isset($product->track_inventory) && $product->track_inventory)
-                        @if($product->quantity <= 0)
-                            <div class="stock-alert out-of-stock">
-                                <i class="fas fa-exclamation-circle"></i> Out of Stock
-                            </div>
-                            <button class="buy-btn btn-disabled" disabled>Sold Out</button>
-                        @elseif($product->quantity <= $product->reorder_level)
-                            <div class="stock-alert low-stock">
-                                <i class="fas fa-exclamation-triangle"></i> Only {{ $product->quantity }} left! Hurry up!
-                            </div>
-                            <div class="d-flex justify-content-between mt-2">
-                                <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
-                                <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
-                            </div>
+                            @if($product->quantity <= 0)
+                                <div class="stock-alert out-of-stock">
+                                    <i class="fas fa-exclamation-circle"></i> Out of Stock
+                                </div>
+                                <button class="buy-btn btn-disabled" disabled>Sold Out</button>
+                            @elseif($product->quantity <= $product->reorder_level)
+                                <div class="stock-alert low-stock">
+                                    <i class="fas fa-exclamation-triangle"></i> Only {{ $product->quantity }} left! Hurry up!
+                                </div>
+                                <div class="d-flex justify-content-between mt-2">
+                                    <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
+                                    <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
+                                </div>
+                            @else
+                                <div class="d-flex justify-content-between mt-2">
+                                    <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
+                                    <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
+                                </div>
+                            @endif
                         @else
                             <div class="d-flex justify-content-between mt-2">
                                 <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
                                 <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
                             </div>
                         @endif
-                    @else
-                        <div class="d-flex justify-content-between mt-2">
-                            <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
-                            <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
-                        </div>
-                    @endif
                     </div>
                 @endforeach
             @else
@@ -959,26 +1046,60 @@
             @endif
         </div>
     </section>
-    
+
     @if(!$selectedCategory)
     <div class="section-divider container"></div>
     @endif
     @endif
-    
-    <!-- Pre-Workout Category Section -->
+
+    <!-- Gym Boost Category Section (formerly Gym Supplements) -->  
     @if(!$selectedCategory || $selectedCategory == 'preworkout')
     <section id="category-preworkout" class="my-5">
         <div class="container text-center mt-5 py-5">
-            <h3>Pre-Workout Supplements</h3>
+            <h3>Gym Boost</h3>
             <hr class="mx-auto">
-            <p>Advanced formulas designed to maximize energy, focus, and performance during your workouts.</p>
+            <p>Advanced formulas designed to enhance your training sessions and support optimal fitness results.</p>
         </div>
         <div class="row mx-auto container-fluid">
             @php
-            $preworkoutProducts = !$selectedCategory ? 
-                $filterProductsByCategory($products, 'preworkout', $categoryMappings) : 
-                $products;
-        @endphp
+            $preworkoutProducts = [];
+            
+            // If we're on the gym supplements category page, use all products (already filtered)
+            if ($selectedCategory == 'preworkout') {
+                $preworkoutProducts = $products;
+            } 
+            // Otherwise, filter to show just gym supplement products
+            else {
+                foreach ($products as $product) {
+                    if (!isset($product->category) || !$product->category) {
+                        continue;
+                    }
+                    
+                    $categoryName = strtolower($product->category->name ?? '');
+                    $categorySlug = strtolower($product->category->slug ?? '');
+                    
+                    // Specifically match pre-workout and gym supplement terms
+                    if ($categoryName == 'preworkout' || 
+                        $categorySlug == 'preworkout' ||
+                        strpos($categoryName, 'pre-workout') !== false ||
+                        strpos($categorySlug, 'pre-workout') !== false ||
+                        strpos($categoryName, 'pre workout') !== false ||
+                        strpos($categorySlug, 'pre workout') !== false ||
+                        strpos($categoryName, 'preworkout') !== false ||
+                        strpos($categorySlug, 'preworkout') !== false ||
+                        strpos($categoryName, 'gym supplement') !== false ||
+                        strpos($categorySlug, 'gym supplement') !== false ||
+                        strpos($categoryName, 'gym-supplement') !== false ||
+                        strpos($categorySlug, 'gym-supplement') !== false ||
+                        strpos($categoryName, 'gym boost') !== false ||
+                        strpos($categorySlug, 'gym boost') !== false ||
+                        strpos($categoryName, 'gym') !== false ||
+                        strpos($categorySlug, 'gym') !== false) {
+                        $preworkoutProducts[] = $product;
+                    }
+                }
+            }
+            @endphp
             
             @if(count($preworkoutProducts) > 0)
                 @foreach($preworkoutProducts as $product)
@@ -997,46 +1118,46 @@
                         <h4 class="p-price">${{ number_format($product->price, 2) }}</h4>
                         
                         @if(isset($product->track_inventory) && $product->track_inventory)
-    @if($product->quantity <= 0)
-        <div class="stock-alert out-of-stock">
-            <i class="fas fa-exclamation-circle"></i> Out of Stock
-        </div>
-        <button class="buy-btn btn-disabled" disabled>Sold Out</button>
-    @elseif($product->quantity <= $product->reorder_level)
-        <div class="stock-alert low-stock">
-            <i class="fas fa-exclamation-triangle"></i> Only {{ $product->quantity }} left! Hurry up!
-        </div>
-        <div class="d-flex justify-content-between mt-2">
-            <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
-            <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
-        </div>
-    @else
-        <div class="d-flex justify-content-between mt-2">
-            <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
-            <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
-        </div>
-    @endif
-@else
-    <div class="d-flex justify-content-between mt-2">
-        <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
-        <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
-    </div>
-@endif
+                            @if($product->quantity <= 0)
+                                <div class="stock-alert out-of-stock">
+                                    <i class="fas fa-exclamation-circle"></i> Out of Stock
+                                </div>
+                                <button class="buy-btn btn-disabled" disabled>Sold Out</button>
+                            @elseif($product->quantity <= $product->reorder_level)
+                                <div class="stock-alert low-stock">
+                                    <i class="fas fa-exclamation-triangle"></i> Only {{ $product->quantity }} left! Hurry up!
+                                </div>
+                                <div class="d-flex justify-content-between mt-2">
+                                    <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
+                                    <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
+                                </div>
+                            @else
+                                <div class="d-flex justify-content-between mt-2">
+                                    <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
+                                    <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
+                                </div>
+                            @endif
+                        @else
+                            <div class="d-flex justify-content-between mt-2">
+                                <button class="buy-btn buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
+                                <a href="{{ route('product.view', ['product' => $product->slug]) }}" class="btn btn-outline-secondary details-btn">Details</a>
+                            </div>
+                        @endif
                     </div>
                 @endforeach
             @else
                 <div class="col-12 text-center">
-                    <p>No pre-workout products available at the moment.</p>
+                    <p>No Gym Boost products available at the moment.</p>
                 </div>
             @endif
         </div>
     </section>
-    
+
     @if(!$selectedCategory)
     <div class="section-divider container"></div>
     @endif
     @endif
-    
+
     <!-- Supplements Category Section -->
     @if(!$selectedCategory || $selectedCategory == 'supplement')
     <section id="category-supplement" class="my-5">
@@ -1047,9 +1168,30 @@
         </div>
         <div class="row mx-auto container-fluid">
             @php
-            $supplementProducts = !$selectedCategory ? 
-                $filterProductsByCategory($products, 'supplement', $categoryMappings) : 
-                $products;
+            $supplementProducts = [];
+            
+            // If we're on the supplement category page, use all products (already filtered)
+            if ($selectedCategory == 'supplement') {
+                $supplementProducts = $products;
+            } 
+            // Otherwise, filter to show just supplement products
+            else {
+                foreach ($products as $product) {
+                    if (!isset($product->category) || !$product->category) {
+                        continue;
+                    }
+                    
+                    $categoryName = strtolower($product->category->name ?? '');
+                    $categorySlug = strtolower($product->category->slug ?? '');
+                    
+                    if ($categoryName == 'supplement' || 
+                        $categorySlug == 'supplement' ||
+                        strpos($categoryName, 'supplement') !== false ||
+                        strpos($categorySlug, 'supplement') !== false) {
+                        $supplementProducts[] = $product;
+                    }
+                }
+            }
             @endphp
             
             @if(count($supplementProducts) > 0)
@@ -1103,7 +1245,7 @@
             @endif
         </div>
     </section>
-    
+
     @if(!$selectedCategory)
     <div class="section-divider container"></div>
     @endif

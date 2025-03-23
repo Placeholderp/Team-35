@@ -258,7 +258,7 @@
                     </span>
                   </div>
                   <div class="flex items-center">
-                    <OrderStatusBadge :status="o.status || 'paid'" class="mr-2" />
+                    <OrderStatus :status="o.status || 'paid'" class="mr-2" />
                     <span class="font-semibold text-gray-800">
                       {{ $filters.currencyUSD(o.total_price) }}
                     </span>
@@ -410,7 +410,7 @@ import CustomInput from '../components/core/CustomInput.vue'
 import DoughnutChart from '../components/core/Charts/Doughnut.vue'
 import BarChart from '../components/core/Charts/Bar.vue'
 import MiniLineChart from '../components/core/Charts/MiniLine.vue'
-import OrderStatusBadge from '../components/OrderStatusBadge.vue'
+import OrderStatusBadge from '../views/Orders/OrderStatus.vue'
 
 // Access store
 const store = useStore()

@@ -16,6 +16,34 @@ axiosClient.interceptors.request.use(config => {
   }
   return config;
 });
+// Add parameter cleaning interceptor
+axiosClient.interceptors.request.use(config => {
+  // Skip if no parameters
+  if (!config.params) return config;
+  
+  // Create a clean copy of the params
+  const cleanParams = { ...config.params };
+  
+  // Remove empty string parameters
+  Object.keys(cleanParams).forEach(key => {
+    if (cleanParams[key] === '' || cleanParams[key] === null || cleanParams[key] === undefined) {
+      delete cleanParams[key];
+    }
+  });
+  
+  // Special handling for orders endpoint and status parameter
+  if (config.url === '/orders' && 'status' in config.params) {
+    if (!config.params.status || config.params.status === '') {
+      delete cleanParams.status;
+      console.log('Interceptor: Removed empty status parameter');
+    }
+  }
+  
+  // Replace params with cleaned version
+  config.params = cleanParams;
+  
+  return config;
+});
 
 // Product ID cleaning interceptor
 axiosClient.interceptors.request.use(config => {

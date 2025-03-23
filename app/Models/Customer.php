@@ -20,6 +20,11 @@ class Customer extends Model
     
     // Define the attributes that are mass assignable.
     protected $fillable = ['first_name', 'last_name', 'email', 'status', 'user_id'];
+    
+    // Cast status to integer to ensure database compatibility
+    protected $casts = [
+        'status' => 'integer',
+    ];
 
     /**
      * Define a relationship to the User model.

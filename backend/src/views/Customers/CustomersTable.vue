@@ -8,7 +8,7 @@
           <div class="flex items-center">
             <span class="text-gray-600 mr-2">Show</span>
             <select
-              @change="getCustomers(null)"
+              @change="onPerPageChange"
               v-model="perPage"
               class="appearance-none bg-gray-50 border border-gray-300 text-gray-700 py-2 px-3 pr-8 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
             >
@@ -20,7 +20,7 @@
             </select>
             <span class="ml-2 text-sm text-gray-600">entries</span>
           </div>
-          <span class="text-sm text-gray-600">{{ customers.total }} total records</span>
+          <span class="text-sm text-gray-600">{{ customers.total || 0 }} total records</span>
         </div>
         
         <!-- Right side controls -->
@@ -28,7 +28,7 @@
           <!-- Status filter dropdown -->
           <select
             v-model="statusFilter"
-            @change="getCustomers(null)"
+            @change="onStatusFilterChange"
             class="appearance-none bg-gray-50 border border-gray-300 text-gray-700 py-2 px-3 pr-8 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
           >
             <option value="">All Statuses</option>
@@ -142,7 +142,6 @@
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="text-sm text-gray-900">{{ customer.email }}</div>
-              <div class="text-sm text-gray-500">{{ customer.phone }}</div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
@@ -231,13 +230,16 @@
 
 <script setup>
 import { computed, onMounted, ref, defineEmits, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import store from '../../store'
 import Spinner from '../../components/core/Spinner.vue'
 import { CUSTOMERS_PER_PAGE } from '../../constants'
 import TableHeaderCell from '../../components/core/Table/TableHeaderCell.vue'
 import { debounce } from 'lodash'
 
-const perPage = ref(CUSTOMERS_PER_PAGE)
+const router = useRouter()
+// Convert to number to ensure proper typing
+const perPage = ref(Number(CUSTOMERS_PER_PAGE))
 const search = ref('')
 const statusFilter = ref('')
 const customers = computed(() => store.state.customers)
@@ -247,48 +249,111 @@ const sortDirection = ref('desc')
 
 const emit = defineEmits(['clickEdit'])
 
+// Explicitly define handlers for filters
+function onPerPageChange() {
+  console.log('Per page changed to:', perPage.value)
+  loadCustomers()
+}
+
+function onStatusFilterChange() {
+  console.log('Status filter changed to:', statusFilter.value)
+  loadCustomers()
+}
+
 // Use debounce to prevent too many API calls while typing
 const onSearchInputDelayed = debounce(() => {
-  getCustomers(null)
+  console.log('Search changed to:', search.value)
+  loadCustomers()
 }, 500)
 
 onMounted(() => {
-  getCustomers()
+  // Initial load
+  loadCustomers()
 })
 
-// Watch for changes in dropdown filters
-watch(perPage, () => {
-  getCustomers(null)
-})
-
-watch(statusFilter, () => {
-  getCustomers(null)
-})
-
+// Function to handle pagination links
 function getForPage(ev, link) {
   if (!link.url || link.active) return
   getCustomers(link.url)
 }
 
-function getCustomers(url = null) {
-  store.dispatch('getCustomers', {
-    url,
-    search: search.value,
-    per_page: perPage.value,
-    sort_field: sortField.value,
-    sort_direction: sortDirection.value,
-    status: statusFilter.value,
-  })
+// Main function to load customers - all filter changes use this
+function loadCustomers() {
+  getCustomers(null)
 }
 
+// Core function that makes the API call
+// Core function that makes the API call
+function getCustomers(url = null) {
+  // Clean and sanitize parameters
+  const cleanParams = {
+    url,
+    per_page: Number(perPage.value) || 10,
+    sort_field: sortField.value || 'created_at',
+    sort_direction: sortDirection.value || 'desc',
+  }
+  
+  // Only add search if it's not empty
+  if (search.value && search.value.trim() !== '') {
+    cleanParams.search = search.value.trim()
+  }
+  
+  // Only add status if it has a value and ensure it's properly formatted
+  if (statusFilter.value !== '') {
+    // Remove any non-numeric characters to ensure it's clean
+    cleanParams.status = String(statusFilter.value).replace(/[^0-9]/g, '')
+  }
+  
+  console.log('Requesting customers with params:', cleanParams)
+  
+  // Track if user is using filters (for fallback purposes)
+  const isFiltered = Boolean(
+    cleanParams.search || 
+    cleanParams.status !== undefined || 
+    cleanParams.sort_field !== 'created_at' || 
+    cleanParams.sort_direction !== 'desc'
+  )
+  
+  store.dispatch('getCustomers', cleanParams)
+    .then(() => {
+      console.log('Customers loaded successfully')
+    })
+    .catch(error => {
+      console.error('Error loading customers:', error)
+      
+      if (isFiltered) {
+        // If filtering failed, attempt to load without filters
+        store.commit('showToast', 'Error with filters. Showing unfiltered results.', 'warning')
+        
+        // Reset UI filters
+        search.value = ''
+        statusFilter.value = ''
+        sortField.value = 'created_at'
+        sortDirection.value = 'desc'
+        
+        // Try again with minimal parameters
+        store.dispatch('getCustomers', {
+          url: null,
+          per_page: Number(perPage.value) || 10
+        }).catch(fallbackError => {
+          console.error('Even fallback failed:', fallbackError)
+          store.commit('showToast', 'Unable to load customers. Please try again.', 'error')
+        })
+      } else {
+        // Just show error toast
+        store.commit('showToast', 'Error loading customers. Please try again.', 'error')
+      }
+    })
+}
 function sortCustomers(field) {
+  console.log('Sorting by field:', field)
   if (field === sortField.value) {
     sortDirection.value = sortDirection.value === 'desc' ? 'asc' : 'desc'
   } else {
     sortField.value = field
     sortDirection.value = 'asc'
   }
-  getCustomers()
+  loadCustomers()
 }
 
 function formatDate(dateString) {
@@ -297,10 +362,6 @@ function formatDate(dateString) {
   return new Date(dateString).toLocaleDateString(undefined, options);
 }
 
-/**
- * Helper function to get a consistent customer ID
- * Prioritizes user_id for standardization
- */
 function getCustomerId(customer) {
   return customer.user_id || customer.id;
 }
@@ -313,7 +374,7 @@ function deleteCustomer(customer) {
   store.dispatch('deleteCustomer', customerId)
     .then(() => {
       store.commit('showToast', 'Customer deleted successfully');
-      getCustomers();
+      loadCustomers();
     })
     .catch((error) => {
       console.error('Error deleting customer:', error);

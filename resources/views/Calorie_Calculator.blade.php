@@ -746,70 +746,86 @@ document.addEventListener('DOMContentLoaded', function() {
   <script src="{{ asset('js/profile.js') }}"></script>
   
   <script>
-    // Additional JavaScript to handle the results display
     document.addEventListener("DOMContentLoaded", function() {
       const calculateBtn = document.getElementById("calculateBtn");
-      
+      const resetBtn = document.getElementById("resetBtn");
+  
       if (calculateBtn) {
         calculateBtn.addEventListener("click", function() {
+  
+          // Grab all relevant elements
           const resultBox = document.getElementById("resultBox");
           const calorieResult = document.getElementById("calorie-result");
-          
-          if (resultBox && resultBox.value && calorieResult) {
-            // Extract the numeric value
-            const calorieValue = parseInt(resultBox.value);
-            
-            if (!isNaN(calorieValue)) {
-              // Update the main result
-              calorieResult.textContent = calorieValue;
-              
-              // Update other calculations
-              const weightLossCal = document.getElementById("weight-loss-cal");
-              const maintenanceCal = document.getElementById("maintenance-cal");
-              const weightGainCal = document.getElementById("weight-gain-cal");
-              
-              if (weightLossCal && maintenanceCal && weightGainCal) {
-                weightLossCal.textContent = calorieValue - 500;
-                maintenanceCal.textContent = calorieValue;
-                weightGainCal.textContent = calorieValue + 500;
-              }
-              
-              // Calculate macros
-              const proteinGrams = document.getElementById("protein-grams");
-              const carbsGrams = document.getElementById("carbs-grams");
-              const fatGrams = document.getElementById("fat-grams");
-              
-              if (proteinGrams && carbsGrams && fatGrams) {
-                // Calculate grams based on calorie splits
-                // Protein: 4 calories per gram, 30% of total
-                const proteinCals = calorieValue * 0.3;
-                const proteinG = Math.round(proteinCals / 4);
-                proteinGrams.textContent = proteinG + "g";
-                
-                // Carbs: 4 calories per gram, 40% of total
-                const carbsCals = calorieValue * 0.4;
-                const carbsG = Math.round(carbsCals / 4);
-                carbsGrams.textContent = carbsG + "g";
-                
-                // Fat: 9 calories per gram, 30% of total
-                const fatCals = calorieValue * 0.3;
-                const fatG = Math.round(fatCals / 9);
-                fatGrams.textContent = fatG + "g";
-              }
-              
-              // Show results container
-              const resultsContainer = document.getElementById("results-container");
-              if (resultsContainer) {
-                resultsContainer.classList.remove("d-none");
-                resultsContainer.classList.add("show");
-              }
+          const weightLossCal = document.getElementById("weight-loss-cal");
+          const maintenanceCal = document.getElementById("maintenance-cal");
+          const weightGainCal = document.getElementById("weight-gain-cal");
+  
+          // Read the base calories from the hidden/readonly #resultBox
+          const baseCalories = parseInt(resultBox.value);
+  
+          // Read the selected goal (lose / maintain / gain)
+          const goal = document.getElementById("goal").value;
+  
+          // Safety check: Make sure we actually have a number
+          if (!isNaN(baseCalories)) {
+  
+            // Calculate lose, maintain, gain recommendations relative to TDEE
+            const loseCalories = baseCalories - 500;
+            const maintainCalories = baseCalories;
+            const gainCalories = baseCalories + 500;
+  
+            let displayedCalories; // what we'll actually show in #calorie-result
+  
+            // Adjust the displayed main result according to the user's goal
+            if (goal === "lose") {
+              displayedCalories = loseCalories;
+            } else if (goal === "gain") {
+              displayedCalories = gainCalories;
+            } else {
+              // Defaults to "maintain"
+              displayedCalories = maintainCalories;
+            }
+  
+            // Update the main result (the large number in the “Your Personalized Nutrition Plan”)
+            if (calorieResult) {
+              calorieResult.textContent = displayedCalories;
+            }
+  
+            // Update the three boxes (Weight Loss, Maintenance, Weight Gain)
+            if (weightLossCal && maintenanceCal && weightGainCal) {
+              weightLossCal.textContent = loseCalories;
+              maintenanceCal.textContent = maintainCalories;
+              weightGainCal.textContent = gainCalories;
+            }
+  
+            // --- MACRO CALCULATIONS ---
+            // We base macros on the main displayedCalories for the user’s chosen goal
+            const proteinGrams = document.getElementById("protein-grams");
+            const carbsGrams = document.getElementById("carbs-grams");
+            const fatGrams = document.getElementById("fat-grams");
+  
+            if (proteinGrams && carbsGrams && fatGrams) {
+              // Example macro split: 30% Protein, 40% Carbs, 30% Fat
+              const proteinCals = displayedCalories * 0.3;
+              const carbsCals   = displayedCalories * 0.4;
+              const fatCals     = displayedCalories * 0.3;
+  
+              proteinGrams.textContent = Math.round(proteinCals / 4) + "g";
+              carbsGrams.textContent   = Math.round(carbsCals / 4)   + "g";
+              fatGrams.textContent     = Math.round(fatCals / 9)     + "g";
+            }
+  
+            // Finally, show the results container
+            const resultsContainer = document.getElementById("results-container");
+            if (resultsContainer) {
+              resultsContainer.classList.remove("d-none");
+              resultsContainer.classList.add("show");
             }
           }
         });
       }
-      
+  
       // Handle reset button
-      const resetBtn = document.getElementById("resetBtn");
       if (resetBtn) {
         resetBtn.addEventListener("click", function() {
           const resultsContainer = document.getElementById("results-container");
@@ -817,9 +833,11 @@ document.addEventListener('DOMContentLoaded', function() {
             resultsContainer.classList.add("d-none");
             resultsContainer.classList.remove("show");
           }
-          
+  
           // Call the reset function from the main JS file
-          resetForm();
+          if (typeof resetForm === 'function') {
+            resetForm();
+          }
         });
       }
     });

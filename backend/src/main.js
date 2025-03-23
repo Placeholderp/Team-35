@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import store from './store'
 import router from './router'
+import './orderStatusFix.js';
 import './index.css'
 import currencyUSD from './filters/currency.js'
 import 'primeicons/primeicons.css'

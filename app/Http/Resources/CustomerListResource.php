@@ -26,7 +26,8 @@ class CustomerListResource extends JsonResource
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
             'email' => $this->user->email ?? null,
-            'status' => $this->status,
+            'phone' => $this->phone,
+            'status' => (bool)$this->status, // Convert integer to boolean for frontend
             'created_at' => $this->created_at ? (new \DateTime($this->created_at))->format('Y-m-d H:i:s') : null,
             'updated_at' => $this->updated_at ? (new \DateTime($this->updated_at))->format('Y-m-d H:i:s') : null,
         ];

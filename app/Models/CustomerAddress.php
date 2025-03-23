@@ -9,7 +9,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class CustomerAddress extends Model
 {
     use HasFactory;
-
+    
+    // Define the correct primary key - it should be 'id' not 'user_id'
+    protected $primaryKey = 'id';
+    public $incrementing = true; // This should be true if id is auto-incrementing
+    
     // Define the attributes that are mass assignable.
     protected $fillable = [
         'type',          

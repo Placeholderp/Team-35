@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-
+use Illuminate\Support\Facades\Log;
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
@@ -54,7 +54,19 @@ class User extends Authenticatable
         // Otherwise, return the actual value from the database
         return (bool) $value;
     }
-
+    protected static function boot()
+    {
+        parent::boot();
+        
+        static::retrieved(function ($model) {
+            // Add debug to track when users are loaded
+            Log::info('User loaded:', [
+                'id' => $model->id, 
+                'name' => $model->name ?? 'unknown',
+                'has_customer_relation' => method_exists($model, 'customer') ? 'yes' : 'no'
+            ]);
+        });
+    }
    
 
     /**

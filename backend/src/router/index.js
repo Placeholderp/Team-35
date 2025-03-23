@@ -22,8 +22,7 @@ import ForcePasswordChange from "../views/ForcePasswordChange.vue";
 import store from "../store";
 import UserProfile from "../views/Users/UserProfile.vue";
 import Report from "../views/Reports/Report.vue";
-import OrdersReport from "../views/Reports/OrdersReport.vue";
-import CustomersReport from "../views/Reports/CustomersReport.vue";
+
 
 // Inventory component imports
 import InventoryDashboard from "../views/Inventory/InventoryDashboard.vue";
@@ -138,6 +137,19 @@ const routes = [
         component: Users
       },
       {
+      path: '/orders',
+      name: 'app.orders',
+      component: () => import('../views/Orders/Orders.vue'),
+      meta: { requiresAuth: true }
+    },
+    
+    {
+      path: '/orders/:id',
+      name: 'app.orders.view',
+      component: () => import('../views/Orders/OrderView.vue'),
+      meta: { requiresAuth: true }
+    },
+      {
         path: 'customers',
         name: 'app.customers',
         component: Customers
@@ -176,18 +188,8 @@ const routes = [
           };
         },
         children: [
-          {
-            path: 'customers/:date?',
-            name: 'reports.customers',
-            component: CustomersReport,
-            props: true  // Pass route params as component props
-          },
-          {
-            path: 'orders/:date?',
-            name: 'reports.orders',
-            component: OrdersReport,
-            props: true  // Pass route params as component props
-          },
+          
+          
           {
             path: 'revenue',
             name: 'reports.revenue',

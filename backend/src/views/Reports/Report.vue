@@ -23,70 +23,7 @@
       </div>
     </div>
     
-    <!-- Report Navigation Tabs -->
-    <div class="bg-white rounded-lg shadow-md mb-6">
-      <div class="px-2 sm:px-6 border-b border-gray-200">
-        <nav class="flex -mb-px space-x-6 overflow-x-auto" aria-label="Tabs">
-          <!-- Orders Report Tab -->
-          <router-link
-            :to="{ name: 'reports.orders', params: route.params }"
-            class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors"
-            :class="[ 
-              isActive('reports.orders')
-                ? 'border-indigo-500 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            ]"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5 inline-block mr-2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-              />
-            </svg>
-            Orders Report
-          </router-link>
-          
-          <!-- Customers Report Tab -->
-          <router-link
-            :to="{ name: 'reports.customers', params: route.params }"
-            class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors"
-            :class="[ 
-              isActive('reports.customers')
-                ? 'border-indigo-500 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            ]"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5 inline-block mr-2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2
-                   c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857
-                   M7 20v-2c0-.656.126-1.283.356-1.857m0 0
-                   a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3
-                   a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-              />
-            </svg>
-            Customers Report
-          </router-link>
-        </nav>
-      </div>
-    </div>
+    
     
     <!-- Report Content -->
     <div class="bg-white p-6 rounded-lg shadow-md">

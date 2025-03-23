@@ -1,5 +1,7 @@
 import axiosClient from "../axios";
+import OrderService from '../services/OrderService';
 import { cleanId, normalizePublished, prepareProductFormData } from "../utils/ProductUtils";
+import { exportOrdersToCsv } from '../utils/exportUtils';
 
 // Utility function to normalize is_admin to boolean
 function normalizeIsAdmin(value) {
@@ -90,29 +92,9 @@ export function getCountries({commit}) {
     })
 }
 
-export function getOrders({commit, state}, {url = null, search = '', per_page, sort_field, sort_direction} = {}) {
-  commit('setOrders', [true])
-  url = url || '/orders'
-  const params = {
-    per_page: state.orders.limit,
-  }
-  return axiosClient.get(url, {
-    params: {
-      ...params,
-      search, per_page, sort_field, sort_direction
-    }
-  })
-    .then((response) => {
-      commit('setOrders', [false, response.data])
-    })
-    .catch(() => {
-      commit('setOrders', [false])
-    })
-}
 
-export function getOrder({commit}, id) {
-  return axiosClient.get(`/orders/${id}`)
-}
+
+
 
 export function getCategories({commit, state}, {
   url = null, 
@@ -428,7 +410,7 @@ export function checkUserRole({commit}, {email}) {
     });
 }
 
-export function getCustomers({commit, state}, {url = null, search = '', per_page, sort_field, sort_direction} = {}) {
+export function getCustomers({commit, state}, {url = null, search = '', per_page, sort_field, sort_direction, status} = {}) {
   commit('setCustomers', [true])
   url = url || '/customers'
   const params = {
@@ -437,31 +419,367 @@ export function getCustomers({commit, state}, {url = null, search = '', per_page
   return axiosClient.get(url, {
     params: {
       ...params,
-      search, per_page, sort_field, sort_direction
+      search, per_page, sort_field, sort_direction, status
     }
   })
-    .then((response) => {
-      commit('setCustomers', [false, response.data])
-    })
-    .catch(() => {
-      commit('setCustomers', [false])
-    })
-
+  .then((response) => {
+    commit('setCustomers', [false, response.data])
+  })
+  .catch((error) => {
+    commit('setCustomers', [false])
+    console.error("Error fetching customers:", error);
+  })
 }
 
-export function getCustomer({commit}, user_id) {
+
+export function getCustomer({commit}, userId) {
+  // Extract user_id consistently, prioritizing user_id if available
+  const user_id = typeof userId === 'object' ? (userId.user_id || userId.id) : userId;
+    
   return axiosClient.get(`/customers/${user_id}`)
-}
-
-export function createCustomer({commit}, customer) {
-  return axiosClient.post('/customers', customer)
+    .then(response => {
+      // Initialize empty address objects if they don't exist
+      if (response.data && !response.data.shippingAddress) {
+        response.data.shippingAddress = {
+          address1: '',
+          address2: '',
+          city: '',
+          state: '',
+          zipcode: '',
+          country_code: ''
+        };
+      }
+      
+      if (response.data && !response.data.billingAddress) {
+        response.data.billingAddress = {
+          address1: '',
+          address2: '',
+          city: '',
+          state: '',
+          zipcode: '',
+          country_code: ''
+        };
+      }
+      
+      return response;
+    });
 }
 
 export function updateCustomer({commit}, customer) {
-  // Make sure we're using user_id instead of id
-  return axiosClient.put(`/customers/${customer.user_id}`, customer);
+  // Create a clean copy of the customer data
+  const customerData = {
+    user_id: customer.user_id,
+    first_name: customer.first_name,
+    last_name: customer.last_name,
+    email: customer.email,
+    status: customer.status
+  };
+  
+  // Check if we have valid address data
+  if (customer.billingAddress && customer.billingAddress.address1 && 
+      customer.billingAddress.address1.trim() !== '') {
+    
+    // Create a clean billing address with explicit empty strings for all fields
+    customerData.billingAddress = {
+      user_id: customerData.user_id,
+      type: 'billing',
+      address1: customer.billingAddress.address1 || '',
+      address2: customer.billingAddress.address2 || '', // Ensures never null
+      city: customer.billingAddress.city || '',
+      state: customer.billingAddress.state || '',
+      zipcode: customer.billingAddress.zipcode || '',
+      country_code: customer.billingAddress.country_code || ''
+    };
+  }
+  
+  if (customer.shippingAddress && customer.shippingAddress.address1 && 
+      customer.shippingAddress.address1.trim() !== '') {
+    
+    // Create a clean shipping address with explicit empty strings for all fields
+    customerData.shippingAddress = {
+      user_id: customerData.user_id,
+      type: 'shipping',
+      address1: customer.shippingAddress.address1 || '',
+      address2: customer.shippingAddress.address2 || '', // Ensures never null
+      city: customer.shippingAddress.city || '',
+      state: customer.shippingAddress.state || '',
+      zipcode: customer.shippingAddress.zipcode || '',
+      country_code: customer.shippingAddress.country_code || ''
+    };
+  }
+  
+  console.log('Sending null-safe customer data:', JSON.stringify(customerData, null, 2));
+  
+  // Send all data in a single request
+  return axiosClient.put(`/customers/${customerData.user_id}`, customerData);
+}
+// Add this function to your actions.js file alongside your other order-related actions
+
+/**
+ * Get a single order by ID
+ * @param {Object} context - Vuex action context
+ * @param {number|string} orderId - The ID of the order to retrieve
+ * @returns {Promise} - Promise with the order data
+ */
+export function getOrder({commit}, orderId) {
+  // You could add a loading state here if needed
+  // commit('setOrderLoading', true);
+  
+  return OrderService.getOrder(orderId)
+    .then(response => {
+      console.log('Order fetched successfully:', response.data);
+      
+      // You could store the current order in state if needed for reuse
+      // commit('setCurrentOrder', response.data);
+      
+      return response;
+    })
+    .catch(error => {
+      console.error('Error fetching order details:', error);
+      
+      // Show toast notification for error
+      commit('showToast', {
+        message: 'Error loading order details.',
+        type: 'error'
+      });
+      
+      throw error;
+    });
 }
 
-export function deleteCustomer({commit}, customer) {
-  return axiosClient.delete(`/customers/${customer.user_id}`)
+// In actions.js
+export function getOrders({commit, state}, params = {}) {
+  commit('setOrders', [true]);
+  
+  return OrderService.getOrders(params)
+    .then((response) => {
+      // Debug the incoming data structure
+      console.log('API response structure:', response);
+      
+      // Make sure we're properly extracting the data
+      // Laravel APIs often wrap the data in a 'data' property
+      const responseData = response.data;
+      
+      // Ensure all orders have IDs for display
+      if (responseData && responseData.data) {
+        responseData.data = responseData.data.map(order => {
+          if (!order.id) {
+            console.warn('Order missing ID:', order);
+            // Provide a temporary ID if needed
+            return { ...order, id: `tmp-${Date.now()}` };
+          }
+          return order;
+        });
+      }
+      
+      commit('setOrders', [false, responseData]);
+      return responseData;
+    })
+    .catch((error) => {
+      // Your existing error handling...
+    });
+}
+
+// Bulk action for orders
+// Replace this function in your actions.js file
+
+export function updateOrdersStatus({commit, dispatch}, {orderIds, status}) {
+  commit('setBulkLoading', true);
+  
+  // Let OrderService handle the actual API calls
+  return OrderService.updateOrdersStatus(orderIds, status)
+    .then(results => {
+      // Check for any failed updates
+      const failedUpdates = results.filter(result => result && result.error);
+      
+      if (failedUpdates.length > 0) {
+        console.warn(`${failedUpdates.length} of ${orderIds.length} order updates failed`);
+        
+        if (failedUpdates.length < orderIds.length) {
+          // Some succeeded, show partial success message
+          commit('showToast', {
+            message: `Updated ${orderIds.length - failedUpdates.length} orders successfully. ${failedUpdates.length} failed.`,
+            type: 'warning'
+          });
+        } else {
+          // All failed
+          throw new Error('All order updates failed');
+        }
+      } else {
+        // All succeeded
+        commit('showToast', {
+          message: `Status updated for ${orderIds.length} orders`,
+          type: 'success'
+        });
+      }
+      
+      // Clear selection
+      commit('clearSelectedOrders');
+      
+      // Refresh orders list
+      return dispatch('getOrders');
+    })
+    .catch(error => {
+      console.error('Error updating orders status:', error);
+      commit('showToast', {
+        message: 'Failed to update orders status',
+        type: 'error'
+      });
+      throw error;
+    })
+    .finally(() => {
+      commit('setBulkLoading', false);
+    });
+}
+
+export function printOrders({commit}, orderIds) {
+  commit('setBulkLoading', true);
+  
+  return OrderService.generateOrdersPdf(orderIds)
+    .then(response => {
+      // Create a blob from the PDF data
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      
+      // Open the PDF in a new tab
+      window.open(url, '_blank');
+      
+      commit('showToast', {
+        message: 'Orders prepared for printing',
+        type: 'success'
+      });
+    })
+    .catch(error => {
+      console.error('Error generating PDF:', error);
+      commit('showToast', {
+        message: 'Failed to prepare orders for printing',
+        type: 'error'
+      });
+      throw error;
+    })
+    .finally(() => {
+      commit('setBulkLoading', false);
+    });
+}
+
+export function exportOrders({commit}, orderIds) {
+  commit('setBulkLoading', true);
+  
+  return OrderService.getOrdersForExport(orderIds)
+    .then(response => {
+      const orders = response.data;
+      
+      // Use the exportOrdersToCsv utility function
+      const filename = `orders_export_${new Date().toISOString().slice(0, 10)}.csv`;
+      exportOrdersToCsv(orders, filename);
+      
+      commit('showToast', {
+        message: `${orders.length} orders exported successfully`,
+        type: 'success'
+      });
+    })
+    .catch(error => {
+      console.error('Error exporting orders:', error);
+      commit('showToast', {
+        message: 'Failed to export orders',
+        type: 'error'
+      });
+      throw error;
+    })
+    .finally(() => {
+      commit('setBulkLoading', false);
+    });
+}
+
+// Dashboard data action
+export function getDashboardData({commit, state}, period = null) {
+  commit('setDashboardLoading', true);
+  
+  // Use provided period or current period from state
+  period = period || state.dashboard.period;
+  
+  // Update period in state
+  if (period !== state.dashboard.period) {
+    commit('setDashboardPeriod', period);
+  }
+  
+  return OrderService.getDashboardData(period)
+    .then(response => {
+      const data = response.data;
+      
+      // Update metrics
+      commit('setDashboardMetrics', data.metrics);
+      
+      // Update charts
+      commit('setDashboardCharts', data.charts);
+      
+      // Update recent orders
+      commit('setRecentOrders', data.recentOrders);
+      
+      return data;
+    })
+    .catch(error => {
+      console.error('Error fetching dashboard data:', error);
+      commit('showToast', {
+        message: 'Failed to load dashboard data',
+        type: 'error'
+      });
+      throw error;
+    })
+    .finally(() => {
+      commit('setDashboardLoading', false);
+    });
+}
+
+// Order notes actions
+export function getOrderNotes({commit}, orderId) {
+  commit('setOrderNotesLoading', true);
+  
+  return OrderService.getOrderNotes(orderId)
+    .then(response => {
+      commit('setOrderNotes', {
+        orderId,
+        notes: response.data
+      });
+      return response.data;
+    })
+    .catch(error => {
+      console.error('Error fetching order notes:', error);
+      commit('showToast', {
+        message: 'Failed to load order notes',
+        type: 'error'
+      });
+      throw error;
+    })
+    .finally(() => {
+      commit('setOrderNotesLoading', false);
+    });
+}
+
+export function createOrderNote({commit}, {orderId, note}) {
+  commit('setOrderNotesSubmitting', true);
+  
+  return OrderService.createOrderNote(orderId, note)
+    .then(response => {
+      commit('addOrderNote', {
+        orderId,
+        note: response.data
+      });
+      commit('showToast', {
+        message: 'Note added successfully',
+        type: 'success'
+      });
+      return response.data;
+    })
+    .catch(error => {
+      console.error('Error adding order note:', error);
+      commit('showToast', {
+        message: 'Failed to add note',
+        type: 'error'
+      });
+      throw error;
+    })
+    .finally(() => {
+      commit('setOrderNotesSubmitting', false);
+    });
 }

@@ -104,20 +104,43 @@ export function setCustomers(state, [loading, data = null]) {
   state.customers.loading = loading;
 }
 
+// Update in mutations.js
 export function setOrders(state, [loading, data = null]) {
   if (data) {
     state.orders = {
       ...state.orders,
-      data: data.data,
-      links: data.meta?.links,
-      page: data.meta.current_page,
-      limit: data.meta.per_page,
-      from: data.meta.from,
-      to: data.meta.to,
-      total: data.meta.total,
+      data: data.data || [],
+      links: data.meta?.links || [],
+      page: data.meta?.current_page || 1,
+      limit: data.meta?.per_page || state.orders.limit,
+      from: data.meta?.from || null,
+      to: data.meta?.to || null,
+      total: data.meta?.total || 0,
     }
   }
   state.orders.loading = loading;
+}
+
+// Bulk order selection mutations
+export function setSelectedOrders(state, orderIds) {
+  state.orders.selected = orderIds;
+}
+
+export function toggleOrderSelection(state, orderId) {
+  const index = state.orders.selected.indexOf(orderId);
+  if (index === -1) {
+    state.orders.selected.push(orderId);
+  } else {
+    state.orders.selected.splice(index, 1);
+  }
+}
+
+export function clearSelectedOrders(state) {
+  state.orders.selected = [];
+}
+
+export function setBulkLoading(state, isLoading) {
+  state.orders.bulkLoading = isLoading;
 }
 
 export function showToast(state, messageOrOptions, type = 'success') {
@@ -205,4 +228,50 @@ export function syncCategoryCounts(state) {
       product_count: categoryCounts[categoryId] || 0 
     }; 
   }); 
+}
+
+// Dashboard mutations
+export function setDashboardLoading(state, loading) {
+  state.dashboard.loading = loading;
+}
+
+export function setDashboardPeriod(state, period) {
+  state.dashboard.period = period;
+}
+
+export function setDashboardMetrics(state, metrics) {
+  state.dashboard.metrics = { ...state.dashboard.metrics, ...metrics };
+}
+
+export function setDashboardCharts(state, charts) {
+  state.dashboard.charts = { ...state.dashboard.charts, ...charts };
+}
+
+export function setRecentOrders(state, orders) {
+  state.dashboard.recentOrders = orders;
+}
+
+// Order notes mutations
+export function setOrderNotesLoading(state, loading) {
+  state.orderNotes.loading = loading;
+}
+
+export function setOrderNotesSubmitting(state, submitting) {
+  state.orderNotes.submitting = submitting;
+}
+
+export function setOrderNotes(state, { orderId, notes }) {
+  // Use Vue.set-like approach for reactivity
+  state.orderNotes.data = {
+    ...state.orderNotes.data,
+    [orderId]: notes
+  };
+}
+
+export function addOrderNote(state, { orderId, note }) {
+  const orderNotes = state.orderNotes.data[orderId] || [];
+  state.orderNotes.data = {
+    ...state.orderNotes.data,
+    [orderId]: [note, ...orderNotes]
+  };
 }

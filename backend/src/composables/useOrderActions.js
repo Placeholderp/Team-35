@@ -1,52 +1,89 @@
+import { ref } from 'vue';
 import axios from '../axios';
 import { useStore } from 'vuex';
 
 export function useOrderActions() {
   const store = useStore();
-
-  const updateOrderStatus = async (orderId, status) => {
+  const loading = ref(false);
+  
+  /**
+   * Update an order's status
+   * @param {Number|String} orderId Order ID
+   * @param {String} status New status
+   * @returns {Promise}
+   */
+  async function updateOrderStatus(orderId, status) {
+    loading.value = true;
+    
     try {
-      const response = await axios.post(`/orders/change-status/${orderId}/${status}`);
-      return response.data;
+      const response = await axios.post(`/orders/${orderId}/status/${status}`);
+      loading.value = false;
+      return response;
     } catch (error) {
-      console.error('Error updating order status:', error);
+      loading.value = false;
       throw error;
     }
-  };
-
-  const printOrder = () => {
+  }
+  
+  /**
+   * Print the current order
+   */
+  function printOrder() {
     window.print();
-  };
-
-  const emailInvoice = async (orderId) => {
+  }
+  
+  /**
+   * Send invoice email for an order
+   * @param {Number|String} orderId Order ID
+   * @returns {Promise}
+   */
+  async function emailInvoice(orderId) {
+    loading.value = true;
+    
     try {
-      await axios.post(`/orders/${orderId}/email-invoice`);
+      const response = await axios.post(`/orders/${orderId}/email-invoice`);
+      loading.value = false;
+      
       store.commit('showToast', {
-        message: 'Invoice has been sent to the customer.',
+        message: 'Invoice email sent successfully',
         type: 'success'
       });
+      
+      return response;
     } catch (error) {
-      console.error('Error sending invoice:', error);
+      loading.value = false;
+      
       store.commit('showToast', {
-        message: 'Error sending invoice email.',
+        message: 'Failed to send invoice email',
         type: 'error'
       });
+      
       throw error;
     }
-  };
-
-  const formatPhoneNumber = (phone) => {
-    if (!phone) return 'N/A';
-    // Basic phone formatting - adjust as needed
-    const cleaned = ('' + phone).replace(/\D/g, '');
-    const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
-    if (match) {
-      return `(${match[1]}) ${match[2]}-${match[3]}`;
+  }
+  
+  /**
+   * Format a phone number
+   * @param {String} phoneNumber Phone number
+   * @returns {String} Formatted phone number
+   */
+  function formatPhoneNumber(phoneNumber) {
+    if (!phoneNumber) return '';
+    
+    // Remove all non-numeric characters
+    const cleaned = String(phoneNumber).replace(/\D/g, '');
+    
+    // Check if the number has the right length for US format
+    if (cleaned.length === 10) {
+      return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6, 10)}`;
     }
-    return phone;
-  };
-
+    
+    // For international or other formats, just return the original
+    return phoneNumber;
+  }
+  
   return {
+    loading,
     updateOrderStatus,
     printOrder,
     emailInvoice,

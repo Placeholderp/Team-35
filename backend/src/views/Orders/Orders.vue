@@ -13,19 +13,43 @@
           <div class="text-sm text-gray-500">Total Orders</div>
           <div class="text-2xl font-semibold">{{ ordersTotal }}</div>
         </div>
+        <div class="bg-white rounded-lg shadow px-4 py-3 border-l-4 border-orange-400">
+          <div class="text-sm text-gray-500">Pending</div>
+          <div class="text-2xl font-semibold">{{ pendingOrders }}</div>
+        </div>
+        <div class="bg-white rounded-lg shadow px-4 py-3 border-l-4 border-yellow-500">
+          <div class="text-sm text-gray-500">Processing</div>
+          <div class="text-2xl font-semibold">{{ processingOrders }}</div>
+        </div>
+        <div class="bg-white rounded-lg shadow px-4 py-3 border-l-4 border-green-500">
+          <div class="text-sm text-gray-500">Paid</div>
+          <div class="text-2xl font-semibold">{{ paidOrders }}</div>
+        </div>
+        <div class="bg-white rounded-lg shadow px-4 py-3 border-l-4 border-purple-500">
+          <div class="text-sm text-gray-500">Shipped</div>
+          <div class="text-2xl font-semibold">{{ shippedOrders }}</div>
+        </div>
+        <div class="bg-white rounded-lg shadow px-4 py-3 border-l-4 border-indigo-500">
+          <div class="text-sm text-gray-500">Delivered</div>
+          <div class="text-2xl font-semibold">{{ deliveredOrders }}</div>
+        </div>
         <div class="bg-white rounded-lg shadow px-4 py-3 border-l-4 border-emerald-500">
           <div class="text-sm text-gray-500">Completed</div>
           <div class="text-2xl font-semibold">{{ completedOrders }}</div>
         </div>
-        <div class="bg-white rounded-lg shadow px-4 py-3 border-l-4 border-orange-400">
-          <div class="text-sm text-gray-500">Pending</div>
-          <div class="text-2xl font-semibold">{{ pendingOrders }}</div>
+        <div class="bg-white rounded-lg shadow px-4 py-3 border-l-4 border-red-500">
+          <div class="text-sm text-gray-500">Cancelled</div>
+          <div class="text-2xl font-semibold">{{ cancelledOrders }}</div>
+        </div>
+        <div class="bg-white rounded-lg shadow px-4 py-3 border-l-4 border-cyan-500">
+          <div class="text-sm text-gray-500">Refunded</div>
+          <div class="text-2xl font-semibold">{{ refundedOrders }}</div>
         </div>
       </div>
     </div>
     
     <!-- Orders Table Component -->
-    <OrdersTable @click-view="viewOrder"/>
+    <OrdersTable @click-view="(order) => viewOrder(order)"/>
   </div>
 </template>
 
@@ -34,6 +58,7 @@ import { computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
 import OrdersTable from "./OrdersTable.vue";
+import { normalizeStatus } from '../../utils/orderstatusUtils';
 
 // Use Composition API for store and router
 const store = useStore();
@@ -44,24 +69,71 @@ const ordersTotal = computed(() => {
   return store.state.orders?.total || 0;
 });
 
-// Calculate order statistics
-const completedOrders = computed(() => {
-  const orderData = store.state.orders?.data || [];
-  return orderData.filter(order => 
-    ['paid', 'completed'].includes(order.status)
-  ).length;
-});
-
+// Calculate order statistics based on exact status names from the dropdown
 const pendingOrders = computed(() => {
   const orderData = store.state.orders?.data || [];
   return orderData.filter(order => 
-    ['unpaid', 'shipped'].includes(order.status)
+    normalizeStatus(order.status) === 'pending'
+  ).length;
+});
+
+const processingOrders = computed(() => {
+  const orderData = store.state.orders?.data || [];
+  return orderData.filter(order => 
+    normalizeStatus(order.status) === 'processing'
+  ).length;
+});
+
+const paidOrders = computed(() => {
+  const orderData = store.state.orders?.data || [];
+  return orderData.filter(order => 
+    normalizeStatus(order.status) === 'paid'
+  ).length;
+});
+
+const shippedOrders = computed(() => {
+  const orderData = store.state.orders?.data || [];
+  return orderData.filter(order => 
+    normalizeStatus(order.status) === 'shipped'
+  ).length;
+});
+
+const deliveredOrders = computed(() => {
+  const orderData = store.state.orders?.data || [];
+  return orderData.filter(order => 
+    normalizeStatus(order.status) === 'delivered'
+  ).length;
+});
+
+const completedOrders = computed(() => {
+  const orderData = store.state.orders?.data || [];
+  return orderData.filter(order => 
+    normalizeStatus(order.status) === 'completed'
+  ).length;
+});
+
+const cancelledOrders = computed(() => {
+  const orderData = store.state.orders?.data || [];
+  return orderData.filter(order => 
+    normalizeStatus(order.status) === 'cancelled'
+  ).length;
+});
+
+const refundedOrders = computed(() => {
+  const orderData = store.state.orders?.data || [];
+  return orderData.filter(order => 
+    normalizeStatus(order.status) === 'refunded'
   ).length;
 });
 
 // Method to view specific order
 function viewOrder(order) {
-  // Navigate to order view
+  console.log("View Order called with:", order); // Add this for debugging
+  if (!order || !order.id) {
+    console.error("Invalid order or missing order ID");
+    return;
+  }
+  // Navigate to order view with the ID
   router.push({ name: 'app.orders.view', params: { id: order.id } });
 }
 
