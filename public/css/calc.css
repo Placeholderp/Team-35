@@ -1,0 +1,259 @@
+/* Calorie Calculator Styles */
+
+/* Hero Section Styles */
+#calculator-hero {
+   
+    padding: 80px 0;
+    margin-bottom: 0;
+    position: relative;
+}
+
+#calculator-hero h1 {
+    font-weight: 700;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+#calculator-hero .lead {
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+
+.calculator-card {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    transition: all 0.3s ease;
+}
+
+.calculator-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.calculator-header h2 {
+    color: #333;
+    font-weight: 600;
+}
+
+/* Form Styling */
+#calorieForm label {
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: #444;
+}
+
+#calorieForm label i {
+    margin-right: 5px;
+    color: #4a90e2;
+}
+
+#calorieForm .form-control {
+    border: 1px solid #e1e1e1;
+    border-radius: 5px;
+    height: 45px;
+    font-size: 1rem;
+    padding: 10px 15px;
+    transition: all 0.3s;
+}
+
+#calorieForm .form-control:focus {
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
+}
+
+#calorieForm .form-text {
+    font-size: 0.75rem;
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: #4a90e2;
+    border-color: #4a90e2;
+    padding: 10px 20px;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.btn-primary:hover, .btn-primary:focus {
+    background-color: #3a7bc8;
+    border-color: #3a7bc8;
+    box-shadow: 0 5px 15px rgba(74, 144, 226, 0.4);
+}
+
+.btn-outline-secondary {
+    color: #666;
+    background-color: transparent;
+    border-color: #ccc;
+    padding: 10px 20px;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #f2f2f2;
+    color: #444;
+}
+
+/* Results Section */
+.results-card {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    margin-top: 20px;
+}
+
+.results-header h3 {
+    color: #333;
+    font-weight: 600;
+}
+
+.calorie-display {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #4a90e2;
+    margin: 15px 0;
+    line-height: 1;
+}
+
+.calorie-display small {
+    font-size: 1rem;
+    display: block;
+    color: #999;
+    font-weight: 400;
+}
+
+.result-detail {
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    transition: all 0.3s;
+}
+
+.result-detail:hover {
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    transform: translateY(-3px);
+}
+
+.result-detail h5 {
+    color: #555;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.result-detail p {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.result-detail small {
+    color: #999;
+    font-size: 0.75rem;
+}
+
+/* Macros Section */
+.macros-section {
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+}
+
+.macro-card {
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.macro-card:hover {
+    transform: translateY(-3px);
+}
+
+.macro-card h6 {
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.macro-card p {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.protein-card {
+    background-color: rgba(74, 144, 226, 0.1);
+    border-left: 4px solid #4a90e2;
+}
+
+.carbs-card {
+    background-color: rgba(240, 173, 78, 0.1);
+    border-left: 4px solid #f0ad4e;
+}
+
+.fat-card {
+    background-color: rgba(92, 184, 92, 0.1);
+    border-left: 4px solid #5cb85c;
+}
+
+#nutrition-tips {
+    background-color: #fff; /* Ensure this section is white */
+}
+
+.tip-card {
+    /* Background color removed */
+    border-radius: 8px;
+    padding: 25px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    height: 100%;
+    transition: all 0.3s;
+}
+
+.tip-card:hover {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    transform: translateY(-5px);
+}
+
+.tip-icon {
+    font-size: 2.5rem;
+    color: #4a90e2;
+    margin-bottom: 15px;
+}
+
+.tip-card h5 {
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.tip-card p {
+    color: #666;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 767px) {
+    .calculator-card, .results-card {
+        padding: 20px;
+    }
+    
+    .calorie-display {
+        font-size: 2.5rem;
+    }
+    
+    .result-detail, .macro-card {
+        margin-bottom: 15px;
+    }
+}
+
+/* Animation for results display */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+#results-container.show {
+    display: block !important;
+    animation: fadeIn 0.5s ease-out forwards;
+}

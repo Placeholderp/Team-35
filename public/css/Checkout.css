@@ -1,0 +1,125 @@
+/********************************
+Developer: Hussain Alwazan
+University ID: 230049123
+Function: This page is to display items and purchase it.
+********************************/
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@100;400;500;600;700&display=swap');
+
+* {
+    font-family: "Poppins", sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --main-color: #e65c00;
+    --text-color: #333333;
+    --bg1-color: #e65c00;
+    --bg-color: #ffffff;
+    --container-color: #ffffff;
+    --bg2-color: #e65c00;
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: var(--container-color);
+    padding: 25px;
+    box-shadow: 0 0 20px rgba(230, 92, 0, 0.1);
+}
+
+.container form {
+    width: 700px;
+    padding: 40px;
+    background: var(--bg-color);
+    border-radius: 10px;
+    border: 2px solid var(--main-color);
+}
+
+form .row {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.row .column {
+    flex: 1 1 250px;
+}
+
+.column .title {
+    font-size: 20px;
+    color: var(--main-color);
+    text-transform: uppercase;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.column .input-box {
+    margin: 15px 0;
+}
+
+.input-box span {
+    display: block;
+    margin-bottom: 10px;
+    color: var(--text-color);
+}
+
+.input-box input {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid var(--main-color);
+    border-radius: 6px;
+    font-size: 15px;
+}
+
+.input-box input:focus {
+    outline: none;
+    border-color: var(--main-color);
+    box-shadow: 0 0 5px rgba(230, 92, 0, 0.3);
+}
+
+.input-box input[type="month"] {
+    width: 100%;
+    padding: 9px 15px;
+    border: 1px solid var(--main-color);
+    border-radius: 6px;
+    font-size: 15px;
+}
+
+.input-box img {
+    height: 34px;
+    margin-top: 5px;
+    filter: drop-shadow(0 0 1px var(--text-color));
+}
+
+form .btn {
+    width: 100%;
+    padding: 12px;
+    background: var(--bg2-color);
+    border: none;
+    outline: none;
+    border-radius: 6px;
+    font-size: 17px;
+    color: var(--bg-color);
+    margin-top: 15px;
+    cursor: pointer;
+    transition: .3s;
+    font-weight: 600;
+}
+
+form .btn:hover {
+    background: #cc5200;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(230, 92, 0, 0.4);
+}
+
+#result {
+    text-align: center;
+    margin-top: 15px;
+    color: var(--main-color);
+    font-weight: 600;
+}
