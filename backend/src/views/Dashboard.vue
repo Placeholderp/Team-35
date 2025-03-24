@@ -79,9 +79,8 @@
               <span>12% from last period</span>
             </div>
             
-            <!-- Added mini-chart for trend visualization -->
             <div class="absolute bottom-0 right-0 h-10 w-24 opacity-25">
-              <MiniLineChart :data="customerTrendData" color="#6366F1" />
+              <MiniLineChart v-if="customerTrendData.length > 0" :data="customerTrendData" color="#6366F1" />
             </div>
           </template>
           <Spinner v-else text="" />
@@ -113,9 +112,8 @@
               <span>4% from last period</span>
             </div>
             
-            <!-- Added mini-chart for trend visualization -->
             <div class="absolute bottom-0 right-0 h-10 w-24 opacity-25">
-              <MiniLineChart :data="productTrendData" color="#10B981" />
+              <MiniLineChart v-if="productTrendData.length > 0" :data="productTrendData" color="#10B981" />
             </div>
           </template>
           <Spinner v-else text="" />
@@ -147,9 +145,8 @@
               <span>8% from last period</span>
             </div>
             
-            <!-- Added mini-chart for trend visualization -->
             <div class="absolute bottom-0 right-0 h-10 w-24 opacity-25">
-              <MiniLineChart :data="orderTrendData" color="#FBBF24" />
+              <MiniLineChart v-if="orderTrendData.length > 0" :data="orderTrendData" color="#FBBF24" />
             </div>
           </template>
           <Spinner v-else text="" />
@@ -181,9 +178,8 @@
               <span>15% from last period</span>
             </div>
             
-            <!-- Added mini-chart for trend visualization -->
             <div class="absolute bottom-0 right-0 h-10 w-24 opacity-25">
-              <MiniLineChart :data="revenueTrendData" color="#F87171" />
+              <MiniLineChart v-if="revenueTrendData.length > 0" :data="revenueTrendData" color="#F87171" />
             </div>
           </template>
           <Spinner v-else text="" />
@@ -198,7 +194,7 @@
         <!-- Latest Orders with improved list styling -->
         <div
           class="col-span-1 md:col-span-2 row-span-1 md:row-span-2
-                 bg-white rounded-xl shadow-sm p-6"
+                 bg-white rounded-xl shadow-sm p-6 latest-orders-section"
         >
           <div class="flex items-center justify-between mb-5">
             <div class="flex items-center">
@@ -231,15 +227,24 @@
                 class="p-4 hover:bg-gray-50 border border-gray-100 rounded-lg last:border-b transition-colors group"
               >
                 <div class="flex justify-between items-center mb-2">
-                  <router-link
-                    :to="{ name: 'app.orders.view', params: { id: o.id } }"
-                    class="text-indigo-700 font-semibold flex items-center group-hover:text-indigo-800"
-                  >
-                    <span class="mr-2">Order #{{ o.id }}</span>
-                    <span class="px-2 py-1 text-xs rounded-full bg-indigo-50 text-indigo-700 group-hover:bg-indigo-100">
-                      {{ o.items }} items
+                  <div class="flex items-center">
+                    <router-link
+                      :to="{ name: 'app.orders.view', params: { id: o.id } }"
+                      class="text-indigo-700 font-semibold flex items-center group-hover:text-indigo-800"
+                    >
+                      <span class="mr-2">Order #{{ o.id }}</span>
+                      <span class="px-2 py-1 text-xs rounded-full bg-indigo-50 text-indigo-700 group-hover:bg-indigo-100">
+                        {{ o.items }} items
+                      </span>
+                    </router-link>
+                    <!-- Highlight if order is in selected category -->
+                    <span 
+                      v-if="selectedRevenueCategory && filteredOrdersByCategory.some(order => order.id === o.id)"
+                      class="ml-2 px-2 py-0.5 text-xs font-medium bg-green-100 text-green-800 rounded-full"
+                    >
+                      {{ selectedRevenueCategory }}
                     </span>
-                  </router-link>
+                  </div>
                   <span class="text-sm font-medium text-gray-500">
                     {{ o.created_at }}
                   </span>
@@ -258,7 +263,7 @@
                     </span>
                   </div>
                   <div class="flex items-center">
-                    <OrderStatus :status="o.status || 'paid'" class="mr-2" />
+                    <OrderStatus :order="o" :status="o.status || 'paid'" class="mr-2" />
                     <span class="font-semibold text-gray-800">
                       {{ $filters.currencyUSD(o.total_price) }}
                     </span>
@@ -273,46 +278,95 @@
           <Spinner v-else text="Loading orders..." />
         </div>
 
-        <!-- Orders by Country -->
+        <!-- Revenue Breakdown -->
         <div
           class="bg-white rounded-xl shadow-sm p-6 flex flex-col"
         >
           <div class="flex items-center mb-5 justify-between">
             <div class="flex items-center">
-              <div class="w-1 h-6 bg-green-600 rounded mr-3"></div>
+              <div class="p-2 rounded-full bg-red-50 mr-3">
+                <CurrencyDollarIcon class="h-5 w-5 text-red-600" />
+              </div>
               <h2 class="text-lg font-bold text-gray-800">
-                Global Market Reach
+                Revenue Breakdown
               </h2>
             </div>
-            <button 
-              @click="toggleChartView"
-              class="p-1.5 bg-gray-100 rounded text-gray-500 hover:bg-gray-200 hover:text-gray-700" 
-              title="Toggle chart view"
-            >
-              <ChartBarIcon v-if="chartView === 'doughnut'" class="h-4 w-4" />
-              <ChartPieIcon v-else class="h-4 w-4" />
-            </button>
+            <div class="flex space-x-2">
+              <button 
+                @click="refreshRevenueData" 
+                class="p-1.5 rounded text-red-600 hover:bg-red-50" 
+                title="Refresh revenue data"
+                :disabled="loading.revenueData"
+              >
+                <RefreshIcon class="h-4 w-4" :class="{'animate-spin': loading.revenueData}" />
+              </button>
+              <button 
+                @click="toggleChartView"
+                class="p-1.5 bg-gray-100 rounded text-gray-500 hover:bg-gray-200 hover:text-gray-700" 
+                title="Toggle chart view"
+              >
+                <ChartBarIcon v-if="chartView === 'doughnut'" class="h-4 w-4" />
+                <ChartPieIcon v-else class="h-4 w-4" />
+              </button>
+            </div>
           </div>
           
-          <template v-if="!loading.ordersByCountry && ordersByCountry.labels && ordersByCountry.labels.length">
+          <template v-if="!loading.revenueData && revenueChartData.labels && revenueChartData.labels.length">
             <div class="flex-1 flex items-center justify-center">
+              <!-- Added click handler to each segment to filter orders -->
               <DoughnutChart
                 v-if="chartView === 'doughnut'"
                 :width="165"
                 :height="200"
-                :data="ordersByCountry"
+                :data="revenueChartData"
+                @segment-click="onRevenueSegmentClick"
               />
               <BarChart
                 v-else
-                :data="ordersByCountry"
+                :data="revenueChartData"
                 :height="200"
+                @segment-click="onRevenueSegmentClick"
               />
             </div>
+            
+            <!-- Connection to orders - added category filter indicator -->
+            <div v-if="selectedRevenueCategory" class="mt-4 py-2 px-3 bg-indigo-50 rounded-lg flex justify-between items-center text-sm">
+              <div class="flex items-center">
+                <span class="font-medium text-indigo-700">
+                  Filtering: {{ selectedRevenueCategory }}
+                </span>
+                <span class="ml-2 text-indigo-600">
+                  ({{ filteredOrdersByCategory.length }} orders)
+                </span>
+              </div>
+              <button 
+                @click="clearRevenueCategoryFilter" 
+                class="text-indigo-600 hover:text-indigo-800"
+                title="Clear filter"
+              >
+                <XIcon class="h-4 w-4" />
+              </button>
+            </div>
+            
+            <!-- Top performing products in selected category -->
+            <div v-if="selectedRevenueCategory && topProductsInCategory.length" class="mt-3">
+              <h4 class="text-sm font-medium text-gray-700 mb-2">Top Products in {{ selectedRevenueCategory }}</h4>
+              <div class="space-y-2">
+                <div 
+                  v-for="product in topProductsInCategory" 
+                  :key="product.id"
+                  class="flex justify-between items-center text-sm py-1.5 px-2 hover:bg-gray-50 rounded"
+                >
+                  <span class="truncate">{{ product.name }}</span>
+                  <span class="font-medium text-gray-700">{{ $filters.currencyUSD(product.revenue) }}</span>
+                </div>
+              </div>
+            </div>
           </template>
-          <div v-else-if="!loading.ordersByCountry && (!ordersByCountry.labels || !ordersByCountry.labels.length)" class="py-8 text-center text-gray-500">
-            No country data available
+          <div v-else-if="!loading.revenueData && (!revenueChartData.labels || !revenueChartData.labels.length)" class="py-8 text-center text-gray-500">
+            No revenue data available
           </div>
-          <Spinner v-else text="Loading chart..." />
+          <Spinner v-else text="Loading revenue data..." />
         </div>
 
         <!-- Latest Customers with improved styling -->
@@ -321,7 +375,7 @@
             <div class="flex items-center">
               <div class="w-1 h-6 bg-yellow-600 rounded mr-3"></div>
               <h2 class="text-lg font-bold text-gray-800">
-                Latest Fitness Enthusiasts
+                New Customers Added
               </h2>
             </div>
             <div class="flex items-center space-x-2">
@@ -344,18 +398,17 @@
             <div class="space-y-3">
               <router-link
                 v-for="c in filteredCustomers"
-                :key="c.id"
-                :to="{ name: 'app.customers.view', params: { id: c.id } }"
+                :key="c.user_id || c.id"
+                :to="{ name: 'app.customers.view', params: { id: c.user_id || c.id } }"
                 class="flex items-center hover:bg-gray-50
                       p-3 rounded-lg transition-colors border border-gray-100 group"
               >
                 <div
                   class="w-10 h-10 flex items-center justify-center
                         rounded-full mr-3 group-hover:bg-indigo-100 transition-colors"
-                  :class="getCustomerAvatarColor(c.id)"
+                  :class="getCustomerAvatarColor(c.user_id || c.id)"
                 >
-                  <span v-if="c.avatar" class="text-md font-semibold text-white">{{ getCustomerInitials(c) }}</span>
-                  <UserIcon v-else class="w-5 h-5 text-indigo-600" />
+                  <span class="text-md font-semibold text-white">{{ getCustomerInitials(c) }}</span>
                 </div>
                 <div>
                   <h3 class="font-semibold text-gray-800">
@@ -401,7 +454,8 @@ import {
   SearchIcon,
   ChartBarIcon,
   ChartPieIcon,
-  LightBulbIcon
+  LightBulbIcon,
+  XIcon
 } from '@heroicons/vue/outline'
 
 // Local components
@@ -410,11 +464,13 @@ import CustomInput from '../components/core/CustomInput.vue'
 import DoughnutChart from '../components/core/Charts/Doughnut.vue'
 import BarChart from '../components/core/Charts/Bar.vue'
 import MiniLineChart from '../components/core/Charts/MiniLine.vue'
-import OrderStatusBadge from '../views/Orders/OrderStatus.vue'
+import OrderStatus from '../views/Orders/OrderStatus.vue'
 
-// Access store
+// Access store and route
 const store = useStore()
-const route = useRoute() // Add route to detect navigation changes
+const route = useRoute()
+
+// Date options
 const dateOptions = computed(() => {
   const storeOptions = store.state.dateOptions;
   
@@ -444,13 +500,17 @@ const customerSearchQuery = ref('')
 // Chart view toggle
 const chartView = ref('doughnut') // doughnut or bar
 
+// Revenue category filter
+const selectedRevenueCategory = ref(null)
+const rawRevenueData = ref([]) // Store the original data for filtering
+
 // Loading states
 const loading = ref({
   customersCount: true,
   productsCount: true,
   paidOrders: true,
   totalIncome: true,
-  ordersByCountry: true,
+  revenueData: true,
   latestCustomers: true,
   latestOrders: true
 })
@@ -460,13 +520,17 @@ const customersCount = ref(0)
 const productsCount = ref(0)
 const paidOrders = ref(0)
 const totalIncome = ref(0)
-const ordersByCountry = ref({
+const latestCustomers = ref([])
+const latestOrders = ref([])
+
+// Revenue chart data
+const revenueChartData = ref({
   labels: [],
   datasets: [
     {
       backgroundColor: [
-        '#818CF8', // Lighter indigo
-        '#34D399', // Green
+        '#34D399', // Green (primary for revenue)
+        '#818CF8', // Indigo
         '#FBBF24', // Yellow
         '#F87171', // Red
         '#60A5FA', // Blue
@@ -477,40 +541,39 @@ const ordersByCountry = ref({
     }
   ]
 })
-const latestCustomers = ref([])
-const latestOrders = ref([])
 
-// Mini trend chart data (mock data for visualization)
-const customerTrendData = ref([4, 6, 5, 8, 7, 9, 10, 12])
-const productTrendData = ref([20, 18, 22, 25, 27, 24, 28, 30])
-const orderTrendData = ref([12, 18, 15, 22, 30, 35, 32, 40])
-const revenueTrendData = ref([800, 950, 1100, 980, 1250, 1400, 1350, 1600])
+// Load trend data from API
+const customerTrendData = ref([])
+const productTrendData = ref([])
+const orderTrendData = ref([])
+const revenueTrendData = ref([])
 
-// AI-driven performance insight
-const performanceInsights = [
-  "Protein supplements sales are up 22% this month with strong performance in the female demographic.",
-  "New fitness enthusiast acquisition is outpacing last quarter by 17%.",
-  "Product category 'Strength Training' has shown the highest growth rate of 31%.",
-  "Order volume from health-conscious markets increased by 24% this period.",
-  "Customer retention rate has improved to 72%, up from 65% last period."
-]
-const performanceInsight = computed(() => {
-  // In a real implementation, this would be dynamic based on actual data analysis
-  return performanceInsights[Math.floor(Math.random() * performanceInsights.length)]
-})
+// Performance insight from API
+const performanceInsight = ref("")
 
 // Filtered results for search functionality
 const filteredOrders = computed(() => {
-  if (!orderSearchQuery.value) return latestOrders.value
-  
+  // First filter by search query
+  let result = latestOrders.value
   const query = orderSearchQuery.value.toLowerCase()
-  return latestOrders.value.filter(order => {
-    return (
-      order.id.toString().includes(query) ||
-      `${order.first_name} ${order.last_name}`.toLowerCase().includes(query) ||
-      order.total_price.toString().includes(query)
-    )
-  })
+  
+  if (query) {
+    result = result.filter(order => {
+      return (
+        order.id.toString().includes(query) ||
+        `${order.first_name} ${order.last_name}`.toLowerCase().includes(query) ||
+        order.total_price.toString().includes(query)
+      )
+    })
+  }
+  
+  // Then filter by selected revenue category if any
+  if (selectedRevenueCategory.value) {
+    const orderIds = new Set(filteredOrdersByCategory.value.map(order => order.id))
+    result = result.filter(order => orderIds.has(order.id))
+  }
+  
+  return result
 })
 
 const filteredCustomers = computed(() => {
@@ -525,17 +588,219 @@ const filteredCustomers = computed(() => {
   })
 })
 
+// Orders filtered by selected revenue category
+const filteredOrdersByCategory = computed(() => {
+  if (!selectedRevenueCategory.value || !rawRevenueData.value.ordersByCategory) {
+    return []
+  }
+  
+  return rawRevenueData.value.ordersByCategory[selectedRevenueCategory.value] || []
+})
+
+// Top products in the selected category
+const topProductsInCategory = computed(() => {
+  if (!selectedRevenueCategory.value || !rawRevenueData.value.products) {
+    return []
+  }
+  
+  return rawRevenueData.value.products
+    .filter(product => product.category === selectedRevenueCategory.value)
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 3) // Show top 3 products
+})
+
+// Process revenue data for chart display with enhanced info for interaction
+function processRevenueData(apiData) {
+  const chartData = {
+    labels: [],
+    datasets: [
+      {
+        backgroundColor: [
+          '#34D399', // Green (primary for revenue)
+          '#818CF8', // Indigo
+          '#FBBF24', // Yellow
+          '#F87171', // Red
+          '#60A5FA', // Blue
+          '#FDBA74'  // Orange
+        ],
+        borderWidth: 0,
+        data: [],
+        categoryNames: [] // Store original category names for filtering
+      }
+    ]
+  }
+  
+  // Check if data is directly an array or has a nested data property
+  const categories = Array.isArray(apiData) ? apiData : (apiData?.data || [])
+  
+  if (categories && categories.length) {
+    console.log('Processing revenue breakdown:', categories)
+    
+    // Sort categories by revenue amount for better display
+    const sortedCategories = [...categories].sort((a, b) => {
+      // Get revenue amount safely with fallbacks
+      const amountA = a.revenue_amount || a.revenue || a.amount || a.total || 0
+      const amountB = b.revenue_amount || b.revenue || b.amount || b.total || 0
+      return amountB - amountA
+    }).slice(0, 6) // Limit to top 6 for chart readability
+    
+    sortedCategories.forEach(category => {
+      // Handle different possible property names
+      const name = category.category_name || category.name || category.title || 'Other'
+      const amount = category.revenue_amount || category.revenue || category.amount || category.total || 0
+      
+      // Format the label to include the amount
+      const formattedAmount = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(amount)
+      
+      // Only add categories with an amount > 0
+      if (amount > 0) {
+        chartData.labels.push(`${name} (${formattedAmount})`)
+        chartData.datasets[0].data.push(amount)
+        chartData.datasets[0].categoryNames.push(name) // Store original name
+      }
+    })
+  }
+  
+  return chartData
+}
+
+// Extract revenue breakdown from orders with enhanced detail
+function extractRevenueFromOrders(orders) {
+  const categoryRevenue = {}
+  const productRevenue = {}
+  const ordersByCategory = {}
+  
+  orders.forEach(order => {
+    if (order.items && Array.isArray(order.items)) {
+      // Track which categories are in each order
+      const categoriesInOrder = new Set()
+      
+      order.items.forEach(item => {
+        if (item.product) {
+          const category = item.product.category?.name || 'Uncategorized'
+          const productId = item.product.id
+          const productName = item.product.name || `Product ${productId}`
+          const revenue = (item.price || 0) * (item.quantity || 1)
+          
+          // Add to category revenue
+          if (!categoryRevenue[category]) {
+            categoryRevenue[category] = 0
+          }
+          categoryRevenue[category] += revenue
+          
+          // Add to product revenue
+          const productKey = `${productId}-${category}`
+          if (!productRevenue[productKey]) {
+            productRevenue[productKey] = {
+              id: productId,
+              name: productName,
+              category,
+              revenue: 0
+            }
+          }
+          productRevenue[productKey].revenue += revenue
+          
+          // Mark this category as included in this order
+          categoriesInOrder.add(category)
+        }
+      })
+      
+      // Add this order to each category it contains products from
+      categoriesInOrder.forEach(category => {
+        if (!ordersByCategory[category]) {
+          ordersByCategory[category] = []
+        }
+        ordersByCategory[category].push(order)
+      })
+    }
+  })
+  
+  // Convert category revenue to array and sort by revenue
+  const categorySummary = Object.entries(categoryRevenue)
+    .map(([category, amount]) => ({
+      category_name: category,
+      revenue_amount: amount,
+      orders: ordersByCategory[category] || []
+    }))
+    .sort((a, b) => b.revenue_amount - a.revenue_amount)
+    .slice(0, 6) // Get top 6 categories
+  
+  // Convert product revenue to array and sort by revenue
+  const productSummary = Object.values(productRevenue)
+    .sort((a, b) => b.revenue - a.revenue)
+  
+  // Store raw data for filtering
+  rawRevenueData.value = {
+    categories: categorySummary,
+    products: productSummary,
+    ordersByCategory: ordersByCategory
+  }
+  
+  return categorySummary
+}
+
 // Handle API errors
 function handleApiError(endpoint, error) {
   console.error(`Error fetching ${endpoint}:`, error)
+  
   // Set corresponding loading state to false to prevent infinite loading
   if (endpoint.includes('customers-count')) loading.value.customersCount = false
   else if (endpoint.includes('products-count')) loading.value.productsCount = false
   else if (endpoint.includes('orders-count')) loading.value.paidOrders = false
   else if (endpoint.includes('income-amount')) loading.value.totalIncome = false
-  else if (endpoint.includes('orders-by-country')) loading.value.ordersByCountry = false
+  else if (endpoint.includes('revenue-breakdown')) loading.value.revenueData = false
   else if (endpoint.includes('latest-customers')) loading.value.latestCustomers = false
   else if (endpoint.includes('latest-orders')) loading.value.latestOrders = false
+}
+
+// Fetch revenue data
+function fetchRevenueData() {
+  loading.value.revenueData = true
+  const d = chosenDate.value
+  
+  axiosClient
+    .get('/dashboard/revenue-breakdown', { params: { d } })
+    .then(({ data }) => {
+      console.log('Revenue API response:', data)
+      revenueChartData.value = processRevenueData(data)
+      loading.value.revenueData = false
+    })
+    .catch(error => {
+      console.error('Failed to load revenue breakdown, trying fallback:', error)
+      
+      // Try fallback to orders API to extract revenue breakdown
+      axiosClient
+        .get('/orders', { 
+          params: { 
+            per_page: 50,
+            include: 'items.product',
+            sort_field: 'created_at',
+            sort_direction: 'desc'
+          } 
+        })
+        .then(response => {
+          const orders = response.data?.data || []
+          console.log('Fallback: Processing orders to calculate revenue breakdown')
+          
+          if (orders.length > 0) {
+            const revenueData = extractRevenueFromOrders(orders)
+            revenueChartData.value = processRevenueData(revenueData)
+          } else {
+            revenueChartData.value = { labels: [], datasets: [{ backgroundColor: [], data: [] }] }
+          }
+          loading.value.revenueData = false
+        })
+        .catch(fallbackError => {
+          console.error('Fallback to orders also failed:', fallbackError)
+          revenueChartData.value = { labels: [], datasets: [{ backgroundColor: [], data: [] }] }
+          loading.value.revenueData = false
+        })
+    })
 }
 
 // Fetch dashboard data
@@ -552,6 +817,7 @@ function updateDashboard() {
   latestOrders.value = []
   latestCustomers.value = []
   
+  // Fetch customers count
   axiosClient
     .get('/dashboard/customers-count', { params: { d } })
     .then(({ data }) => {
@@ -560,6 +826,7 @@ function updateDashboard() {
     })
     .catch(error => handleApiError('customers-count', error))
 
+  // Fetch products count
   axiosClient
     .get('/dashboard/products-count', { params: { d } })
     .then(({ data }) => {
@@ -568,6 +835,7 @@ function updateDashboard() {
     })
     .catch(error => handleApiError('products-count', error))
 
+  // Fetch orders count
   axiosClient
     .get('/dashboard/orders-count', { params: { d } })
     .then(({ data }) => {
@@ -576,6 +844,7 @@ function updateDashboard() {
     })
     .catch(error => handleApiError('orders-count', error))
 
+  // Fetch total income
   axiosClient
     .get('/dashboard/income-amount', { params: { d } })
     .then(({ data }) => {
@@ -588,48 +857,37 @@ function updateDashboard() {
     })
     .catch(error => handleApiError('income-amount', error))
 
-  axiosClient
-    .get('/dashboard/orders-by-country', { params: { d } })
-    .then(({ data: countries }) => {
-      loading.value.ordersByCountry = false
-      
-      const chartData = {
-        labels: [],
-        datasets: [
-          {
-            backgroundColor: [
-              '#818CF8', // Lighter indigo
-              '#34D399', // Green
-              '#FBBF24', // Yellow
-              '#F87171', // Red
-              '#60A5FA', // Blue
-              '#FDBA74'  // Orange
-            ],
-            borderWidth: 0,
-            data: []
-          }
-        ]
-      }
-      
-      if (countries && countries.length) {
-        countries.forEach(country => {
-          chartData.labels.push(country.name)
-          chartData.datasets[0].data.push(country.count)
-        })
-      }
-      
-      ordersByCountry.value = chartData
-    })
-    .catch(error => handleApiError('orders-by-country', error))
-
+  // Fetch revenue breakdown data
+  fetchRevenueData()
+  
+  // Fetch latest customers
   axiosClient
     .get('/dashboard/latest-customers', { params: { d } })
-    .then(({ data: customers }) => {
-      latestCustomers.value = customers || []
+    .then(({ data }) => {
+      latestCustomers.value = data || []
       loading.value.latestCustomers = false
     })
-    .catch(error => handleApiError('latest-customers', error))
+    .catch(error => {
+      console.error('Failed to load latest customers:', error)
+      // Try fallback to customers API if dashboard endpoint fails
+      axiosClient
+        .get('/customers', { params: { per_page: 4, sort_field: 'created_at', sort_direction: 'desc' } })
+        .then(response => {
+          if (response.data && response.data.data) {
+            latestCustomers.value = response.data.data
+          } else {
+            latestCustomers.value = []
+          }
+          loading.value.latestCustomers = false
+        })
+        .catch(fallbackError => {
+          console.error('Both customer endpoints failed:', fallbackError)
+          latestCustomers.value = []
+          loading.value.latestCustomers = false
+        })
+    })
 
+  // Fetch latest orders
   axiosClient
     .get('/dashboard/latest-orders', { params: { d } })
     .then(({ data: orders }) => {
@@ -637,23 +895,71 @@ function updateDashboard() {
       loading.value.latestOrders = false
     })
     .catch(error => handleApiError('latest-orders', error))
+    
+  // Load trend data and performance insight
+  axiosClient
+    .get('/dashboard/trend-data', { params: { d } })
+    .then(({ data }) => {
+      if (data.customers) customerTrendData.value = data.customers
+      if (data.products) productTrendData.value = data.products
+      if (data.orders) orderTrendData.value = data.orders
+      if (data.revenue) revenueTrendData.value = data.revenue
+    })
+    .catch(error => console.error('Failed to load trend data:', error))
+    
+  axiosClient
+    .get('/dashboard/performance-insight', { params: { d } })
+    .then(({ data }) => {
+      performanceInsight.value = data.message || ""
+    })
+    .catch(error => console.error('Failed to load performance insight:', error))
 }
 
+// Date picker change handler
 function onDatePickerChange() {
   updateDashboard()
 }
 
+// Refresh all dashboard data
 function refreshData() {
   updateDashboard()
 }
 
+// Refresh only revenue data
+function refreshRevenueData() {
+  fetchRevenueData()
+}
+
+// Toggle chart view between doughnut and bar
 function toggleChartView() {
   chartView.value = chartView.value === 'doughnut' ? 'bar' : 'doughnut'
 }
 
+// Handle click on revenue chart segment
+function onRevenueSegmentClick(index) {
+  if (index >= 0 && index < revenueChartData.value.datasets[0].categoryNames.length) {
+    const categoryName = revenueChartData.value.datasets[0].categoryNames[index]
+    selectedRevenueCategory.value = categoryName
+    
+    // Scroll to orders section to show filtered results
+    setTimeout(() => {
+      const ordersSection = document.querySelector('.latest-orders-section')
+      if (ordersSection) {
+        ordersSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    }, 100)
+  }
+}
+
+// Clear revenue category filter
+function clearRevenueCategoryFilter() {
+  selectedRevenueCategory.value = null
+}
+
 // Customer avatar/initials helper functions
 function getCustomerInitials(customer) {
-  return (customer.first_name?.[0] || '') + (customer.last_name?.[0] || '')
+  if (!customer) return '';
+  return (customer.first_name?.[0] || '') + (customer.last_name?.[0] || '');
 }
 
 function getCustomerAvatarColor(id) {
@@ -664,9 +970,46 @@ function getCustomerAvatarColor(id) {
     'bg-yellow-500',
     'bg-red-500',
     'bg-purple-500'
-  ]
-  // Ensure consistent color based on customer ID
-  return colors[id % colors.length]
+  ];
+  // Ensure consistent color based on customer ID and handle non-numeric IDs
+  const idNumber = typeof id === 'number' ? id : (parseInt(id) || 0);
+  return colors[idNumber % colors.length];
+}
+
+// Refresh customers and revenue data
+function refreshSpecificSections() {
+  // Reset loading flags for specific sections
+  loading.value.revenueData = true
+  loading.value.latestCustomers = true
+  
+  // Fetch revenue data
+  fetchRevenueData()
+  
+  // Fetch latest customers
+  const d = chosenDate.value
+  axiosClient
+    .get('/dashboard/latest-customers', { params: { d } })
+    .then(({ data }) => {
+      latestCustomers.value = data || []
+      loading.value.latestCustomers = false
+    })
+    .catch(error => {
+      console.error('Failed to refresh latest customers:', error)
+      // Try fallback to customers API
+      axiosClient
+        .get('/customers', { params: { per_page: 4, sort_field: 'created_at', sort_direction: 'desc' } })
+        .then(response => {
+          if (response.data && response.data.data) {
+            latestCustomers.value = response.data.data
+          } else {
+            latestCustomers.value = []
+          }
+          loading.value.latestCustomers = false
+        })
+        .catch(fallbackError => {
+          loading.value.latestCustomers = false
+        })
+    })
 }
 
 // Add both onMounted and onActivated hooks

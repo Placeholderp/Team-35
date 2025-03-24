@@ -1,3 +1,4 @@
+
 <script>
 import { defineComponent, h } from 'vue'
 
@@ -48,10 +49,41 @@ export default defineComponent({
       required: true
     }
   },
-  setup(props) {
+  emits: ['segment-click'],
+  setup(props, { emit }) {
+    // Enhanced chart options with hover effects and segment click event
     const chartOptions = {
       responsive: true,
-      maintainAspectRatio: false
+      maintainAspectRatio: false,
+      cutout: '70%', // Makes doughnut hole larger for better look
+      plugins: {
+        legend: {
+          display: false, // We'll use custom legend outside
+        },
+        tooltip: {
+          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+          titleColor: '#334155', // slate-700
+          bodyColor: '#334155', // slate-700
+          borderColor: '#e2e8f0', // slate-200
+          borderWidth: 1,
+          padding: 12,
+          boxPadding: 6,
+          usePointStyle: true,
+          bodyFont: {
+            size: 13,
+          },
+          titleFont: {
+            size: 14,
+            weight: 'bold',
+          },
+        },
+      },
+      onClick: (e, elements) => {
+        if (elements && elements.length > 0) {
+          const index = elements[0].index;
+          emit('segment-click', index);
+        }
+      }
     }
 
     return () =>
@@ -68,3 +100,4 @@ export default defineComponent({
   }
 })
 </script>
+

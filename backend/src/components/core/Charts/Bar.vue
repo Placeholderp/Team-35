@@ -1,3 +1,4 @@
+// UPDATED BAR.VUE
 <script>
 import { defineComponent, h } from 'vue'
 import { Bar } from 'vue-chartjs'
@@ -46,7 +47,8 @@ export default defineComponent({
       required: true
     }
   },
-  setup(props) {
+  emits: ['segment-click'],
+  setup(props, { emit }) {
     // Enhanced chart options with better styling
     const chartOptions = {
       responsive: true,
@@ -104,6 +106,12 @@ export default defineComponent({
           },
         },
       },
+      onClick: (e, elements) => {
+        if (elements && elements.length > 0) {
+          const index = elements[0].index;
+          emit('segment-click', index);
+        }
+      }
     }
 
     // Process data to add spacing between bars
@@ -126,7 +134,7 @@ export default defineComponent({
         height: props.height,
         cssClasses: props.cssClasses,
         styles: props.styles,
-        plugins: props.plugins,
+        plugins: props.plugins
       })
   }
 })

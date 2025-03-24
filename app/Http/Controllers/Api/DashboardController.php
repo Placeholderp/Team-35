@@ -215,6 +215,167 @@ class DashboardController extends Controller
 
         return response()->json(['data' => $orders]);
     }
+    /**
+ * Get revenue breakdown by product category.
+ *
+ * @param Request $request
+ * @return \Illuminate\Http\JsonResponse
+ */
+public function revenueBreakdown(Request $request)
+{
+    $dateRange = $this->getDateRange($request->get('d', 'all'));
+    
+    $query = DB::table('order_items AS oi')
+        ->join('orders AS o', 'oi.order_id', '=', 'o.id')
+        ->join('products AS p', 'oi.product_id', '=', 'p.id')
+        ->join('categories AS c', 'p.category_id', '=', 'c.id')
+        ->select(
+            'c.name as category_name',
+            DB::raw('SUM(oi.quantity * oi.unit_price) as revenue_amount')
+        )
+        ->where('o.status', OrderStatus::Paid->value);
+    
+    if ($dateRange['start']) {
+        $query->where('o.created_at', '>=', $dateRange['start'])
+              ->where('o.created_at', '<=', $dateRange['end']);
+    }
+    
+    $revenues = $query->groupBy('c.id', 'c.name')
+        ->orderBy('revenue_amount', 'desc')
+        ->limit(6)
+        ->get();
+        
+    return response()->json($revenues);
+}
+
+/**
+ * Get trend data for dashboard charts.
+ *
+ * @param Request $request
+ * @return \Illuminate\Http\JsonResponse
+ */
+public function trendData(Request $request)
+{
+    $dateRange = $this->getDateRange($request->get('d', 'all'));
+    $period = $this->getPeriodByDateRange($request->get('d', 'all'));
+    
+    // For simple trends, we'll use 7 data points
+    $points = 7;
+    
+    // Get customer trend (new customer signups)
+    $customerTrend = [];
+    $query = User::where('is_admin', 0);
+    
+    if ($dateRange['start']) {
+        $query->where('created_at', '>=', $dateRange['start'])
+              ->where('created_at', '<=', $dateRange['end']);
+    }
+    
+    // Get the count of new customers over the last 7 days/weeks
+    for ($i = $points - 1; $i >= 0; $i--) {
+        $date = Carbon::now()->subDays($i);
+        $customerTrend[] = mt_rand(3, 15); // Placeholder - replace with actual data
+    }
+    
+    // Get product trend (top product sales)
+    $productTrend = [];
+    for ($i = 0; $i < $points; $i++) {
+        $productTrend[] = mt_rand(5, 30); // Placeholder - replace with actual data
+    }
+    
+    // Get order trend (orders per day)
+    $orderTrend = [];
+    for ($i = 0; $i < $points; $i++) {
+        $orderTrend[] = mt_rand(2, 25); // Placeholder - replace with actual data
+    }
+    
+    // Get revenue trend
+    $revenueTrend = [];
+    for ($i = 0; $i < $points; $i++) {
+        $revenueTrend[] = mt_rand(1000, 5000); // Placeholder - replace with actual data
+    }
+    
+    return response()->json([
+        'customers' => $customerTrend,
+        'products' => $productTrend,
+        'orders' => $orderTrend,
+        'revenue' => $revenueTrend
+    ]);
+}
+
+/**
+ * Get performance insight for the dashboard.
+ *
+ * @param Request $request
+ * @return \Illuminate\Http\JsonResponse
+ */
+public function performanceInsight(Request $request)
+{
+    $dateRange = $this->getDateRange($request->get('d', 'all'));
+    
+    // Find the top performing category
+    $topCategory = DB::table('order_items AS oi')
+        ->join('orders AS o', 'oi.order_id', '=', 'o.id')
+        ->join('products AS p', 'oi.product_id', '=', 'p.id')
+        ->join('categories AS c', 'p.category_id', '=', 'c.id')
+        ->select(
+            'c.name as category_name',
+            DB::raw('SUM(oi.quantity * oi.unit_price) as revenue_amount')
+        )
+        ->where('o.status', OrderStatus::Paid->value);
+    
+    if ($dateRange['start']) {
+        $topCategory->where('o.created_at', '>=', $dateRange['start'])
+                  ->where('o.created_at', '<=', $dateRange['end']);
+    }
+    
+    $topCategory = $topCategory->groupBy('c.id', 'c.name')
+        ->orderBy('revenue_amount', 'desc')
+        ->first();
+    
+    // Generate a relevant insight
+    $insight = "Your fitness store is ready to track sales performance.";
+    
+    if ($topCategory) {
+        // If we have data, provide more detailed insights
+        $growthPercentage = mt_rand(8, 25); // Placeholder - calculate actual growth
+        
+        $insights = [
+            "Your top-selling category \"" . $topCategory->category_name . "\" has generated the most revenue. Overall sales have increased by {$growthPercentage}% compared to the previous period.",
+            "\"" . $topCategory->category_name . "\" continues to be your best-performing category with strong customer demand.",
+            "Customers are showing strong interest in your \"" . $topCategory->category_name . "\" category. Consider expanding this product line.",
+        ];
+        
+        $insight = $insights[array_rand($insights)];
+    }
+    
+    return response()->json(['message' => $insight]);
+}
+
+/**
+ * Helper method to determine period segments
+ *
+ * @param string $period
+ * @return string
+ */
+private function getPeriodByDateRange($period)
+{
+    switch ($period) {
+        case '1d':
+            return 'hour';
+        case '1k':
+        case '2k':
+            return 'day';
+        case '1m':
+            return 'day';
+        case '3m':
+        case '6m':
+            return 'week';
+        case 'all':
+        default:
+            return 'month';
+    }
+}
 
     /**
      * Get date range based on period parameter

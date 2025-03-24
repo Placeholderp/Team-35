@@ -105,6 +105,9 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('/dashboard/latest-orders', [DashboardController::class, 'latestOrders']);
     Route::get('/orders/user/{userId}', [OrderController::class, 'getByUserId']);
     // Report routes
+    Route::get('/dashboard/revenue-breakdown', [DashboardController::class, 'revenueBreakdown']);
+Route::get('/dashboard/trend-data', [DashboardController::class, 'trendData']);
+Route::get('/dashboard/performance-insight', [DashboardController::class, 'performanceInsight']);
     Route::prefix('reports')->group(function () {
         Route::get('/summary', [ReportController::class, 'summary']);
         Route::get('/orders', [ReportController::class, 'ordersReport']);
