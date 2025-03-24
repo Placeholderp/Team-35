@@ -7,8 +7,8 @@ namespace App\Enums;
 /**
  * Class CustomerStatus
  */
-enum CustomerStatus: string
+enum CustomerStatus: int
 {
-    case Active = 'active';
-    case Disabled = 'disabled';
+    case Active = 1;
+    case Disabled = 0;
 }

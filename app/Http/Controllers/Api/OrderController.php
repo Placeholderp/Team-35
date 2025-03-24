@@ -153,6 +153,7 @@ class OrderController extends Controller
             ], 500);
         }
     }
+    
 
     /**
      * View a specific order - fix for /orders/{id} endpoint
@@ -386,43 +387,111 @@ class OrderController extends Controller
     /**
      * Update order status
      */
-    public function updateStatus(Request $request, $orderId, $status)
-    {
+    /**
+ * Update order status
+ */
+
+/**
+ * Update order status - Fixed to only use ID
+ */
+
+/**
+ * Update order status - Final simplified version
+ */
+
+/**
+ * Update order status using direct database queries
+ */
+public function updateStatus(Request $request, $orderId, $status)
+{
+    try {
+        Log::info('Starting status update with direct DB query', [
+            'order_id' => $orderId,
+            'status' => $status
+        ]);
+        
+        // Get current order data for logging
+        $currentOrder = DB::table('orders')->where('id', $orderId)->first();
+        
+        if (!$currentOrder) {
+            Log::warning('Order not found in database', ['order_id' => $orderId]);
+            return response()->json([
+                'message' => 'Order not found'
+            ], 404);
+        }
+        
+        Log::info('Current order status', [
+            'order_id' => $orderId,
+            'current_status' => $currentOrder->status
+        ]);
+        
+        // Normalize status
+        $normalizedStatus = strtolower($status);
+        
+        // Basic validation
+        $allowedStatuses = [
+            'pending', 'processing', 'paid', 'shipped', 
+            'delivered', 'completed', 'cancelled', 'refunded'
+        ];
+        
+        if (!in_array($normalizedStatus, $allowedStatuses)) {
+            Log::warning('Invalid status value', ['status' => $normalizedStatus]);
+            return response()->json([
+                'message' => 'Invalid status value'
+            ], 400);
+        }
+        
+        // Perform direct update with error handling
         try {
-            Log::info('Updating order status', [
-                'order_id' => $orderId,
-                'status' => $status
-            ]);
-            
-            // Find order by user_id
-            $order = Order::find($orderId);
-            
-            if (!$order) {
+            $updated = DB::table('orders')
+                ->where('id', $orderId)
+                ->update([
+                    'status' => $normalizedStatus,
+                    'updated_at' => now()
+                ]);
+                
+            if ($updated !== 1) {
+                Log::warning('Update affected zero rows', ['order_id' => $orderId]);
                 return response()->json([
-                    'message' => 'Order not found'
-                ], 404);
+                    'message' => 'Order update failed - no rows affected'
+                ], 500);
             }
             
-            // Update status
-            $order->status = $status;
-            $order->save();
+            Log::info('Order status updated successfully with direct query', [
+                'order_id' => $orderId,
+                'old_status' => $currentOrder->status,
+                'new_status' => $normalizedStatus
+            ]);
             
             return response()->json([
                 'message' => 'Order status updated successfully',
-                'status' => $status
+                'status' => $normalizedStatus
             ]);
-        } catch (Exception $e) {
-            Log::error('Error updating order status', [
+        } catch (\Exception $dbEx) {
+            Log::error('Database update failed', [
                 'order_id' => $orderId,
-                'status' => $status,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'error' => $dbEx->getMessage(),
+                'code' => $dbEx->getCode()
             ]);
             
+            // Get more details about the database error
             return response()->json([
-                'message' => 'Error updating order status',
-                'error' => config('app.debug') ? $e->getMessage() : 'Server error'
+                'message' => 'Database error updating order status',
+                'error' => $dbEx->getMessage(),
+                'code' => $dbEx->getCode()
             ], 500);
         }
+    } catch (\Exception $e) {
+        Log::error('Exception in updateStatus', [
+            'order_id' => $orderId,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        return response()->json([
+            'message' => 'Error updating order status',
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
 }

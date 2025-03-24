@@ -10,12 +10,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Log;
+
 class Order extends Model
 {
     use HasFactory;
     
-    // Define user_id as the primary key to match your database structure
-    protected $primaryKey = 'user_id';
+    // Changed primary key to standard 'id'
+    protected $primaryKey = 'id';
     
     // Define attributes that are mass assignable
     protected $fillable = ['status', 'total_price', 'created_by', 'updated_by'];
@@ -25,6 +26,18 @@ class Order extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+    
+    // Add this to prevent Laravel from trying to save non-existent columns
+    protected $guarded = [];
+    
+    // This makes user_id a virtual attribute that isn't saved to database
+    protected $appends = ['user_id'];
+    
+    // Get the user_id (virtual attribute for backward compatibility)
+    public function getUserIdAttribute()
+    {
+        return $this->id;
+    }
 
     /**
      * Check if the order is paid.
@@ -39,8 +52,8 @@ class Order extends Model
      */
     public function payment(): HasOne
     {
-        // Specify that the foreign key in payments table is order_id and references user_id
-        return $this->hasOne(Payment::class, 'order_id', 'user_id');
+        // Updated to use standard relationship
+        return $this->hasOne(Payment::class);
     }
 
     /**
@@ -57,8 +70,8 @@ class Order extends Model
      */
     public function items(): HasMany
     {
-        // Specify that the foreign key in order_items is order_id and references user_id
-        return $this->hasMany(OrderItem::class, 'order_id', 'user_id');
+        // Updated to use standard relationship
+        return $this->hasMany(OrderItem::class);
     }
     
     /**
@@ -66,8 +79,8 @@ class Order extends Model
      */
     public function detail(): HasOne
     {
-        // Specify that the foreign key in order_details is order_id and references user_id
-        return $this->hasOne(OrderDetail::class, 'order_id', 'user_id')->withDefault([
+        // Updated to use standard relationship
+        return $this->hasOne(OrderDetail::class)->withDefault([
             'first_name' => '',
             'last_name' => '',
             'address1' => '',
@@ -86,26 +99,23 @@ class Order extends Model
     }
     
     /**
-     * Boot method to add global error handling
+     * Modified boot method with safer backward compatibility approach
      */
     protected static function boot()
     {
         parent::boot();
         
         static::retrieved(function ($model) {
-            // Ensure ID property exists for frontend compatibility
-            $model->id = $model->user_id;
-            
-            // Add debug logging to check user relationship
+            // Debug logging to check user relationship
             if ($model->user) {
                 Log::info('Order user loaded:', [
-                    'order_id' => $model->user_id, 
+                    'order_id' => $model->id, 
                     'user_id' => $model->user->id,
                     'has_customer' => $model->user->customer ? 'yes' : 'no'
                 ]);
             } else {
                 Log::warning('Order user not loaded:', [
-                    'order_id' => $model->user_id, 
+                    'order_id' => $model->id, 
                     'created_by' => $model->created_by
                 ]);
             }

@@ -11,19 +11,19 @@ class OrderItem extends Model
 {
     use HasFactory;
 
-    // Define the primary key based on your database structure
-    protected $primaryKey = 'user_id';
+    // Changed to standard primary key
+    protected $primaryKey = 'id';
     
     // Define the attributes that are mass assignable.
     protected $fillable = ['order_id', 'unit_price', 'product_id', 'quantity'];
 
     /**
      * An OrderItem belongs to an Order.
-     * The order uses user_id as its primary key.
+     * Using standard Laravel relationship conventions.
      */
     public function order(): BelongsTo
     {
-        return $this->belongsTo(Order::class, 'order_id', 'user_id');
+        return $this->belongsTo(Order::class);
     }
 
     /**

@@ -286,17 +286,16 @@ class CheckoutController extends Controller
             // Use direct INSERT to avoid any model issues
             DB::statement("
                 INSERT INTO order_details (
-                    order_id, user_id, first_name, last_name, 
+                    order_id, first_name, last_name, 
                     address1, address2, city, state, 
                     zipcode, country_code, created_at, updated_at
                 ) VALUES (
-                    ?, ?, ?, ?, 
+                    ?, ?, ?, 
                     ?, ?, ?, ?, 
                     ?, ?, NOW(), NOW()
                 )
             ", [
                 $order->id,
-                $user->id,
                 $data['first_name'],
                 $data['last_name'],
                 $data['address'],

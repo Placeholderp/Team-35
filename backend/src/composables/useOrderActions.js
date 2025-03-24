@@ -16,10 +16,17 @@ export function useOrderActions() {
     loading.value = true;
     
     try {
+      // Using the exact format that matches your API routes
+      // This matches: Route::post('orders/{order}/status/{status}', [OrderController::class, 'changeStatus']);
       const response = await axios.post(`/orders/${orderId}/status/${status}`);
+      
+      // Log the request details for debugging
+      console.log(`Sending POST request to: /orders/${orderId}/status/${status}`);
+      
       loading.value = false;
       return response;
     } catch (error) {
+      console.error('Error updating order status:', error);
       loading.value = false;
       throw error;
     }

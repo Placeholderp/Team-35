@@ -130,6 +130,7 @@ class OrderController extends Controller
             ]);
         }
     }
+    
 
     /**
      * Get the requested includes from the request

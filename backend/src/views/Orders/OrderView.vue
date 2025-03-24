@@ -120,6 +120,7 @@
                           class="h-10 w-10 rounded-md object-cover" 
                           :src="getProductImageUrl(item)" 
                           :alt="item.product ? item.product.title : 'Product'" 
+                          @error="handleImageError"
                         />
                       </div>
                       <div class="ml-4">
@@ -184,31 +185,50 @@
 
       <!-- Customer Information -->
       <div class="space-y-6">
-        <!-- Customer Details -->
+        <!-- Enhanced Customer Details -->
         <div class="bg-white rounded-lg shadow-md overflow-hidden">
           <div class="p-6 bg-gray-50 border-b border-gray-200">
             <h2 class="text-lg font-medium text-gray-900">Customer</h2>
           </div>
           <div class="p-6" v-if="order.customer">
             <div class="flex items-center mb-4">
-              <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 mr-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
+              <!-- Customer Avatar/Picture with dynamic color based on ID -->
+              <div 
+                :class="[getAvatarColor, 'h-12 w-12 rounded-full flex items-center justify-center text-white font-bold text-lg']"
+              >
+                {{ getCustomerInitials }}
               </div>
-              <div>
+              <div class="ml-4">
                 <h3 class="text-lg font-medium text-gray-900">
-                  {{ order.customer.first_name }} {{ order.customer.last_name }}
+                  {{ getCustomerFullName() }}
                 </h3>
-                <p class="text-sm text-gray-500">Customer ID: #{{ order.customer.id }}</p>
+                <p class="text-sm text-gray-500">
+                  Customer ID: #{{ order.customer.id }}
+                </p>
               </div>
             </div>
             <div class="border-t border-gray-200 pt-4">
               <dl class="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
                 <div class="sm:col-span-1">
                   <dt class="text-sm font-medium text-gray-500">Email</dt>
-                  <dd class="mt-1 text-sm text-gray-900">
+                  <dd class="mt-1 text-sm text-gray-900 break-all">
                     {{ getCustomerEmail() }}
+                  </dd>
+                </div>
+                
+                <!-- Additional customer information (if available) -->
+                <div v-if="order.customer.phone" class="sm:col-span-1">
+                  <dt class="text-sm font-medium text-gray-500">Phone</dt>
+                  <dd class="mt-1 text-sm text-gray-900">
+                    {{ order.customer.phone }}
+                  </dd>
+                </div>
+                
+                <!-- Order count or customer status (if available) -->
+                <div v-if="order.customer.order_count" class="sm:col-span-1">
+                  <dt class="text-sm font-medium text-gray-500">Total Orders</dt>
+                  <dd class="mt-1 text-sm text-gray-900">
+                    {{ order.customer.order_count }}
                   </dd>
                 </div>
               </dl>
@@ -336,6 +356,39 @@ const orderTotal = computed(() =>
   order.value ? order.value.total_price + shippingCost.value : 0
 );
 
+// Enhanced customer info display
+const getCustomerInitials = computed(() => {
+  if (!order.value || !order.value.customer) return '?';
+  
+  const firstName = order.value.customer.first_name || '';
+  const lastName = order.value.customer.last_name || '';
+  
+  if (firstName && lastName) {
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  } else if (firstName) {
+    return firstName.charAt(0).toUpperCase();
+  } else if (lastName) {
+    return lastName.charAt(0).toUpperCase();
+  }
+  
+  return '#';
+});
+
+// Get avatar background color based on customer ID
+const getAvatarColor = computed(() => {
+  if (!order.value || !order.value.customer || !order.value.customer.id) return 'bg-gray-400';
+  
+  // Generate color based on customer ID
+  const colors = [
+    'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 
+    'bg-pink-500', 'bg-purple-500', 'bg-indigo-500',
+    'bg-red-500', 'bg-teal-500', 'bg-orange-500'
+  ];
+  
+  const colorIndex = (parseInt(order.value.customer.id) % colors.length);
+  return colors[colorIndex];
+});
+
 onMounted(async () => {
   try {
     // Fetch order details
@@ -370,34 +423,30 @@ onMounted(async () => {
   }
 });
 
-// Status change handler - Updated to be more resilient
 async function onStatusChange() {
   if (!isStatusChanged.value) return;
 
   try {
-    // Use either id or user_id, whichever is available
-    const orderId = order.value.id || order.value.user_id;
+    // Call updateOrderStatus directly with the order ID and new status
+    // Make sure we're passing string values
+    const orderId = String(order.value.id);
+    const newStatus = String(currentStatus.value);
     
-    // Use PATCH to /orders/{id}/status with status in body
-    await axios.patch(`/orders/${orderId}/status`, {
-      status: currentStatus.value
-    });
+    console.log(`Updating order ${orderId} status to ${newStatus}`);
     
-    // Update the original status to match current if successful
+    await updateOrderStatus(orderId, newStatus);
+    
     originalStatus.value = currentStatus.value;
-    
     store.commit('showToast', {
       message: `Order status was successfully changed to "${currentStatus.value}"`,
       type: 'success'
     });
   } catch (error) {
     console.error('Error updating order status:', error);
-    
     // Revert status on error
     currentStatus.value = originalStatus.value;
-    
     store.commit('showToast', {
-      message: 'Error updating order status: ' + (error.response?.data?.message || error.message),
+      message: 'Error updating order status.',
       type: 'error'
     });
   }
@@ -409,61 +458,64 @@ function capitalizeFirstLetter(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-// FIXED: Function to get customer email with improved fallbacks
+// Improved customer email retrieval
 function getCustomerEmail() {
-  if (!order.value) return '';
+  if (!order.value || !order.value.customer) return 'Email not available';
   
-  // First check if customer info is available in expected location
-  if (order.value.customer && order.value.customer.email) {
+  // First check if email is directly available
+  if (order.value.customer.email) {
     return order.value.customer.email;
   }
   
-  // Check if email might be nested in customer.user_email (potential database structure)
-  if (order.value.customer && order.value.customer.user_email) {
+  // Check for nested properties with fallbacks
+  if (order.value.customer.user_email) {
     return order.value.customer.user_email;
   }
-
-  // Check if email is directly in customer object
-  if (order.value.customer && typeof order.value.customer === 'object') {
-    // Look for any property that might contain email
-    const customerObj = order.value.customer;
-    for (const key in customerObj) {
-      if (typeof customerObj[key] === 'string' && 
-          (key.includes('email') || 
-           customerObj[key].includes('@'))) {
-        return customerObj[key];
-      }
-    }
-  }
   
-  // Fallbacks
+  // Check if user object exists with email
   if (order.value.user && order.value.user.email) {
     return order.value.user.email;
   }
   
+  // Check if email might be in order object directly
   if (order.value.email) {
     return order.value.email;
   }
   
-  // Additional check for shipping/billing address emails
-  if (order.value.customer && order.value.customer.billingAddress && 
-      order.value.customer.billingAddress.email) {
+  // Check if email might be in addresses
+  if (order.value.customer.billingAddress && order.value.customer.billingAddress.email) {
     return order.value.customer.billingAddress.email;
   }
   
-  if (order.value.customer && order.value.customer.shippingAddress && 
-      order.value.customer.shippingAddress.email) {
+  if (order.value.customer.shippingAddress && order.value.customer.shippingAddress.email) {
     return order.value.customer.shippingAddress.email;
   }
   
   return 'Email not available';
 }
 
-// FIXED: Function to get product image URL with improved fallbacks
-// UPDATED: Function to get product image URL with improved fallbacks and correct storage path
+// Customer name formatter with fallbacks
+function getCustomerFullName() {
+  if (!order.value || !order.value.customer) return 'Unknown Customer';
+  
+  const firstName = order.value.customer.first_name || '';
+  const lastName = order.value.customer.last_name || '';
+  
+  if (firstName || lastName) {
+    return `${firstName} ${lastName}`.trim();
+  }
+  
+  if (order.value.user && order.value.user.name) {
+    return order.value.user.name;
+  }
+  
+  return `Customer #${order.value.customer.id || 'Unknown'}`;
+}
+
+// Modified getProductImageUrl function for OrderView.vue
 function getProductImageUrl(item) {
   // Base fallback image - could be a placeholder image
-  const fallbackImage = '/images/placeholder-product.png';
+  const fallbackImage = '';  // Empty to trigger error handler
   
   // Check if we have valid item and product data
   if (!item) return fallbackImage;
@@ -485,7 +537,7 @@ function getProductImageUrl(item) {
     // Get the first image from the array
     imagePath = typeof item.product.images[0] === 'string' 
       ? item.product.images[0] 
-      : (item.product.images[0].url || item.product.images[0].path || '');
+      : (item.product.images[0]?.url || item.product.images[0]?.path || '');
   }
   // Check thumbnail as a last resort
   else if (item.product.thumbnail) {
@@ -495,48 +547,36 @@ function getProductImageUrl(item) {
   // If no image was found, return fallback
   if (!imagePath) return fallbackImage;
   
-  // Handle different image path formats
-  
-  // If the path is a full URL
+  // If the image path is already a full URL, return it as is
   if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
     return imagePath;
   }
   
-  // If the path is already a relative path with /storage prefix
-  if (imagePath.startsWith('/storage/')) {
-    return imagePath;
+  // For Laravel projects with Vite/Vue development server, you may need to use the backend URL
+  // Modify this to match your Laravel backend URL
+  const backendUrl = 'http://localhost/team-35/public'; // Change this to match your XAMPP setup
+  
+  // Clean up the path to ensure proper formatting
+  let cleanPath = imagePath;
+  
+  // Remove any leading slash for concatenation
+  if (cleanPath.startsWith('/')) {
+    cleanPath = cleanPath.substring(1);
   }
   
-  // If the path includes storage/products without leading slash
-  if (imagePath.startsWith('storage/products/')) {
-    return `/${imagePath}`;
+  // Ensure the path includes 'storage/products' prefix
+  if (!cleanPath.includes('public/storage/products') && !cleanPath.includes('public/storage/products')) {
+    cleanPath = `public/storage/products${cleanPath}`;
+  } else if (!cleanPath.includes('public/storage/products')) {
+    cleanPath = `public/storage/products${cleanPath}`;
   }
   
-  // For paths that might just be relative to the product directory
-  if (imagePath.startsWith('/products/')) {
-    return `/storage${imagePath}`;
-  }
-  
-  // For paths that might include the full server path (strip the server path part)
-  if (imagePath.includes('public/storage/products')) {
-    // Extract just the filename part or the part after products/
-    const parts = imagePath.split('products/');
-    if (parts.length > 1) {
-      return `/storage/products/${parts[1]}`;
-    }
-  }
-  
-  // For paths that might just have the filename
-  return `/storage/products/${imagePath}`;
+  // Return the full URL to the image on the backend
+  return `${backendUrl}/${cleanPath}`;
 }
 
-// Handle image loading errors
-function handleImageError(e) {
-  console.error('Image failed to load:', e.target.src);
-  e.target.src = ''; // Clear the source to avoid repeated error
-  e.target.classList.add('bg-gray-100');
-  e.target.classList.add('p-2');
-}
+// Replace the getProductImageUrl function in OrderView.vue (around line 483)
+
 
 // Export order to CSV
 function exportOrder() {

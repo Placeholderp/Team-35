@@ -27,6 +27,15 @@ class CustomerAddress extends Model
     ];
 
     /**
+     * Define attributes that should be cast.
+     * This ensures nullable fields are properly handled.
+     */
+    protected $casts = [
+        'address2' => 'string',
+        'state' => 'string',
+    ];
+
+    /**
      * Define a relationship indicating that a CustomerAddress belongs to a Customer.
      * Explicitly specify the foreign key in this table and the owner key in the Customer table.
      */

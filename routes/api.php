@@ -79,8 +79,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('orders', [OrderController::class, 'index']);
     Route::get('orders/statuses', [OrderController::class, 'getStatuses']);
     Route::post('orders', [OrderController::class, 'placeOrder']);
-    Route::post('orders/change-status/{order}/{status}', [OrderController::class, 'changeStatus']);
-    Route::post('orders/{order}/status/{status}', [OrderController::class, 'changeStatus']); // Alternative format
+
     Route::get('orders/{order}', [OrderController::class, 'view']);
     Route::post('orders/{order}/cancel', [OrderController::class, 'cancelOrder']);
     Route::post('orders/{order}/return', [OrderController::class, 'processReturn']);
@@ -93,8 +92,9 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('/order-details', [OrderController::class, 'getOrderDetails']);
     
     // Order status endpoint - you have a similar one as 'getStatuses'
-    // Make sure the implementation includes what the frontend expects
-    Route::get('/orders/statuses', [OrderController::class, 'getStatuses']);
+    Route::post('orders/change-status/{orderId}/{status}', [OrderController::class, 'updateStatus']);
+    Route::post('orders/{orderId}/status/{status}', [OrderController::class, 'updateStatus']);
+    Route::put('orders/{orderId}/status/{status}', [OrderController::class, 'updateStatus']);
     // Dashboard Routes
     Route::get('/dashboard/customers-count', [DashboardController::class, 'activeCustomers']);
     Route::get('/dashboard/products-count', [DashboardController::class, 'activeProducts']);

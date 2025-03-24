@@ -15,6 +15,7 @@ return new class extends Migration
     {
         Schema::create('order_details', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('order_id')->references('id')->on('orders');  // Add this line
             $table->string('first_name');
             $table->string('last_name');
             $table->string('address1', 255);

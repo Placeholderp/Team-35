@@ -25,7 +25,7 @@ class OrderDetail extends Model
      */
     protected $fillable = [
         'order_id',
-        'user_id',
+      
         'first_name',
         'last_name',
         'address1',
@@ -38,11 +38,11 @@ class OrderDetail extends Model
     
     /**
      * Get the order that owns the order detail.
-     * The order uses user_id as its primary key.
+     * Updated to use standard Laravel relationship conventions.
      */
     public function order(): BelongsTo
     {
-        return $this->belongsTo(Order::class, 'order_id', 'user_id');
+        return $this->belongsTo(Order::class);
     }
     
     /**
